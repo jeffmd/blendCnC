@@ -1,0 +1,18 @@
+
+
+Ran with:
+    install_deps.sh --skip-osl --skip-llvm --skip-openexr --skip-osd --skip-openvdb --skip-ffmpeg --skip-opencollada --skip-alembic --force-ocio --force-oiio
+
+
+If you're using CMake add this to your configuration flags:
+  -D WITH_CODEC_SNDFILE=ON
+  -D PYTHON_VERSION=3.6
+  -D WITH_OPENCOLORIO=ON
+  -D OPENCOLORIO_ROOT_DIR=/opt/lib/ocio
+  -D WITH_OPENIMAGEIO=ON
+  -D OPENIMAGEIO_ROOT_DIR=/opt/lib/oiio
+  -D WITH_CYCLES_OSL=OFF
+  -D WITH_LLVM=OFF
+
+Or even simpler, just run (in your blender-source dir):
+  make -j2 BUILD_CMAKE_ARGS="-U *SNDFILE* -U *PYTHON* -U *BOOST* -U *Boost* -U *OPENCOLORIO* -U *OPENEXR* -U *OPENIMAGEIO* -U *LLVM* -U *CYCLES* -U *OPENSUBDIV* -U *OPENVDB* -U *COLLADA* -U *FFMPEG* -U *ALEMBIC* -D WITH_CODEC_SNDFILE=ON -D PYTHON_VERSION=3.6 -D WITH_OPENCOLORIO=ON -D OPENCOLORIO_ROOT_DIR=/opt/lib/ocio -D WITH_OPENIMAGEIO=ON -D OPENIMAGEIO_ROOT_DIR=/opt/lib/oiio -D WITH_CYCLES_OSL=OFF -D WITH_LLVM=OFF"
