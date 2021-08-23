@@ -569,24 +569,9 @@ bool BKE_scene_validate_setscene(Main *bmain, Scene *sce)
  * would pollute STDERR with whole bunch of timing information which then
  * could be parsed and nicely visualized.
  */
-#ifdef WITH_LEGACY_DEPSGRAPH
-#  undef DETAILED_ANALYSIS_OUTPUT
-#else
 /* ALWAYS KEEY DISABLED! */
 #  undef DETAILED_ANALYSIS_OUTPUT
-#endif
 
-/* Mballs evaluation uses BKE_scene_base_iter_next which calls
- * duplilist for all objects in the scene. This leads to conflict
- * accessing and writing same data from multiple threads.
- *
- * Ideally Mballs shouldn't do such an iteration and use DAG
- * queries instead. For the time being we've got new DAG
- * let's keep it simple and update mballs in a single thread.
- */
-#define MBALL_SINGLETHREAD_HACK
-
-#ifdef WITH_LEGACY_DEPSGRAPH
 typedef struct StatisicsEntry {
 	struct StatisicsEntry *next, *prev;
 	Object *object;
@@ -601,18 +586,12 @@ typedef struct ThreadedObjectUpdateState {
 	Scene *scene_parent;
 	double base_time;
 
-#ifdef MBALL_SINGLETHREAD_HACK
-	bool has_mballs;
-#endif
-
 	int num_threads;
 
 	/* Execution statistics */
 	bool has_updated_objects;
 	ListBase *statistics;
 } ThreadedObjectUpdateState;
-
-#endif  /* WITH_LEGACY_DEPSGRAPH */
 
 static bool check_rendered_viewport_visible(Main *bmain)
 {

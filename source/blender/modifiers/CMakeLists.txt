@@ -30,7 +30,6 @@ set(INC
 	../blenkernel
 	../blenlib
 	../blenfont
-	../depsgraph
 	../makesdna
 	../makesrna
 	../bmesh
@@ -93,10 +92,6 @@ set(SRC
 	intern/MOD_util.h
 	intern/MOD_weightvg_util.h
 )
-
-if(WITH_LEGACY_DEPSGRAPH)
-	add_definitions(-DWITH_LEGACY_DEPSGRAPH)
-endif()
 
 if(WITH_MOD_REMESH)
 	add_definitions(-DWITH_MOD_REMESH)
