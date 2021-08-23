@@ -673,20 +673,6 @@ static const char arg_handle_debug_mode_generic_set_doc_jobs[] =
 "\n\tEnable time profiling for background jobs.";
 static const char arg_handle_debug_mode_generic_set_doc_gpu[] =
 "\n\tEnable gpu debug context and information for OpenGL 4.3+.";
-static const char arg_handle_debug_mode_generic_set_doc_depsgraph[] =
-"\n\tEnable all debug messages from dependency graph.";
-static const char arg_handle_debug_mode_generic_set_doc_depsgraph_build[] =
-"\n\tEnable debug messages from dependency graph related on graph construction.";
-static const char arg_handle_debug_mode_generic_set_doc_depsgraph_tag[] =
-"\n\tEnable debug messages from dependency graph related on tagging.";
-static const char arg_handle_debug_mode_generic_set_doc_depsgraph_time[] =
-"\n\tEnable debug messages from dependency graph related on timing.";
-static const char arg_handle_debug_mode_generic_set_doc_depsgraph_eval[] =
-"\n\tEnable debug messages from dependency graph related on evaluation.";
-static const char arg_handle_debug_mode_generic_set_doc_depsgraph_no_threads[] =
-"\n\tSwitch dependency graph to a single threaded evaluation.";
-static const char arg_handle_debug_mode_generic_set_doc_depsgraph_pretty[] =
-"\n\tEnable colors for dependency graph debug messages.";
 static const char arg_handle_debug_mode_generic_set_doc_gpumem[] =
 "\n\tEnable GPU memory stats in status bar.";
 
