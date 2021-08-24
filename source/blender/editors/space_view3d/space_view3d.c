@@ -1268,7 +1268,7 @@ void ED_spacetype_view3d(void)
 	art = MEM_callocN(sizeof(ARegionType), "spacetype view3d buttons region");
 	art->regionid = RGN_TYPE_UI;
 	art->prefsizex = 180; /* XXX */
-	art->keymapflag = ED_KEYMAP_UI | ED_KEYMAP_FRAMES;
+	art->keymapflag = ED_KEYMAP_UI;
 	art->listener = view3d_buttons_region_listener;
 	art->init = view3d_buttons_region_init;
 	art->draw = view3d_buttons_region_draw;
@@ -1281,7 +1281,7 @@ void ED_spacetype_view3d(void)
 	art->regionid = RGN_TYPE_TOOLS;
 	art->prefsizex = 160; /* XXX */
 	art->prefsizey = 50; /* XXX */
-	art->keymapflag = ED_KEYMAP_UI | ED_KEYMAP_FRAMES;
+	art->keymapflag = ED_KEYMAP_UI;
 	art->listener = view3d_buttons_region_listener;
 	art->init = view3d_tools_region_init;
 	art->draw = view3d_tools_region_draw;
@@ -1297,7 +1297,7 @@ void ED_spacetype_view3d(void)
 	art->regionid = RGN_TYPE_TOOL_PROPS;
 	art->prefsizex = 0;
 	art->prefsizey = 120;
-	art->keymapflag = ED_KEYMAP_UI | ED_KEYMAP_FRAMES;
+	art->keymapflag = ED_KEYMAP_UI;
 	art->listener = view3d_props_region_listener;
 	art->init = view3d_tools_region_init;
 	art->draw = view3d_tools_region_draw;

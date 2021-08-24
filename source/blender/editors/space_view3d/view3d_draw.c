@@ -2368,7 +2368,7 @@ void ED_view3d_update_viewmat(
  * Shared by #ED_view3d_draw_offscreen and #view3d_main_region_draw_objects
  *
  * \note \a C and \a grid_unit will be NULL when \a draw_offscreen is set.
- * \note Drawing lamps and opengl render uses this, so dont do grease pencil or view widgets here.
+ * \note Drawing lamps and opengl render uses this, so dont do view widgets here.
  */
 static void view3d_draw_objects(
         const bContext *C,
