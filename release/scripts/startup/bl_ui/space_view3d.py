@@ -1243,8 +1243,6 @@ class VIEW3D_MT_object_relations(Menu):
 
         layout.operator("object.proxy_make", text="Make Proxy...")
 
-        layout.operator("object.make_dupli_face")
-
         layout.separator()
 
         layout.operator_menu_enum("object.make_local", "type", text="Make Local...")
@@ -1299,20 +1297,10 @@ class VIEW3D_MT_object(Menu):
         layout.separator()
         layout.menu("VIEW3D_MT_make_links", text="Make Links...")
         layout.menu("VIEW3D_MT_object_relations")
-        layout.menu("VIEW3D_MT_object_constraints")
-        layout.menu("VIEW3D_MT_object_track")
-
-        layout.separator()
-
-        layout.menu("VIEW3D_MT_object_animation")
 
         layout.separator()
 
         layout.menu("VIEW3D_MT_object_quick_effects")
-
-        layout.separator()
-
-        layout.menu("VIEW3D_MT_object_game")
 
         layout.separator()
 
@@ -1547,7 +1535,6 @@ class VIEW3D_MT_object_apply(Menu):
             text="All Transforms to Deltas",
             text_ctxt=i18n_contexts.default,
         ).mode = 'ALL'
-        layout.operator("object.anim_transforms_to_deltas")
 
         layout.separator()
 
@@ -1561,7 +1548,6 @@ class VIEW3D_MT_object_apply(Menu):
             text="Visual Geometry to Mesh",
             text_ctxt=i18n_contexts.default,
         ).target = 'MESH'
-        layout.operator("object.duplicates_make_real")
 
 
 class VIEW3D_MT_object_parent(Menu):
@@ -1575,19 +1561,6 @@ class VIEW3D_MT_object_parent(Menu):
         layout.separator()
 
         layout.operator_enum("object.parent_clear", "type")
-
-
-class VIEW3D_MT_object_track(Menu):
-    bl_label = "Track"
-
-    def draw(self, context):
-        layout = self.layout
-
-        layout.operator_enum("object.track_set", "type")
-
-        layout.separator()
-
-        layout.operator_enum("object.track_clear", "type")
 
 
 class VIEW3D_MT_object_group(Menu):
@@ -1605,20 +1578,6 @@ class VIEW3D_MT_object_group(Menu):
 
         layout.operator("group.objects_add_active")
         layout.operator("group.objects_remove_active")
-
-
-class VIEW3D_MT_object_constraints(Menu):
-    bl_label = "Constraints"
-
-    def draw(self, context):
-        layout = self.layout
-
-        layout.operator("object.constraint_add_with_targets")
-        layout.operator("object.constraints_copy")
-
-        layout.separator()
-
-        layout.operator("object.constraints_clear")
 
 
 class VIEW3D_MT_object_quick_effects(Menu):
@@ -1693,8 +1652,6 @@ class VIEW3D_MT_make_links(Menu):
         layout.operator_context = operator_context_default
 
         layout.operator_enum("object.make_links_data", "type")  # inline
-
-        layout.operator("object.join_uvs")  # stupid place to add this!
 
 
 class VIEW3D_MT_object_game(Menu):
@@ -3878,7 +3835,6 @@ classes = (
     VIEW3D_MT_object_apply,
     VIEW3D_MT_object_parent,
     VIEW3D_MT_object_group,
-    VIEW3D_MT_object_constraints,
     VIEW3D_MT_object_quick_effects,
     VIEW3D_MT_object_showhide,
     VIEW3D_MT_make_single_user,
