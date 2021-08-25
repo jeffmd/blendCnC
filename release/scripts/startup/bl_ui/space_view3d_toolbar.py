@@ -131,7 +131,7 @@ class VIEW3D_PT_tools_add_object(View3DPanel, Panel):
 
         layout.separator()
 
-        layout.operator("curve.draw", icon='LINE_DATA')
+        #layout.operator("curve.draw", icon='LINE_DATA')
 
     @staticmethod
     def draw_add_surface(layout):
@@ -153,10 +153,8 @@ class VIEW3D_PT_tools_add_object(View3DPanel, Panel):
     @staticmethod
     def draw_add_other(layout):
         layout.operator("object.text_add", text="Text", icon='OUTLINER_OB_FONT')
-        layout.operator("object.armature_add", text="Armature", icon='OUTLINER_OB_ARMATURE')
         layout.operator("object.add", text="Lattice", icon='OUTLINER_OB_LATTICE').type = 'LATTICE'
         layout.operator("object.empty_add", text="Empty", icon='OUTLINER_OB_EMPTY').type = 'PLAIN_AXES'
-        layout.operator("object.speaker_add", text="Speaker", icon='OUTLINER_OB_SPEAKER')
         layout.operator("object.camera_add", text="Camera", icon='OUTLINER_OB_CAMERA')
 
     def draw(self, context):
