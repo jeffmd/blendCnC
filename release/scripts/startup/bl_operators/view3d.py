@@ -183,7 +183,7 @@ class VIEW3D_OT_select_or_deselect_all(Operator):
     def poll(cls, context):
         active_object = context.active_object
         if active_object:
-            return active_object.mode in {'EDIT', 'OBJECT', 'POSE'}
+            return active_object.mode in {'EDIT', 'OBJECT'}
         return True
 
     def invoke(self, context, event):
@@ -203,14 +203,6 @@ class VIEW3D_OT_select_or_deselect_all(Operator):
                         bpy.ops.curve.select_all(action='DESELECT')
                     elif active_object.type == 'LATTICE':
                         bpy.ops.lattice.select_all(action='DESELECT')
-                    elif active_object.type == 'META':
-                        bpy.ops.mball.select_all(action='DESELECT')
-                    elif active_object.type == 'ARMATURE':
-                        bpy.ops.armature.select_all(action='DESELECT')
-                elif active_object.mode == 'POSE':
-                    bpy.ops.pose.select_all(action='DESELECT')
-                elif active_object.mode == 'PARTICLE_EDIT':
-                    bpy.ops.particle.select_all(action='DESELECT')
                 else:
                     bpy.ops.object.select_all(action='DESELECT')
             else:
