@@ -30,7 +30,7 @@ class WorldButtonsPanel:
 
     @classmethod
     def poll(cls, context):
-        return (context.world and context.scene.render.engine in cls.COMPAT_ENGINES)
+        return (context.world)
 
 
 class WORLD_PT_context_world(WorldButtonsPanel, Panel):
@@ -40,8 +40,7 @@ class WORLD_PT_context_world(WorldButtonsPanel, Panel):
 
     @classmethod
     def poll(cls, context):
-        rd = context.scene.render
-        return rd.engine in cls.COMPAT_ENGINES
+        return True
 
     def draw(self, context):
         layout = self.layout
@@ -68,8 +67,7 @@ class WORLD_PT_preview(WorldButtonsPanel, Panel):
 
     @classmethod
     def poll(cls, context):
-        rd = context.scene.render
-        return (context.world) and (rd.engine in cls.COMPAT_ENGINES)
+        return (context.world)
 
     def draw(self, context):
         self.layout.template_preview(context.world)
@@ -244,7 +242,7 @@ class WORLD_PT_mist(WorldButtonsPanel, Panel):
 
 
 class WORLD_PT_custom_props(WorldButtonsPanel, PropertyPanel, Panel):
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
     _context_path = "world"
     _property_type = bpy.types.World
 
