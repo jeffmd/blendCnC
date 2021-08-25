@@ -143,42 +143,6 @@ def module_filesystem_remove(path_base, module_name):
                 os.remove(f_full)
 
 
-class BRUSH_OT_active_index_set(Operator):
-    """Set active sculpt/paint brush from it's number"""
-    bl_idname = "brush.active_index_set"
-    bl_label = "Set Brush Number"
-
-    mode = StringProperty(
-        name="Mode",
-        description="Paint mode to set brush for",
-        maxlen=1024,
-    )
-    index = IntProperty(
-        name="Number",
-        description="Brush number",
-    )
-
-    _attr_dict = {
-        "sculpt": "use_paint_sculpt",
-        "vertex_paint": "use_paint_vertex",
-        "weight_paint": "use_paint_weight",
-        "image_paint": "use_paint_image",
-    }
-
-    def execute(self, context):
-        attr = self._attr_dict.get(self.mode)
-        if attr is None:
-            return {'CANCELLED'}
-
-        tool_settings = context.tool_settings
-        for i, brush in enumerate((cur for cur in bpy.data.brushes if getattr(cur, attr))):
-            if i == self.index:
-                getattr(tool_settings, self.mode).brush = brush
-                return {'FINISHED'}
-
-        return {'CANCELLED'}
-
-
 class WM_OT_context_set_boolean(Operator):
     """Set a context value"""
     bl_idname = "wm.context_set_boolean"
@@ -1491,54 +1455,6 @@ class WM_OT_copy_prev_settings(Operator):
         return {'CANCELLED'}
 
 
-class WM_OT_blenderplayer_start(Operator):
-    """Launch the blender-player with the current blend-file"""
-    bl_idname = "wm.blenderplayer_start"
-    bl_label = "Start Game In Player"
-
-    def execute(self, context):
-        import os
-        import sys
-        import subprocess
-
-        gs = context.scene.game_settings
-
-        # these remain the same every execution
-        blender_bin_path = bpy.app.binary_path
-        blender_bin_dir = os.path.dirname(blender_bin_path)
-        ext = os.path.splitext(blender_bin_path)[-1]
-        player_path = os.path.join(blender_bin_dir, "blenderplayer" + ext)
-        # done static vars
-
-        if sys.platform == "darwin":
-            player_path = os.path.join(blender_bin_dir, "../../../blenderplayer.app/Contents/MacOS/blenderplayer")
-
-        if not os.path.exists(player_path):
-            self.report({'ERROR'}, "Player path: %r not found" % player_path)
-            return {'CANCELLED'}
-
-        filepath = bpy.data.filepath + '~' if bpy.data.is_saved else os.path.join(bpy.app.tempdir, "game.blend")
-        bpy.ops.wm.save_as_mainfile('EXEC_DEFAULT', filepath=filepath, copy=True)
-
-        # start the command line call with the player path
-        args = [player_path]
-
-        # handle some UI options as command line arguments
-        args.extend([
-            "-g", "show_framerate", "=", "%d" % gs.show_framerate_profile,
-            "-g", "show_profile", "=", "%d" % gs.show_framerate_profile,
-            "-g", "show_properties", "=", "%d" % gs.show_debug_properties,
-            "-g", "ignore_deprecation_warnings", "=", "%d" % (not gs.use_deprecation_warnings),
-        ])
-
-        # finish the call with the path to the blend file
-        args.append(filepath)
-
-        subprocess.call(args)
-        os.remove(filepath)
-        return {'FINISHED'}
-
-
 class WM_OT_keyconfig_test(Operator):
     """Test key-config for conflicts"""
     bl_idname = "wm.keyconfig_test"
@@ -2337,7 +2253,6 @@ class WM_OT_app_template_install(Operator):
 
 
 classes = (
-    BRUSH_OT_active_index_set,
     WM_OT_addon_disable,
     WM_OT_addon_enable,
     WM_OT_addon_expand,
@@ -2348,7 +2263,6 @@ classes = (
     WM_OT_app_template_install,
     WM_OT_appconfig_activate,
     WM_OT_appconfig_default,
-    WM_OT_blenderplayer_start,
     WM_OT_context_collection_boolean_set,
     WM_OT_context_cycle_array,
     WM_OT_context_cycle_enum,
