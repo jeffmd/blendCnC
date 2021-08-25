@@ -840,16 +840,6 @@ int CTX_data_mode_enum(const bContext *C)
 				return CTX_MODE_EDIT_LATTICE;
 		}
 	}
-	else {
-		Object *ob = CTX_data_active_object(C);
-
-		if (ob) {
-			if (ob->mode & OB_MODE_SCULPT) return CTX_MODE_SCULPT;
-			else if (ob->mode & OB_MODE_WEIGHT_PAINT) return CTX_MODE_PAINT_WEIGHT;
-			else if (ob->mode & OB_MODE_VERTEX_PAINT) return CTX_MODE_PAINT_VERTEX;
-			else if (ob->mode & OB_MODE_TEXTURE_PAINT) return CTX_MODE_PAINT_TEXTURE;
-		}
-	}
 
 	return CTX_MODE_OBJECT;
 }

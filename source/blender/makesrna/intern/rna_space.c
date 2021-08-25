@@ -1329,7 +1329,6 @@ static void rna_def_space_outliner(BlenderRNA *brna)
 		{SO_SAME_TYPE, "SAME_TYPES", 0, "Same Types",
 		               "Display data-blocks of all objects of same type as selected object"},
 		{SO_GROUPS, "GROUPS", 0, "Groups", "Display groups and their data-blocks"},
-		{SO_SEQUENCE, "SEQUENCE", 0, "Sequence", "Display sequence data-blocks"},
 		{SO_LIBRARIES, "LIBRARIES", 0, "Blender File", "Display data of current file and linked libraries"},
 		{SO_DATABLOCKS, "DATABLOCKS", 0, "Data-Blocks", "Display all raw data-blocks"},
 		{SO_USERDEF, "USER_PREFERENCES", 0, "User Preferences", "Display user preference data"},
@@ -2532,11 +2531,6 @@ static void rna_def_fileselect_params(BlenderRNA *brna)
 	RNA_def_property_ui_icon(prop, ICON_FILE_BACKUP, 0);
 	RNA_def_property_update(prop, NC_SPACE | ND_SPACE_FILE_PARAMS, NULL);
 
-	prop = RNA_def_property(srna, "use_filter_movie", PROP_BOOLEAN, PROP_NONE);
-	RNA_def_property_boolean_sdna(prop, NULL, "filter", FILE_TYPE_MOVIE);
-	RNA_def_property_ui_text(prop, "Filter Movies", "Show movie files");
-	RNA_def_property_ui_icon(prop, ICON_FILE_MOVIE, 0);
-	RNA_def_property_update(prop, NC_SPACE | ND_SPACE_FILE_PARAMS, NULL);
 
 	prop = RNA_def_property(srna, "use_filter_script", PROP_BOOLEAN, PROP_NONE);
 	RNA_def_property_boolean_sdna(prop, NULL, "filter", FILE_TYPE_PYSCRIPT);
@@ -2550,11 +2544,6 @@ static void rna_def_fileselect_params(BlenderRNA *brna)
 	RNA_def_property_ui_icon(prop, ICON_FILE_FONT, 0);
 	RNA_def_property_update(prop, NC_SPACE | ND_SPACE_FILE_PARAMS, NULL);
 
-	prop = RNA_def_property(srna, "use_filter_sound", PROP_BOOLEAN, PROP_NONE);
-	RNA_def_property_boolean_sdna(prop, NULL, "filter", FILE_TYPE_SOUND);
-	RNA_def_property_ui_text(prop, "Filter Sound", "Show sound files");
-	RNA_def_property_ui_icon(prop, ICON_FILE_SOUND, 0);
-	RNA_def_property_update(prop, NC_SPACE | ND_SPACE_FILE_PARAMS, NULL);
 
 	prop = RNA_def_property(srna, "use_filter_text", PROP_BOOLEAN, PROP_NONE);
 	RNA_def_property_boolean_sdna(prop, NULL, "filter", FILE_TYPE_TEXT);

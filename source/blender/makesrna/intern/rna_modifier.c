@@ -1956,7 +1956,6 @@ static void rna_def_modifier_meshdeform(BlenderRNA *brna)
 static void rna_def_modifier_collision(BlenderRNA *brna)
 {
 	StructRNA *srna;
-	PropertyRNA *prop;
 
 	srna = RNA_def_struct(brna, "CollisionModifier", "Modifier");
 	RNA_def_struct_ui_text(srna, "Collision Modifier",

@@ -63,8 +63,6 @@ const char *screen_context_dir[] = {
 	"editable_objects", "editable_bases",
 	"selected_editable_objects", "selected_editable_bases",
 	"active_base", "active_object", "object", "edit_object",
-	"sculpt_object", "vertex_paint_object", "weight_paint_object",
-	"image_paint_object", "particle_edit_object",
 	NULL};
 
 int ed_screen_context(const bContext *C, const char *member, bContextDataResult *result)
@@ -199,30 +197,6 @@ int ed_screen_context(const bContext *C, const char *member, bContextDataResult 
 		/* convenience for now, 1 object per scene in editmode */
 		if (obedit)
 			CTX_data_id_pointer_set(result, &obedit->id);
-
-		return 1;
-	}
-	else if (CTX_data_equals(member, "sculpt_object")) {
-		if (obact && (obact->mode & OB_MODE_SCULPT))
-			CTX_data_id_pointer_set(result, &obact->id);
-
-		return 1;
-	}
-	else if (CTX_data_equals(member, "vertex_paint_object")) {
-		if (obact && (obact->mode & OB_MODE_VERTEX_PAINT))
-			CTX_data_id_pointer_set(result, &obact->id);
-
-		return 1;
-	}
-	else if (CTX_data_equals(member, "weight_paint_object")) {
-		if (obact && (obact->mode & OB_MODE_WEIGHT_PAINT))
-			CTX_data_id_pointer_set(result, &obact->id);
-
-		return 1;
-	}
-	else if (CTX_data_equals(member, "image_paint_object")) {
-		if (obact && (obact->mode & OB_MODE_TEXTURE_PAINT))
-			CTX_data_id_pointer_set(result, &obact->id);
 
 		return 1;
 	}

@@ -138,39 +138,11 @@ wmKeyMap *WM_keymap_guess_opname(const bContext *C, const char *opname)
 			km = WM_keymap_find_all(C, "Object Mode", 0, 0);
 		}
 	}
-	else if (STRPREFIX(opname, "SCULPT_OT")) {
-		switch (CTX_data_mode_enum(C)) {
-			case OB_MODE_SCULPT:
-				km = WM_keymap_find_all(C, "Sculpt", 0, 0);
-				break;
-			case OB_MODE_EDIT:
-				km = WM_keymap_find_all(C, "UV Sculpt", 0, 0);
-				break;
-		}
-	}
 	else if (STRPREFIX(opname, "LATTICE_OT")) {
 		km = WM_keymap_find_all(C, "Lattice", 0, 0);
 	}
 	else if (STRPREFIX(opname, "FONT_OT")) {
 		km = WM_keymap_find_all(C, "Font", 0, 0);
-	}
-	/* Paint Face Mask */
-	else if (STRPREFIX(opname, "PAINT_OT_face_select")) {
-		km = WM_keymap_find_all(C, "Face Mask", 0, 0);
-	}
-	else if (STRPREFIX(opname, "PAINT_OT")) {
-		/* check for relevant mode */
-		switch (CTX_data_mode_enum(C)) {
-			case OB_MODE_WEIGHT_PAINT:
-				km = WM_keymap_find_all(C, "Weight Paint", 0, 0);
-				break;
-			case OB_MODE_VERTEX_PAINT:
-				km = WM_keymap_find_all(C, "Vertex Paint", 0, 0);
-				break;
-			case OB_MODE_TEXTURE_PAINT:
-				km = WM_keymap_find_all(C, "Image Paint", 0, 0);
-				break;
-		}
 	}
 	/* Image Editor */
 	else if (STRPREFIX(opname, "IMAGE_OT")) {

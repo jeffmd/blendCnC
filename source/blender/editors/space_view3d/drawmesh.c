@@ -240,9 +240,6 @@ static bool set_draw_settings_cached(
 	int lit = 0;
 	int has_texface = texface != NULL;
 	bool need_set_tpage = false;
-	bool texpaint = ((gtexdraw->ob->mode & OB_MODE_TEXTURE_PAINT) != 0);
-
-	Image *ima = NULL;
 
 	if (ma != NULL) {
 		if (ma->mode & MA_TRANSP) {
@@ -271,18 +268,12 @@ static bool set_draw_settings_cached(
 		if (ma->mode & MA_SHLESS) lit = 0;
 	}
 
-	if (texface && !texpaint) {
+	if (texface) {
 		textured = textured && (texface->tpage);
 
 		/* no material, render alpha if texture has depth=32 */
 		if (!ma && BKE_image_has_alpha(texface->tpage))
 			alphablend = GPU_BLEND_ALPHA;
-	}
-	else if (texpaint) {
-		if (gtexdraw->texpaint_material)
-			ima = ma && ma->texpaintslot ? ma->texpaintslot[ma->paint_active_slot].ima : NULL;
-		else
-			ima = gtexdraw->canvas;
 	}
 	else
 		textured = 0;
@@ -297,51 +288,11 @@ static bool set_draw_settings_cached(
 	/* need to re-set tpage if textured flag changed or existsment of texface changed..  */
 	need_set_tpage = textured != c_textured || has_texface != c_has_texface;
 	/* ..or if settings inside texface were changed (if texface was used) */
-	need_set_tpage |= (texpaint && c_ma != ma) || (texface && memcmp(&c_texface, texface, sizeof(c_texface)));
+	need_set_tpage |= (c_ma != ma) || (texface && memcmp(&c_texface, texface, sizeof(c_texface)));
 
 	if (need_set_tpage) {
 		if (textured) {
-			if (texpaint) {
-				c_badtex = false;
-				if (GPU_verify_image(ima, NULL, GL_TEXTURE_2D, 0, 1, 0, false)) {
-					glEnable(GL_TEXTURE_2D);
-					glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-					glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
-					glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_TEXTURE);
-					glTexEnvi(GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PRIMARY_COLOR);
-					glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
-					glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_TEXTURE);
-
-					glActiveTexture(GL_TEXTURE1);
-					glEnable(GL_TEXTURE_2D);
-					glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-					glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_INTERPOLATE);
-					glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_RGB, GL_PREVIOUS);
-					glTexEnvi(GL_TEXTURE_ENV, GL_SRC1_RGB, GL_PRIMARY_COLOR);
-					glTexEnvi(GL_TEXTURE_ENV, GL_SRC2_RGB, GL_PREVIOUS);
-					glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_RGB, GL_SRC_ALPHA);
-					glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
-					glTexEnvi(GL_TEXTURE_ENV, GL_SRC0_ALPHA, GL_PREVIOUS);
-					glBindTexture(GL_TEXTURE_2D, ima->bindcode[TEXTARGET_TEXTURE_2D]);
-					glActiveTexture(GL_TEXTURE0);
-				}
-				else {
-					glActiveTexture(GL_TEXTURE1);
-					glDisable(GL_TEXTURE_2D);
-					glBindTexture(GL_TEXTURE_2D, 0);
-					glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-					glActiveTexture(GL_TEXTURE0);
-
-					c_badtex = true;
-					GPU_clear_tpage(true);
-					glDisable(GL_TEXTURE_2D);
-					glBindTexture(GL_TEXTURE_2D, 0);
-					glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-				}
-			}
-			else {
-				c_badtex = !GPU_set_tpage(texface, !texpaint, alphablend);
-			}
+			c_badtex = !GPU_set_tpage(texface, true, alphablend);
 		}
 		else {
 			GPU_set_tpage(NULL, 0, 0);
@@ -442,31 +393,8 @@ static void draw_textured_begin(Scene *scene, View3D *v3d, RegionView3D *rv3d, O
 
 static void draw_textured_end(void)
 {
-	if (Gtexdraw.ob->mode & OB_MODE_TEXTURE_PAINT) {
-		glActiveTexture(GL_TEXTURE1);
-		glDisable(GL_TEXTURE_2D);
-		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_RGB, GL_SRC_COLOR);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		if (Gtexdraw.stencil != NULL) {
-			glActiveTexture(GL_TEXTURE2);
-			glDisable(GL_TEXTURE_2D);
-			glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_RGB, GL_SRC_COLOR);
-			glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-			glBindTexture(GL_TEXTURE_2D, 0);
-		}
-		glActiveTexture(GL_TEXTURE0);
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		/* manual reset, since we don't use tpage */
-		glBindTexture(GL_TEXTURE_2D, 0);
-		/* force switch off textures */
-		GPU_clear_tpage(true);
-	}
-	else {
-		/* switch off textures */
-		GPU_set_tpage(NULL, 0, 0);
-	}
+	/* switch off textures */
+	GPU_set_tpage(NULL, 0, 0);
 
 	glDisable(GL_CULL_FACE);
 	GPU_basic_shader_bind(GPU_SHADER_USE_COLOR);
@@ -687,16 +615,6 @@ static DMDrawOption draw_em_tf_mapped__set_draw(void *userData, int origindex, i
 	}
 }
 
-/* when face select is on, use face hidden flag */
-static DMDrawOption wpaint__setSolidDrawOptions_facemask(void *userData, int index)
-{
-	Mesh *me = (Mesh *)userData;
-	MPoly *mp = &me->mpoly[index];
-	if (mp->flag & ME_HIDE)
-		return DM_DRAW_OPTION_SKIP;
-	return DM_DRAW_OPTION_NORMAL;
-}
-
 static int compareDrawOptions(void *userData, int cur_index, int next_index)
 {
 	drawTFace_userData *data = userData;
@@ -754,30 +672,9 @@ static void draw_mesh_textured_old(Scene *scene, View3D *v3d, RegionView3D *rv3d
 		DMDrawFlag dm_draw_flag;
 		drawTFace_userData userData;
 
-		if (ob->mode & OB_MODE_TEXTURE_PAINT) {
-			dm_draw_flag = DM_DRAW_USE_TEXPAINT_UV;
-		}
-		else {
-			dm_draw_flag = DM_DRAW_USE_ACTIVE_UV;
-		}
+		dm_draw_flag = DM_DRAW_USE_ACTIVE_UV;
 
-		if (ob == OBACT) {
-			if (ob->mode & OB_MODE_WEIGHT_PAINT) {
-				dm_draw_flag |= DM_DRAW_USE_COLORS | DM_DRAW_ALWAYS_SMOOTH | DM_DRAW_SKIP_HIDDEN;
-			}
-			else if (ob->mode & OB_MODE_SCULPT) {
-				dm_draw_flag |= DM_DRAW_SKIP_HIDDEN | DM_DRAW_USE_COLORS;
-			}
-			else if ((ob->mode & OB_MODE_TEXTURE_PAINT) == 0) {
-				dm_draw_flag |= DM_DRAW_USE_COLORS;
-			}
-		}
-		else {
-			if ((ob->mode & OB_MODE_TEXTURE_PAINT) == 0) {
-				dm_draw_flag |= DM_DRAW_USE_COLORS;
-			}
-		}
-
+		dm_draw_flag |= DM_DRAW_USE_COLORS;
 
 		userData.mpoly = DM_get_poly_data_layer(dm, CD_MPOLY);
 		userData.mtexpoly = DM_get_poly_data_layer(dm, CD_MTEXPOLY);
@@ -805,7 +702,7 @@ static void draw_mesh_textured_old(Scene *scene, View3D *v3d, RegionView3D *rv3d
 				 * TODO(sergey): Find some real solution here.
 				 */
 
-				update_tface_color_layer(dm, !(ob->mode & OB_MODE_TEXTURE_PAINT));
+				update_tface_color_layer(dm, true);
 			}
 
 			dm->drawFacesTex(
@@ -818,7 +715,7 @@ static void draw_mesh_textured_old(Scene *scene, View3D *v3d, RegionView3D *rv3d
 
 	/* draw edges and selected faces over textured mesh */
 	if (!(ob == scene->obedit) && (draw_flags & DRAW_FACE_SELECT)) {
-		bool draw_select_edges = (ob->mode & OB_MODE_TEXTURE_PAINT) == 0;
+		bool draw_select_edges = true;
 		draw_mesh_face_select(rv3d, me, dm, draw_select_edges);
 	}
 
@@ -903,14 +800,9 @@ void draw_mesh_textured(Scene *scene, View3D *v3d, RegionView3D *rv3d,
 {
 	/* if not cycles, or preview-modifiers, or drawing matcaps */
 	if ((draw_flags & DRAW_MODIFIERS_PREVIEW) ||
-	    (v3d->flag2 & V3D_SHOW_SOLID_MATCAP) ||
-	    ((ob->mode & OB_MODE_TEXTURE_PAINT) && ELEM(v3d->drawtype, OB_TEXTURE, OB_SOLID)))
+	    (v3d->flag2 & V3D_SHOW_SOLID_MATCAP))
 	{
 		draw_mesh_textured_old(scene, v3d, rv3d, ob, dm, draw_flags);
-		return;
-	}
-	else if (ob->mode & (OB_MODE_VERTEX_PAINT | OB_MODE_WEIGHT_PAINT)) {
-		draw_mesh_paint(v3d, rv3d, ob, dm, draw_flags);
 		return;
 	}
 
@@ -920,8 +812,7 @@ void draw_mesh_textured(Scene *scene, View3D *v3d, RegionView3D *rv3d,
 
 	Mesh *me = ob->data;
 
-	bool shadeless = ((v3d->flag2 & V3D_SHADELESS_TEX) &&
-	    ((v3d->drawtype == OB_TEXTURE) || (ob->mode & OB_MODE_TEXTURE_PAINT)));
+	bool shadeless = ((v3d->flag2 & V3D_SHADELESS_TEX) && (v3d->drawtype == OB_TEXTURE));
 	bool two_sided_lighting = (me->flag & ME_TWOSIDED) != 0;
 
 	TexMatCallback data = {scene, ob, me, dm, shadeless, two_sided_lighting};
@@ -971,7 +862,7 @@ void draw_mesh_textured(Scene *scene, View3D *v3d, RegionView3D *rv3d,
 
 	/* faceselect mode drawing over textured mesh */
 	if (!(ob == scene->obedit) && (draw_flags & DRAW_FACE_SELECT)) {
-		bool draw_select_edges = (ob->mode & OB_MODE_TEXTURE_PAINT) == 0;
+		bool draw_select_edges = true;
 		draw_mesh_face_select(rv3d, ob->data, dm, draw_select_edges);
 	}
 }
@@ -1088,29 +979,17 @@ void draw_mesh_paint_weight_edges(RegionView3D *rv3d, DerivedMesh *dm,
 void draw_mesh_paint(View3D *v3d, RegionView3D *rv3d,
                      Object *ob, DerivedMesh *dm, const int draw_flags)
 {
-	DMSetDrawOptions facemask = NULL;
 	Mesh *me = ob->data;
 	const bool use_light = (v3d->drawtype >= OB_SOLID);
 
-	/* hide faces in face select mode */
-	if (me->editflag & (ME_EDIT_PAINT_VERT_SEL | ME_EDIT_PAINT_FACE_SEL))
-		facemask = wpaint__setSolidDrawOptions_facemask;
-
-	if (ob->mode & OB_MODE_WEIGHT_PAINT) {
-		draw_mesh_paint_weight_faces(dm, use_light, facemask, me);
-	}
-	else if (ob->mode & OB_MODE_VERTEX_PAINT) {
-		draw_mesh_paint_vcolor_faces(dm, use_light, facemask, me, me);
-	}
-
 	/* draw face selection on top */
 	if (draw_flags & DRAW_FACE_SELECT) {
-		bool draw_select_edges = (ob->mode & OB_MODE_TEXTURE_PAINT) == 0;
+		bool draw_select_edges = true;
 		draw_mesh_face_select(rv3d, me, dm, draw_select_edges);
 	}
 	else if ((use_light == false) || (ob->dtx & OB_DRAWWIRE)) {
-		const bool use_depth = (v3d->flag & V3D_ZBUF_SELECT) || !(ob->mode & OB_MODE_WEIGHT_PAINT);
-		const bool use_alpha = (ob->mode & OB_MODE_VERTEX_PAINT) == 0;
+		const bool use_depth = (v3d->flag & V3D_ZBUF_SELECT);
+		const bool use_alpha = true;
 
 		if (use_alpha == false) {
 			set_inverted_drawing(1);

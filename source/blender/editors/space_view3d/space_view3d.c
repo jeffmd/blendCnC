@@ -1253,7 +1253,6 @@ void ED_spacetype_view3d(void)
 	/* regions: main window */
 	art = MEM_callocN(sizeof(ARegionType), "spacetype view3d main region");
 	art->regionid = RGN_TYPE_WINDOW;
-	art->keymapflag = ED_KEYMAP_GPENCIL;
 	art->draw = view3d_main_region_draw;
 	art->init = view3d_main_region_init;
 	art->exit = view3d_main_region_exit;
@@ -1310,7 +1309,7 @@ void ED_spacetype_view3d(void)
 	art = MEM_callocN(sizeof(ARegionType), "spacetype view3d header region");
 	art->regionid = RGN_TYPE_HEADER;
 	art->prefsizey = HEADERY;
-	art->keymapflag = ED_KEYMAP_UI | ED_KEYMAP_VIEW2D | ED_KEYMAP_FRAMES | ED_KEYMAP_HEADER;
+	art->keymapflag = ED_KEYMAP_UI | ED_KEYMAP_VIEW2D | ED_KEYMAP_HEADER;
 	art->listener = view3d_header_region_listener;
 	art->init = view3d_header_region_init;
 	art->draw = view3d_header_region_draw;

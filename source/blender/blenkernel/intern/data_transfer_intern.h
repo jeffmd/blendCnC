@@ -29,6 +29,7 @@
 struct CustomData;
 struct CustomDataTransferLayerMap;
 struct ListBase;
+struct Object;
 
 float data_transfer_interp_float_do(
         const int mix_mode, const float val_dst, const float val_src, const float mix_factor);

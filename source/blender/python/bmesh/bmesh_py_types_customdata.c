@@ -90,9 +90,6 @@ PyDoc_STRVAR(bpy_bmlayeraccess_collection__string_doc,
 PyDoc_STRVAR(bpy_bmlayeraccess_collection__deform_doc,
 "Vertex deform weight :class:`BMDeformVert` (TODO).\n\ntype: :class:`BMLayerCollection`" // TYPE DOESN'T EXIST YET
 );
-PyDoc_STRVAR(bpy_bmlayeraccess_collection__shape_doc,
-"Vertex shapekey absolute location (as a 3D Vector).\n\n:type: :class:`BMLayerCollection`"
-);
 PyDoc_STRVAR(bpy_bmlayeraccess_collection__bevel_weight_doc,
 "Bevel weight float in [0 - 1].\n\n:type: :class:`BMLayerCollection`"
 );
@@ -108,20 +105,6 @@ PyDoc_STRVAR(bpy_bmlayeraccess_collection__uv_doc,
 PyDoc_STRVAR(bpy_bmlayeraccess_collection__color_doc,
 "Accessor for vertex color layer.\n\ntype: :class:`BMLayerCollection`"
 );
-PyDoc_STRVAR(bpy_bmlayeraccess_collection__skin_doc,
-"Accessor for skin layer.\n\ntype: :class:`BMLayerCollection`"
-);
-PyDoc_STRVAR(bpy_bmlayeraccess_collection__paint_mask_doc,
-"Accessor for paint mask layer.\n\ntype: :class:`BMLayerCollection`"
-);
-#ifdef WITH_FREESTYLE
-PyDoc_STRVAR(bpy_bmlayeraccess_collection__freestyle_edge_doc,
-"Accessor for Freestyle edge layer.\n\ntype: :class:`BMLayerCollection`"
-);
-PyDoc_STRVAR(bpy_bmlayeraccess_collection__freestyle_face_doc,
-"Accessor for Freestyle face layer.\n\ntype: :class:`BMLayerCollection`"
-);
-#endif
 
 static PyObject *bpy_bmlayeraccess_collection_get(BPy_BMLayerAccess *self, void *flag)
 {
@@ -190,10 +173,7 @@ static PyGetSetDef bpy_bmlayeraccess_vert_getseters[] = {
 	{(char *)"int",    (getter)bpy_bmlayeraccess_collection_get, (setter)NULL, (char *)bpy_bmlayeraccess_collection__int_doc, (void *)CD_PROP_INT},
 	{(char *)"string", (getter)bpy_bmlayeraccess_collection_get, (setter)NULL, (char *)bpy_bmlayeraccess_collection__string_doc, (void *)CD_PROP_STR},
 
-	{(char *)"shape",        (getter)bpy_bmlayeraccess_collection_get, (setter)NULL, (char *)bpy_bmlayeraccess_collection__shape_doc, (void *)CD_SHAPEKEY},
 	{(char *)"bevel_weight", (getter)bpy_bmlayeraccess_collection_get, (setter)NULL, (char *)bpy_bmlayeraccess_collection__bevel_weight_doc, (void *)CD_BWEIGHT},
-	{(char *)"skin",         (getter)bpy_bmlayeraccess_collection_get, (setter)NULL, (char *)bpy_bmlayeraccess_collection__skin_doc, (void *)CD_MVERT_SKIN},
-	{(char *)"paint_mask",   (getter)bpy_bmlayeraccess_collection_get, (setter)NULL, (char *)bpy_bmlayeraccess_collection__paint_mask_doc, (void *)CD_PAINT_MASK},
 
 	{NULL, NULL, NULL, NULL, NULL} /* Sentinel */
 };
@@ -977,11 +957,6 @@ PyObject *BPy_BMLayerItem_GetItem(BPy_BMElem *py_ele, BPy_BMLayerItem *py_layer)
 			break;
 		}
 		case CD_PROP_FLT:
-		case CD_PAINT_MASK:
-		{
-			ret = PyFloat_FromDouble(*(float *)value);
-			break;
-		}
 		case CD_PROP_INT:
 		{
 			ret = PyLong_FromLong(*(int *)value);
@@ -1008,11 +983,6 @@ PyObject *BPy_BMLayerItem_GetItem(BPy_BMElem *py_ele, BPy_BMLayerItem *py_layer)
 			ret = BPy_BMLoopColor_CreatePyObject(value);
 			break;
 		}
-		case CD_SHAPEKEY:
-		{
-			ret = Vector_CreatePyObject_wrap((float *)value, 3, NULL);
-			break;
-		}
 		case CD_BWEIGHT:
 		{
 			ret = PyFloat_FromDouble(*(float *)value);
@@ -1021,11 +991,6 @@ PyObject *BPy_BMLayerItem_GetItem(BPy_BMElem *py_ele, BPy_BMLayerItem *py_layer)
 		case CD_CREASE:
 		{
 			ret = PyFloat_FromDouble(*(float *)value);
-			break;
-		}
-		case CD_MVERT_SKIN:
-		{
-			ret = BPy_BMVertSkin_CreatePyObject(value);
 			break;
 		}
 		default:
@@ -1055,18 +1020,6 @@ int BPy_BMLayerItem_SetItem(BPy_BMElem *py_ele, BPy_BMLayerItem *py_layer, PyObj
 			break;
 		}
 		case CD_PROP_FLT:
-		case CD_PAINT_MASK:
-		{
-			float tmp_val = PyFloat_AsDouble(py_value);
-			if (UNLIKELY(tmp_val == -1 && PyErr_Occurred())) {
-				PyErr_Format(PyExc_TypeError, "expected a float, not a %.200s", Py_TYPE(py_value)->tp_name);
-				ret = -1;
-			}
-			else {
-				*(float *)value = tmp_val;
-			}
-			break;
-		}
 		case CD_PROP_INT:
 		{
 			int tmp_val = PyC_Long_AsI32(py_value);
@@ -1111,17 +1064,6 @@ int BPy_BMLayerItem_SetItem(BPy_BMElem *py_ele, BPy_BMLayerItem *py_layer, PyObj
 			ret = BPy_BMLoopColor_AssignPyObject(value, py_value);
 			break;
 		}
-		case CD_SHAPEKEY:
-		{
-			float tmp_val[3];
-			if (UNLIKELY(mathutils_array_parse(tmp_val, 3, 3, py_value, "BMVert[shape] = value") == -1)) {
-				ret = -1;
-			}
-			else {
-				copy_v3_v3((float *)value, tmp_val);
-			}
-			break;
-		}
 		case CD_BWEIGHT:
 		{
 			float tmp_val = PyFloat_AsDouble(py_value);
@@ -1144,11 +1086,6 @@ int BPy_BMLayerItem_SetItem(BPy_BMElem *py_ele, BPy_BMLayerItem *py_layer, PyObj
 			else {
 				*(float *)value = clamp_f(tmp_val, 0.0f, 1.0f);
 			}
-			break;
-		}
-		case CD_MVERT_SKIN:
-		{
-			ret = BPy_BMVertSkin_AssignPyObject(value, py_value);
 			break;
 		}
 		default:

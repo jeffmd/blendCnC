@@ -293,7 +293,7 @@ typedef struct wmNotifier {
 #define ND_DISPLAY			(51<<16)
 
 	/* NC_GEOM Geometry */
-	/* Mesh, Curve, MetaBall, Armature, .. */
+	/* Mesh, Curve, .. */
 #define ND_SELECT			(90<<16)
 #define ND_DATA				(91<<16)
 #define ND_VERTEX_GROUP		(92<<16)

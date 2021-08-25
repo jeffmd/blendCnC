@@ -287,110 +287,11 @@ typedef struct MDisps {
 	unsigned int *hidden;
 } MDisps;
 
-/** Multires structs kept for compatibility with old files **/
-typedef struct MultiresCol {
-	float a, r, g, b;
-} MultiresCol;
-
-typedef struct MultiresColFace {
-	/* vertex colors */
-	MultiresCol col[4];
-} MultiresColFace;
-
-typedef struct MultiresFace {
-	unsigned int v[4];
-	unsigned int mid;
-	char flag, mat_nr, pad[2];
-} MultiresFace;
-
-typedef struct MultiresEdge {
-	unsigned int v[2];
-	unsigned int mid;
-} MultiresEdge;
-
-typedef struct MultiresLevel {
-	struct MultiresLevel *next, *prev;
-
-	MultiresFace *faces;
-	MultiresColFace *colfaces;
-	MultiresEdge *edges;
-
-	unsigned int totvert, totface, totedge, pad;
-
-	/* Kept for compatibility with even older files */
-	MVert *verts;
-} MultiresLevel;
-
-typedef struct Multires {
-	ListBase levels;
-	MVert *verts;
-
-	unsigned char level_count, current, newlvl, edgelvl, pinlvl, renderlvl;
-	unsigned char use_col, flag;
-
-	/* Special level 1 data that cannot be modified from other levels */
-	CustomData vdata;
-	CustomData fdata;
-	short *edge_flags;
-	char *edge_creases;
-} Multires;
-
-/** End Multires **/
 
 typedef struct MRecast {
 	int i;
 } MRecast;
 
-typedef struct GridPaintMask {
-	/* The data array contains gridsize*gridsize elements */
-	float *data;
-
-	/* The maximum multires level associated with this grid */
-	unsigned int level;
-
-	int pad;
-} GridPaintMask;
-
-typedef enum eMVertSkinFlag {
-	/** Marks a vertex as the edge-graph root, used for calculating rotations for all connected
-	 * edges (recursively). Also used to choose a root when generating an armature.
-	 */
-	MVERT_SKIN_ROOT = 1,
-
-	/** Marks a branch vertex (vertex with more than two connected edges), so that it's neighbors
-	 * are directly hulled together, rather than the default of generating intermediate frames.
-	 */
-	MVERT_SKIN_LOOSE = 2,
-} eMVertSkinFlag;
-
-typedef struct MVertSkin {
-	/* Radii of the skin, define how big the generated frames are.
-	 * Currently only the first two elements are used. */
-	float radius[3];
-
-	/* eMVertSkinFlag */
-	int flag;
-} MVertSkin;
-
-typedef struct FreestyleEdge {
-	char flag;
-	char pad[3];
-} FreestyleEdge;
-
-/* FreestyleEdge->flag */
-enum {
-	FREESTYLE_EDGE_MARK = 1,
-};
-
-typedef struct FreestyleFace {
-	char flag;
-	char pad[3];
-} FreestyleFace;
-
-/* FreestyleFace->flag */
-enum {
-	FREESTYLE_FACE_MARK = 1,
-};
 
 /* mvert->flag */
 enum {

@@ -144,7 +144,7 @@ static SpaceLink *image_new(const bContext *UNUSED(C))
 	simage->spacetype = SPACE_IMAGE;
 	simage->zoom = 1.0f;
 	simage->lock = true;
-	simage->flag = SI_SHOW_GPENCIL | SI_USE_ALPHA;
+	simage->flag = SI_USE_ALPHA;
 
 	simage->iuser.ok = true;
 	simage->iuser.fie_ima = 2;
@@ -303,8 +303,6 @@ static void image_keymap(struct wmKeyConfig *keyconf)
 	RNA_float_set(WM_keymap_add_item(keymap, "IMAGE_OT_view_zoom_ratio", PAD2, KM_PRESS, 0, 0)->ptr, "ratio", 0.5f);
 	RNA_float_set(WM_keymap_add_item(keymap, "IMAGE_OT_view_zoom_ratio", PAD4, KM_PRESS, 0, 0)->ptr, "ratio", 0.25f);
 	RNA_float_set(WM_keymap_add_item(keymap, "IMAGE_OT_view_zoom_ratio", PAD8, KM_PRESS, 0, 0)->ptr, "ratio", 0.125f);
-
-	WM_keymap_add_item(keymap, "IMAGE_OT_change_frame", LEFTMOUSE, KM_PRESS, 0, 0);
 
 	WM_keymap_add_item(keymap, "IMAGE_OT_sample", ACTIONMOUSE, KM_PRESS, 0, 0);
 	RNA_enum_set(WM_keymap_add_item(keymap, "IMAGE_OT_curves_point_set", ACTIONMOUSE, KM_PRESS, KM_CTRL, 0)->ptr, "point", 0);
@@ -832,7 +830,6 @@ void ED_spacetype_image(void)
 	/* regions: main window */
 	art = MEM_callocN(sizeof(ARegionType), "spacetype image region");
 	art->regionid = RGN_TYPE_WINDOW;
-	art->keymapflag = ED_KEYMAP_FRAMES;
 	art->init = image_main_region_init;
 	art->draw = image_main_region_draw;
 	art->listener = image_main_region_listener;
@@ -843,7 +840,7 @@ void ED_spacetype_image(void)
 	art = MEM_callocN(sizeof(ARegionType), "spacetype image region");
 	art->regionid = RGN_TYPE_UI;
 	art->prefsizex = 220; // XXX
-	art->keymapflag = ED_KEYMAP_UI | ED_KEYMAP_FRAMES;
+	art->keymapflag = ED_KEYMAP_UI;
 	art->listener = image_buttons_region_listener;
 	art->init = image_buttons_region_init;
 	art->draw = image_buttons_region_draw;
@@ -855,7 +852,7 @@ void ED_spacetype_image(void)
 	art = MEM_callocN(sizeof(ARegionType), "spacetype image region");
 	art->regionid = RGN_TYPE_TOOLS;
 	art->prefsizex = 220; // XXX
-	art->keymapflag = ED_KEYMAP_UI | ED_KEYMAP_FRAMES;
+	art->keymapflag = ED_KEYMAP_UI;
 	art->listener = image_tools_region_listener;
 	art->init = image_tools_region_init;
 	art->draw = image_tools_region_draw;
@@ -865,7 +862,7 @@ void ED_spacetype_image(void)
 	art = MEM_callocN(sizeof(ARegionType), "spacetype image region");
 	art->regionid = RGN_TYPE_HEADER;
 	art->prefsizey = HEADERY;
-	art->keymapflag = ED_KEYMAP_UI | ED_KEYMAP_VIEW2D | ED_KEYMAP_FRAMES | ED_KEYMAP_HEADER;
+	art->keymapflag = ED_KEYMAP_UI | ED_KEYMAP_VIEW2D | ED_KEYMAP_HEADER;
 	art->listener = image_header_region_listener;
 	art->init = image_header_region_init;
 	art->draw = image_header_region_draw;

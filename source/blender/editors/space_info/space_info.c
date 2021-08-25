@@ -316,7 +316,7 @@ void ED_spacetype_info(void)
 	/* regions: main window */
 	art = MEM_callocN(sizeof(ARegionType), "spacetype info region");
 	art->regionid = RGN_TYPE_WINDOW;
-	art->keymapflag = ED_KEYMAP_UI | ED_KEYMAP_VIEW2D | ED_KEYMAP_FRAMES;
+	art->keymapflag = ED_KEYMAP_UI | ED_KEYMAP_VIEW2D;
 
 	art->init = info_main_region_init;
 	art->draw = info_main_region_draw;
@@ -329,7 +329,7 @@ void ED_spacetype_info(void)
 	art->regionid = RGN_TYPE_HEADER;
 	art->prefsizey = HEADERY;
 
-	art->keymapflag = ED_KEYMAP_UI | ED_KEYMAP_VIEW2D | ED_KEYMAP_FRAMES | ED_KEYMAP_HEADER;
+	art->keymapflag = ED_KEYMAP_UI | ED_KEYMAP_VIEW2D | ED_KEYMAP_HEADER;
 	art->listener = info_header_listener;
 	art->init = info_header_region_init;
 	art->draw = info_header_region_draw;

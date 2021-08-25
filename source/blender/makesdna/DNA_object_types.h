@@ -429,7 +429,6 @@ enum {
 #define BA_SELECT       1
 
 
-#define OB_FROMDUPLI        (1 << 9)
 #define OB_DONE             (1 << 10)  /* unknown state, clear before use */
 /* #define OB_RADIO            (1 << 11) */  /* deprecated */
 #define OB_FROMGROUP        (1 << 12)
@@ -445,42 +444,6 @@ enum {
 	OB_RECALC_ALL       = OB_RECALC_OB | OB_RECALC_DATA | OB_RECALC_TIME,
 };
 
-/* controller state */
-#define OB_MAX_STATES       30
-
-/* collision masks */
-#define OB_MAX_COL_MASKS    16
-
-/* ob->gameflag */
-enum {
-	OB_DYNAMIC               = 1 << 0,
-	OB_CHILD                 = 1 << 1,
-	OB_ACTOR                 = 1 << 2,
-	OB_INERTIA_LOCK_X        = 1 << 3,
-	OB_INERTIA_LOCK_Y        = 1 << 4,
-	OB_INERTIA_LOCK_Z        = 1 << 5,
-	OB_DO_FH                 = 1 << 6,
-	OB_ROT_FH                = 1 << 7,
-	OB_ANISOTROPIC_FRICTION  = 1 << 8,
-	OB_GHOST                 = 1 << 9,
-	OB_RIGID_BODY            = 1 << 10,
-	OB_BOUNDS                = 1 << 11,
-
-	OB_COLLISION_RESPONSE    = 1 << 12,
-	OB_SECTOR                = 1 << 13,
-	OB_PROP                  = 1 << 14,
-	OB_MAINACTOR             = 1 << 15,
-
-	OB_COLLISION             = 1 << 16,
-	OB_SOFT_BODY             = 1 << 17,
-	OB_OCCLUDER              = 1 << 18,
-	OB_SENSOR                = 1 << 19,
-	OB_NAVMESH               = 1 << 20,
-	OB_HASOBSTACLE           = 1 << 21,
-	OB_CHARACTER             = 1 << 22,
-
-	OB_RECORD_ANIMATION      = 1 << 23,
-};
 
 /* ob->gameflag2 */
 enum {
@@ -501,9 +464,6 @@ enum {
 	OB_BODY_TYPE_STATIC         = 1,
 	OB_BODY_TYPE_DYNAMIC        = 2,
 	OB_BODY_TYPE_RIGID          = 3,
-	OB_BODY_TYPE_SOFT           = 4,
-	OB_BODY_TYPE_OCCLUDER       = 5,
-	OB_BODY_TYPE_SENSOR         = 6,
 	OB_BODY_TYPE_NAVMESH        = 7,
 	OB_BODY_TYPE_CHARACTER      = 8,
 };
@@ -512,27 +472,6 @@ enum {
 enum {
 	OB_DEPS_EXTRA_OB_RECALC     = 1 << 0,
 	OB_DEPS_EXTRA_DATA_RECALC   = 1 << 1,
-};
-
-/* ob->scavisflag */
-enum {
-	OB_VIS_SENS     = 1 << 0,
-	OB_VIS_CONT     = 1 << 1,
-	OB_VIS_ACT      = 1 << 2,
-};
-
-/* ob->scaflag */
-enum {
-	OB_SHOWSENS     = 1 << 6,
-	OB_SHOWACT      = 1 << 7,
-	OB_ADDSENS      = 1 << 8,
-	OB_ADDCONT      = 1 << 9,
-	OB_ADDACT       = 1 << 10,
-	OB_SHOWCONT     = 1 << 11,
-	OB_ALLSTATE     = 1 << 12,
-	OB_INITSTBIT    = 1 << 13,
-	OB_DEBUGSTATE   = 1 << 14,
-	OB_SHOWSTATE    = 1 << 15,
 };
 
 /* ob->restrictflag */

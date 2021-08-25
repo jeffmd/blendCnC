@@ -35,7 +35,6 @@
 #include "BLI_fileops_types.h"
 
 #include "DNA_curve_types.h"
-#include "DNA_dynamicpaint_types.h"
 #include "DNA_object_types.h"
 #include "DNA_screen_types.h"
 #include "DNA_scene_types.h"
@@ -1019,7 +1018,7 @@ int UI_rnaptr_icon_get(bContext *C, PointerRNA *ptr, int rnaicon, const bool big
 	if (!ptr->data)
 		return rnaicon;
 
-	/* try ID, material, texture or dynapaint slot */
+	/* try ID, material, texture */
 	if (RNA_struct_is_ID(ptr->type)) {
 		id = ptr->id.data;
 	}

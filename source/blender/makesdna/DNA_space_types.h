@@ -249,7 +249,6 @@ typedef enum eSpaceOutliner_Mode {
 	SO_LIBRARIES = 7,
 	/* SO_VERSE_SESSION = 8, */  /* deprecated! */
 	/* SO_VERSE_MS = 9, */       /* deprecated! */
-	SO_SEQUENCE = 10,
 	SO_DATABLOCKS = 11,
 	SO_USERDEF = 12,
 	/* SO_KEYMAP = 13, */        /* deprecated! */
@@ -460,20 +459,16 @@ typedef enum eFileSel_File_Types {
 	FILE_TYPE_BLENDER           = (1 << 2),
 	FILE_TYPE_BLENDER_BACKUP    = (1 << 3),
 	FILE_TYPE_IMAGE             = (1 << 4),
-	FILE_TYPE_MOVIE             = (1 << 5),
 	FILE_TYPE_PYSCRIPT          = (1 << 6),
 	FILE_TYPE_FTFONT            = (1 << 7),
-	FILE_TYPE_SOUND             = (1 << 8),
 	FILE_TYPE_TEXT              = (1 << 9),
 	/* 1 << 10 was FILE_TYPE_MOVIE_ICON, got rid of this so free slot for future type... */
 	/** represents folders for filtering */
 	FILE_TYPE_FOLDER            = (1 << 11),
 	FILE_TYPE_BTX               = (1 << 12),
-	FILE_TYPE_COLLADA           = (1 << 13),
 	/** from filter_glob operator property */
 	FILE_TYPE_OPERATOR          = (1 << 14),
 	FILE_TYPE_APPLICATIONBUNDLE = (1 << 15),
-	FILE_TYPE_ALEMBIC           = (1 << 16),
 
 	/** An FS directory (i.e. S_ISDIR on its path is true). */
 	FILE_TYPE_DIR               = (1 << 30),
@@ -709,7 +704,6 @@ typedef enum eSpaceImage_Flag {
 	SI_DRAW_TILE          = (1 << 19),
 	SI_SMOOTH_UV          = (1 << 20),
 	SI_DRAW_STRETCH       = (1 << 21),
-	SI_SHOW_GPENCIL       = (1 << 22),
 	SI_DRAW_OTHER         = (1 << 23),
 
 	SI_COLOR_CORRECTION   = (1 << 24),

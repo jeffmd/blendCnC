@@ -1057,8 +1057,6 @@ static const EnumPropertyItem *object_mode_set_itemsf(
 	if (ob) {
 		while (input->identifier) {
 			if ((input->value == OB_MODE_EDIT && OB_TYPE_SUPPORT_EDITMODE(ob->type)) ||
-			    (ELEM(input->value, OB_MODE_SCULPT, OB_MODE_VERTEX_PAINT,
-		           OB_MODE_WEIGHT_PAINT, OB_MODE_TEXTURE_PAINT) && (ob->type == OB_MESH)) ||
 			    (input->value == OB_MODE_OBJECT))
 			{
 				RNA_enum_item_add(&item, &totitem, input);

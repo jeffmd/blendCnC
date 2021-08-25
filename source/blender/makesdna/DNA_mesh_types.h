@@ -162,7 +162,6 @@ enum {
 	ME_SUBSURF                 = 1 << 7,
 	ME_OPT_EDGES               = 1 << 8,
 	ME_DS_EXPAND               = 1 << 9,
-	ME_SCULPT_DYNAMIC_TOPOLOGY = 1 << 10,
 };
 
 /* me->cd_flag */
@@ -194,9 +193,6 @@ enum {
 
 /* debug only option */
 	ME_DRAWEXTRA_INDICES   = 1 << 14,
-
-	ME_DRAW_FREESTYLE_EDGE = 1 << 15,
-	ME_DRAW_FREESTYLE_FACE = 1 << 16,
 
 /* draw stats */
 	ME_DRAW_STATVIS        = 1 << 17,

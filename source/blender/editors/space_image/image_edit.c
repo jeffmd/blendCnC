@@ -282,7 +282,7 @@ void ED_space_image_scopes_update(const struct bContext *C, struct SpaceImage *s
 	/* scope update can be expensive, don't update during paint modes */
 	if (sima->mode == SI_MODE_PAINT)
 		return;
-	if (ob && ((ob->mode & (OB_MODE_TEXTURE_PAINT | OB_MODE_EDIT)) != 0))
+	if (ob && ((ob->mode & (OB_MODE_EDIT)) != 0))
 		return;
 
 	/* We also don't update scopes of render result during render. */

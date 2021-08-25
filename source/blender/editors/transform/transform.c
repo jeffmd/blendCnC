@@ -187,11 +187,6 @@ void setTransformViewAspect(TransInfo *t, float r_aspect[3])
 {
 	copy_v3_fl(r_aspect, 1.0f);
 
-	if (t->spacetype == SPACE_IMAGE) {
-		SpaceImage *sima = t->sa->spacedata.first;
-
-		ED_space_image_get_uv_aspect(sima, &r_aspect[0], &r_aspect[1]);
-	}
 }
 
 static void convertViewVec2D(View2D *v2d, float r_vec[3], int dx, int dy)

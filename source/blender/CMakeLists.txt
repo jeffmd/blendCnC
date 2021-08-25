@@ -32,7 +32,6 @@ set(SRC_DNA_INC
 	${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_customdata_types.h
 	${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_defs.h
 	${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_documentation.h
-	${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_dynamicpaint_types.h
 	${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_fileglobal_types.h
 	${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_genfile.h
 	${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_gpu_types.h

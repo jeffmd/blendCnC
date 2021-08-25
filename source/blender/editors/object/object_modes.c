@@ -38,14 +38,6 @@ static const char *object_mode_op_string(eObjectMode mode)
 {
 	if (mode & OB_MODE_EDIT)
 		return "OBJECT_OT_editmode_toggle";
-	if (mode == OB_MODE_SCULPT)
-		return "SCULPT_OT_sculptmode_toggle";
-	if (mode == OB_MODE_VERTEX_PAINT)
-		return "PAINT_OT_vertex_paint_toggle";
-	if (mode == OB_MODE_WEIGHT_PAINT)
-		return "PAINT_OT_weight_paint_toggle";
-	if (mode == OB_MODE_TEXTURE_PAINT)
-		return "PAINT_OT_texture_paint_toggle";
 	return NULL;
 }
 
@@ -61,8 +53,7 @@ bool ED_object_mode_compat_test(const Object *ob, eObjectMode mode)
 
 		switch (ob->type) {
 			case OB_MESH:
-				if (mode & (OB_MODE_EDIT | OB_MODE_SCULPT | OB_MODE_VERTEX_PAINT | OB_MODE_WEIGHT_PAINT |
-				            OB_MODE_TEXTURE_PAINT))
+				if (mode & (OB_MODE_EDIT ))
 				{
 					return true;
 				}
@@ -74,7 +65,7 @@ bool ED_object_mode_compat_test(const Object *ob, eObjectMode mode)
 					return true;
 				break;
 			case OB_LATTICE:
-				if (mode & (OB_MODE_EDIT | OB_MODE_WEIGHT_PAINT))
+				if (mode & (OB_MODE_EDIT))
 					return true;
 				break;
 		}

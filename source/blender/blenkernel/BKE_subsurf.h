@@ -75,20 +75,8 @@ void subsurf_copy_grid_hidden(struct DerivedMesh *dm,
                               struct MVert *mvert,
                               const struct MDisps *mdisps);
 
-void subsurf_copy_grid_paint_mask(struct DerivedMesh *dm,
-                                  const struct MPoly *mpoly, float *paint_mask,
-                                  const struct GridPaintMask *grid_paint_mask);
-
 bool subsurf_has_edges(struct DerivedMesh *dm);
 bool subsurf_has_faces(struct DerivedMesh *dm);
-
-typedef enum MultiresModifiedFlags {
-	/* indicates the grids have been sculpted on, so MDisps
-	 * have to be updated */
-	MULTIRES_COORDS_MODIFIED = 1,
-	/* indicates elements have been hidden or unhidden */
-	MULTIRES_HIDDEN_MODIFIED = 2,
-} MultiresModifiedFlags;
 
 /**************************** Internal *****************************/
 
@@ -121,17 +109,6 @@ typedef struct CCGDerivedMesh {
 	unsigned int **gridHidden;
 	/* Elements in arrays above. */
 	unsigned int numGrid;
-
-	struct {
-		struct MultiresModifierData *mmd;
-		int local_mmd;
-
-		int lvl, totlvl;
-		float (*orco)[3];
-
-		struct Object *ob;
-		MultiresModifiedFlags modified_flags;
-	} multires;
 
 	struct EdgeHash *ehash;
 

@@ -1033,24 +1033,6 @@ static void write_mdisps(WriteData *wd, int count, MDisps *mdlist, int external)
 	}
 }
 
-static void write_grid_paint_mask(WriteData *wd, int count, GridPaintMask *grid_paint_mask)
-{
-	if (grid_paint_mask) {
-		int i;
-
-		writestruct(wd, DATA, GridPaintMask, count, grid_paint_mask);
-		for (i = 0; i < count; ++i) {
-			GridPaintMask *gpm = &grid_paint_mask[i];
-			if (gpm->data) {
-				const int gridsize = BKE_ccg_gridsize(gpm->level);
-				writedata(wd, DATA,
-				          sizeof(*gpm->data) * gridsize * gridsize,
-				          gpm->data);
-			}
-		}
-	}
-}
-
 static void write_customdata(
         WriteData *wd, ID *id, int count, CustomData *data, CustomDataLayer *layers,
         int partial_type, int partial_count)
@@ -1079,9 +1061,6 @@ static void write_customdata(
 		else if (layer->type == CD_PAINT_MASK) {
 			const float *layer_data = layer->data;
 			writedata(wd, DATA, sizeof(*layer_data) * count, layer_data);
-		}
-		else if (layer->type == CD_GRID_PAINT_MASK) {
-			write_grid_paint_mask(wd, count, layer->data);
 		}
 		else {
 			CustomData_file_write_info(layer->type, &structname, &structnum);

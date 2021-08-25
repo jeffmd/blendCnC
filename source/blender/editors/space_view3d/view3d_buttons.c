@@ -130,16 +130,6 @@ static void apply_raw_diff_v3(float val[3], const int tot, const float ve_median
 	}
 }
 
-static void apply_scale_factor(float *val, const int tot, const float ve_median, const float median, const float sca)
-{
-	if (tot == 1 || ve_median == median) {
-		*val = ve_median;
-	}
-	else {
-		*val *= sca;
-	}
-}
-
 static void apply_scale_factor_clamp(float *val, const int tot, const float ve_median, const float sca)
 {
 	if (tot == 1) {
@@ -204,11 +194,8 @@ static void v3d_editvertex_buts(uiLayout *layout, View3D *v3d, Object *ob, float
 		BMIter iter;
 
 		const int cd_vert_bweight_offset = CustomData_get_offset(&bm->vdata, CD_BWEIGHT);
-		const int cd_vert_skin_offset    = CustomData_get_offset(&bm->vdata, CD_MVERT_SKIN);
 		const int cd_edge_bweight_offset = CustomData_get_offset(&bm->edata, CD_BWEIGHT);
 		const int cd_edge_crease_offset  = CustomData_get_offset(&bm->edata, CD_CREASE);
-
-		has_skinradius = (cd_vert_skin_offset != -1);
 
 		if (bm->totvertsel) {
 			BM_ITER_MESH (eve, &iter, bm, BM_VERTS_OF_MESH) {
@@ -220,10 +207,6 @@ static void v3d_editvertex_buts(uiLayout *layout, View3D *v3d, Object *ob, float
 						median[M_BV_WEIGHT] += BM_ELEM_CD_GET_FLOAT(eve, cd_vert_bweight_offset);
 					}
 
-					if (has_skinradius) {
-						MVertSkin *vs = BM_ELEM_CD_GET_VOID_P(eve, cd_vert_skin_offset);
-						add_v2_v2(&median[M_SKIN_X], vs->radius); /* Third val not used currently. */
-					}
 				}
 			}
 		}
@@ -532,13 +515,10 @@ static void v3d_editvertex_buts(uiLayout *layout, View3D *v3d, Object *ob, float
 			BMEdge *eed;
 
 			int cd_vert_bweight_offset = -1;
-			int cd_vert_skin_offset = -1;
 			int cd_edge_bweight_offset = -1;
 			int cd_edge_crease_offset = -1;
 
 			float scale_bv_weight = 1.0f;
-			float scale_skin_x = 1.0f;
-			float scale_skin_y = 1.0f;
 			float scale_be_weight = 1.0f;
 			float scale_crease = 1.0f;
 
@@ -553,25 +533,6 @@ static void v3d_editvertex_buts(uiLayout *layout, View3D *v3d, Object *ob, float
 					scale_bv_weight = compute_scale_factor(ve_median[M_BV_WEIGHT], median[M_BV_WEIGHT]);
 				}
 
-				if (median[M_SKIN_X]) {
-					cd_vert_skin_offset = CustomData_get_offset(&bm->vdata, CD_MVERT_SKIN);
-					BLI_assert(cd_vert_skin_offset != -1);
-
-					if (ve_median[M_SKIN_X] != median[M_SKIN_X]) {
-						scale_skin_x = ve_median[M_SKIN_X] / (ve_median[M_SKIN_X] - median[M_SKIN_X]);
-					}
-				}
-				if (median[M_SKIN_Y]) {
-					if (cd_vert_skin_offset == -1) {
-						cd_vert_skin_offset = CustomData_get_offset(&bm->vdata, CD_MVERT_SKIN);
-						BLI_assert(cd_vert_skin_offset != -1);
-					}
-
-					if (ve_median[M_SKIN_Y] != median[M_SKIN_Y]) {
-						scale_skin_y = ve_median[M_SKIN_Y] / (ve_median[M_SKIN_Y] - median[M_SKIN_Y]);
-					}
-				}
-
 				BM_ITER_MESH (eve, &iter, bm, BM_VERTS_OF_MESH) {
 					if (BM_elem_flag_test(eve, BM_ELEM_SELECT)) {
 						if (apply_vcos) {
@@ -583,19 +544,6 @@ static void v3d_editvertex_buts(uiLayout *layout, View3D *v3d, Object *ob, float
 							apply_scale_factor_clamp(bweight, tot, ve_median[M_BV_WEIGHT], scale_bv_weight);
 						}
 
-						if (cd_vert_skin_offset != -1) {
-							MVertSkin *vs = BM_ELEM_CD_GET_VOID_P(eve, cd_vert_skin_offset);
-
-							/* That one is not clamped to [0.0, 1.0]. */
-							if (median[M_SKIN_X] != 0.0f) {
-								apply_scale_factor(&vs->radius[0], tot, ve_median[M_SKIN_X], median[M_SKIN_X],
-								                   scale_skin_x);
-							}
-							if (median[M_SKIN_Y] != 0.0f) {
-								apply_scale_factor(&vs->radius[1], tot, ve_median[M_SKIN_Y], median[M_SKIN_Y],
-								                   scale_skin_y);
-							}
-						}
 					}
 				}
 			}

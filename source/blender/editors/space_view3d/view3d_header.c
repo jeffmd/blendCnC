@@ -322,7 +322,7 @@ void uiTemplateHeader3D(uiLayout *layout, struct bContext *C)
 
 	row = uiLayoutRow(layout, true);
 	uiItemR(row, &v3dptr, "pivot_point", UI_ITEM_R_ICON_ONLY, "", ICON_NONE);
-	if (!ob || ELEM(ob->mode, OB_MODE_OBJECT, OB_MODE_WEIGHT_PAINT)) {
+	if (!ob || ELEM(ob->mode, OB_MODE_OBJECT)) {
 		uiItemR(row, &v3dptr, "use_pivot_point_align", UI_ITEM_R_ICON_ONLY, "", ICON_NONE);
 	}
 
@@ -337,8 +337,6 @@ void uiTemplateHeader3D(uiLayout *layout, struct bContext *C)
 	}
 
 	if (obedit == NULL && v3d->localvd == NULL) {
-		unsigned int ob_lay = ob ? ob->lay : 0;
-
 		/* Scene lock */
 		uiItemR(layout, &v3dptr, "lock_camera_and_layers", UI_ITEM_R_ICON_ONLY, "", ICON_NONE);
 	}

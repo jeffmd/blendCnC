@@ -104,7 +104,6 @@ void GPU_set_mipmap(struct Main *bmain, bool mipmap);
 bool GPU_get_mipmap(void);
 void GPU_set_linear_mipmap(bool linear);
 bool GPU_get_linear_mipmap(void);
-void GPU_paint_set_mipmap(struct Main *bmain, bool mipmap);
 
 /* Anisotropic filtering settings
  * - these will free textures on changes */

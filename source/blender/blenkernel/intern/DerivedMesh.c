@@ -1569,8 +1569,7 @@ static void mesh_calc_modifiers(
 
 	/* Generic preview only in object mode! */
 	const bool do_mod_mcol = (ob->mode == OB_MODE_OBJECT);
-	const bool do_final_wmcol = false;
-	const bool do_init_wmcol = ((dataMask & CD_MASK_PREVIEW_MLOOPCOL) && (ob->mode & OB_MODE_WEIGHT_PAINT) && !do_final_wmcol);
+	const bool do_init_wmcol = false;
 	/* XXX Same as above... For now, only weights preview in WPaint mode. */
 	const bool do_mod_wmcol = do_init_wmcol;
 

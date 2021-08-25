@@ -393,7 +393,7 @@ void ED_spacetype_buttons(void)
 	art->regionid = RGN_TYPE_WINDOW;
 	art->init = buttons_main_region_init;
 	art->draw = buttons_main_region_draw;
-	art->keymapflag = ED_KEYMAP_UI | ED_KEYMAP_FRAMES;
+	art->keymapflag = ED_KEYMAP_UI;
 	BLI_addhead(&st->regiontypes, art);
 
 	buttons_context_register(art);
@@ -402,7 +402,7 @@ void ED_spacetype_buttons(void)
 	art = MEM_callocN(sizeof(ARegionType), "spacetype buttons region");
 	art->regionid = RGN_TYPE_HEADER;
 	art->prefsizey = HEADERY;
-	art->keymapflag = ED_KEYMAP_UI | ED_KEYMAP_VIEW2D | ED_KEYMAP_FRAMES | ED_KEYMAP_HEADER;
+	art->keymapflag = ED_KEYMAP_UI | ED_KEYMAP_VIEW2D | ED_KEYMAP_HEADER;
 
 	art->init = buttons_header_region_init;
 	art->draw = buttons_header_region_draw;

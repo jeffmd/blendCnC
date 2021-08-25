@@ -241,14 +241,12 @@ static struct GPUTextureState {
 	bool domipmap;
 	/* only use when 'domipmap' is set */
 	bool linearmipmap;
-	/* store this so that new images created while texture painting won't be set to mipmapped */
-	bool texpaint;
 
 	int alphablend;
 	float anisotropic;
 	int gpu_mipmap;
 	MTexPoly *lasttface;
-} GTS = {0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 1, 0, 0, -1, 1.0f, 0, NULL};
+} GTS = {0, 0, 0, 0, 0, 0, 0, 0, NULL, NULL, 1, 0, -1, 1.0f, 0, NULL};
 
 /* Mipmap settings */
 
@@ -304,7 +302,7 @@ void GPU_set_linear_mipmap(bool linear)
 
 bool GPU_get_mipmap(void)
 {
-	return GTS.domipmap && !GTS.texpaint;
+	return GTS.domipmap;
 }
 
 bool GPU_get_linear_mipmap(void)
@@ -1126,213 +1124,6 @@ int GPU_set_tpage(MTexPoly *mtexpoly, int mipmap, int alphablend)
 	return 1;
 }
 
-/* these two functions are called on entering and exiting texture paint mode,
- * temporary disabling/enabling mipmapping on all images for quick texture
- * updates with glTexSubImage2D. images that didn't change don't have to be
- * re-uploaded to OpenGL */
-void GPU_paint_set_mipmap(Main *bmain, bool mipmap)
-{
-	if (!GTS.domipmap)
-		return;
-
-	GTS.texpaint = !mipmap;
-
-	if (mipmap) {
-		for (Image *ima = bmain->image.first; ima; ima = ima->id.next) {
-			if (BKE_image_has_bindcode(ima)) {
-				if (ima->tpageflag & IMA_MIPMAP_COMPLETE) {
-					if (ima->bindcode[TEXTARGET_TEXTURE_2D]) {
-						glBindTexture(GL_TEXTURE_2D, ima->bindcode[TEXTARGET_TEXTURE_2D]);
-						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gpu_get_mipmap_filter(0));
-						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gpu_get_mipmap_filter(1));
-					}
-					if (ima->bindcode[TEXTARGET_TEXTURE_CUBE_MAP]) {
-						glBindTexture(GL_TEXTURE_CUBE_MAP, ima->bindcode[TEXTARGET_TEXTURE_CUBE_MAP]);
-						glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, gpu_get_mipmap_filter(0));
-						glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, gpu_get_mipmap_filter(1));
-					}
-				}
-				else
-					GPU_free_image(ima);
-			}
-			else
-				ima->tpageflag &= ~IMA_MIPMAP_COMPLETE;
-		}
-
-	}
-	else {
-		for (Image *ima = bmain->image.first; ima; ima = ima->id.next) {
-			if (BKE_image_has_bindcode(ima)) {
-				if (ima->bindcode[TEXTARGET_TEXTURE_2D]) {
-					glBindTexture(GL_TEXTURE_2D, ima->bindcode[TEXTARGET_TEXTURE_2D]);
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gpu_get_mipmap_filter(1));
-				}
-				if (ima->bindcode[TEXTARGET_TEXTURE_CUBE_MAP]) {
-					glBindTexture(GL_TEXTURE_CUBE_MAP, ima->bindcode[TEXTARGET_TEXTURE_CUBE_MAP]);
-					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-					glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, gpu_get_mipmap_filter(1));
-				}
-			}
-			else
-				ima->tpageflag &= ~IMA_MIPMAP_COMPLETE;
-		}
-	}
-}
-
-
-/* check if image has been downscaled and do scaled partial update */
-static bool gpu_check_scaled_image(ImBuf *ibuf, Image *ima, float *frect, int x, int y, int w, int h)
-{
-	if ((!GPU_full_non_power_of_two_support() && !is_power_of_2_resolution(ibuf->x, ibuf->y)) ||
-	    is_over_resolution_limit(GL_TEXTURE_2D, ibuf->x, ibuf->y))
-	{
-		int x_limit = smaller_power_of_2_limit(ibuf->x);
-		int y_limit = smaller_power_of_2_limit(ibuf->y);
-
-		float xratio = x_limit / (float)ibuf->x;
-		float yratio = y_limit / (float)ibuf->y;
-
-		/* find new width, height and x,y gpu texture coordinates */
-
-		/* take ceiling because we will be losing 1 pixel due to rounding errors in x,y... */
-		int rectw = (int)ceil(xratio * w);
-		int recth = (int)ceil(yratio * h);
-
-		x *= xratio;
-		y *= yratio;
-
-		/* ...but take back if we are over the limit! */
-		if (rectw + x > x_limit) rectw--;
-		if (recth + y > y_limit) recth--;
-
-		/* float rectangles are already continuous in memory so we can use IMB_scaleImBuf */
-		if (frect) {
-			ImBuf *ibuf_scale = IMB_allocFromBuffer(NULL, frect, w, h);
-			IMB_scaleImBuf(ibuf_scale, rectw, recth);
-
-			glBindTexture(GL_TEXTURE_2D, ima->bindcode[TEXTARGET_TEXTURE_2D]);
-			glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, rectw, recth, GL_RGBA,
-			                GL_FLOAT, ibuf_scale->rect_float);
-
-			IMB_freeImBuf(ibuf_scale);
-		}
-		/* byte images are not continuous in memory so do manual interpolation */
-		else {
-			unsigned char *scalerect = MEM_mallocN(rectw * recth * sizeof(*scalerect) * 4, "scalerect");
-			unsigned int *p = (unsigned int *)scalerect;
-			int i, j;
-			float inv_xratio = 1.0f / xratio;
-			float inv_yratio = 1.0f / yratio;
-			for (i = 0; i < rectw; i++) {
-				float u = (x + i) * inv_xratio;
-				for (j = 0; j < recth; j++) {
-					float v = (y + j) * inv_yratio;
-					bilinear_interpolation_color_wrap(ibuf, (unsigned char *)(p + i + j * (rectw)), NULL, u, v);
-				}
-			}
-			glBindTexture(GL_TEXTURE_2D, ima->bindcode[TEXTARGET_TEXTURE_2D]);
-			glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, rectw, recth, GL_RGBA,
-			                GL_UNSIGNED_BYTE, scalerect);
-
-			MEM_freeN(scalerect);
-		}
-
-		if (GPU_get_mipmap()) {
-			gpu_generate_mipmap(GL_TEXTURE_2D);
-		}
-		else {
-			ima->tpageflag &= ~IMA_MIPMAP_COMPLETE;
-		}
-
-		return true;
-	}
-
-	return false;
-}
-
-void GPU_paint_update_image(Image *ima, ImageUser *iuser, int x, int y, int w, int h)
-{
-	ImBuf *ibuf = BKE_image_acquire_ibuf(ima, iuser, NULL);
-
-	if (ima->repbind ||
-	    (!GTS.gpu_mipmap && GPU_get_mipmap()) ||
-	    (ima->bindcode[TEXTARGET_TEXTURE_2D] == 0) ||
-	    (ibuf == NULL) ||
-	    (w == 0) || (h == 0))
-	{
-		/* these cases require full reload still */
-		GPU_free_image(ima);
-	}
-	else {
-		/* for the special case, we can do a partial update
-		 * which is much quicker for painting */
-		GLint row_length, skip_pixels, skip_rows;
-
-		/* if color correction is needed, we must update the part that needs updating. */
-		if (ibuf->rect_float) {
-			float *buffer = MEM_mallocN(w * h * sizeof(float) * 4, "temp_texpaint_float_buf");
-			bool is_data = (ima->tpageflag & IMA_GLBIND_IS_DATA) != 0;
-			IMB_partial_rect_from_float(ibuf, buffer, x, y, w, h, is_data);
-
-			if (gpu_check_scaled_image(ibuf, ima, buffer, x, y, w, h)) {
-				MEM_freeN(buffer);
-				BKE_image_release_ibuf(ima, ibuf, NULL);
-				return;
-			}
-
-			glBindTexture(GL_TEXTURE_2D, ima->bindcode[TEXTARGET_TEXTURE_2D]);
-			glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h, GL_RGBA, GL_FLOAT, buffer);
-
-			MEM_freeN(buffer);
-
-			/* we have already accounted for the case where GTS.gpu_mipmap is false
-			 * so we will be using GPU mipmap generation here */
-			if (GPU_get_mipmap()) {
-				gpu_generate_mipmap(GL_TEXTURE_2D);
-			}
-			else {
-				ima->tpageflag &= ~IMA_MIPMAP_COMPLETE;
-			}
-
-			BKE_image_release_ibuf(ima, ibuf, NULL);
-			return;
-		}
-
-		if (gpu_check_scaled_image(ibuf, ima, NULL, x, y, w, h)) {
-			BKE_image_release_ibuf(ima, ibuf, NULL);
-			return;
-		}
-
-		glBindTexture(GL_TEXTURE_2D, ima->bindcode[TEXTARGET_TEXTURE_2D]);
-
-		glGetIntegerv(GL_UNPACK_ROW_LENGTH, &row_length);
-		glGetIntegerv(GL_UNPACK_SKIP_PIXELS, &skip_pixels);
-		glGetIntegerv(GL_UNPACK_SKIP_ROWS, &skip_rows);
-
-		glPixelStorei(GL_UNPACK_ROW_LENGTH, ibuf->x);
-		glPixelStorei(GL_UNPACK_SKIP_PIXELS, x);
-		glPixelStorei(GL_UNPACK_SKIP_ROWS, y);
-
-		glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h, GL_RGBA,
-			GL_UNSIGNED_BYTE, ibuf->rect);
-
-		glPixelStorei(GL_UNPACK_ROW_LENGTH, row_length);
-		glPixelStorei(GL_UNPACK_SKIP_PIXELS, skip_pixels);
-		glPixelStorei(GL_UNPACK_SKIP_ROWS, skip_rows);
-
-		/* see comment above as to why we are using gpu mipmap generation here */
-		if (GPU_get_mipmap()) {
-			gpu_generate_mipmap(GL_TEXTURE_2D);
-		}
-		else {
-			ima->tpageflag &= ~IMA_MIPMAP_COMPLETE;
-		}
-	}
-
-	BKE_image_release_ibuf(ima, ibuf, NULL);
-}
-
 void GPU_update_images_framechange(Main *bmain)
 {
 	for (Image *ima = bmain->image.first; ima; ima = ima->id.next) {
@@ -1825,7 +1616,7 @@ int GPU_object_material_bind(int nr, void *attribs)
 			}
 
 			GPU_material_bind(
-			        gpumat, GMS.gob->lay, GMS.glay, 1.0, !(GMS.gob->mode & OB_MODE_TEXTURE_PAINT),
+			        gpumat, GMS.gob->lay, GMS.glay, 1.0, true,
 			        GMS.gviewmat, GMS.gviewinv, GMS.gviewcamtexcofac, GMS.gscenelock);
 
 			auto_bump_scale = GMS.gob->derivedFinal != NULL ? GMS.gob->derivedFinal->auto_bump_scale : 1.0f;

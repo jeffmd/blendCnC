@@ -1979,12 +1979,6 @@ int ED_path_extension_type(const char *path)
 	else if (BLI_path_extension_check_n(path, ".ttf", ".ttc", ".pfb", ".otf", ".otc", NULL)) {
 		return FILE_TYPE_FTFONT;
 	}
-	else if (BLI_path_extension_check(path, ".btx")) {
-		return FILE_TYPE_BTX;
-	}
-	else if (BLI_path_extension_check(path, ".dae")) {
-		return FILE_TYPE_COLLADA;
-	}
 	else if (BLI_path_extension_check_array(path, imb_ext_image)) {
 		return FILE_TYPE_IMAGE;
 	}

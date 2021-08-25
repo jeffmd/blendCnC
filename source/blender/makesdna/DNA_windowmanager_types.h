@@ -288,7 +288,6 @@ enum {
 	KMI_TYPE_TWEAK      = 2,
 	KMI_TYPE_TEXTINPUT  = 3,
 	KMI_TYPE_TIMER      = 4,
-	KMI_TYPE_NDOF       = 5,
 };
 
 /* stored in WM, the actively used keymaps */

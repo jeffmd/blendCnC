@@ -1379,49 +1379,6 @@ static void ed_default_handlers(wmWindowManager *wm, ScrArea *sa, ListBase *hand
 		wmKeyMap *keymap = WM_keymap_ensure(wm->defaultconf, "View2D", 0, 0);
 		WM_event_add_keymap_handler(handlers, keymap);
 	}
-	if (flag & ED_KEYMAP_MARKERS) {
-		/* time-markers */
-		wmKeyMap *keymap = WM_keymap_ensure(wm->defaultconf, "Markers", 0, 0);
-
-		/* time space only has this keymap, the others get a boundbox restricted map */
-		if (sa->spacetype) {
-			ARegion *ar;
-			/* same local check for all areas */
-			static rcti rect = {0, 10000, 0, -1};
-			rect.ymax = UI_MARKER_MARGIN_Y;
-			ar = BKE_area_find_region_type(sa, RGN_TYPE_WINDOW);
-			if (ar) {
-				WM_event_add_keymap_handler_bb(handlers, keymap, &rect, &ar->winrct);
-			}
-		}
-		else
-			WM_event_add_keymap_handler(handlers, keymap);
-	}
-	if (flag & ED_KEYMAP_ANIMATION) {
-		/* frame changing and timeline operators (for time spaces) */
-		wmKeyMap *keymap = WM_keymap_ensure(wm->defaultconf, "Animation", 0, 0);
-		WM_event_add_keymap_handler(handlers, keymap);
-	}
-	if (flag & ED_KEYMAP_FRAMES) {
-		/* frame changing/jumping (for all spaces) */
-		wmKeyMap *keymap = WM_keymap_ensure(wm->defaultconf, "Frames", 0, 0);
-		WM_event_add_keymap_handler(handlers, keymap);
-	}
-	if (flag & ED_KEYMAP_GPENCIL) {
-		/* grease pencil */
-		/* NOTE: This is now 2 keymaps - One for basic functionality,
-		 *       and one that only applies when "Edit Mode" is enabled
-		 *       for strokes.
-		 *
-		 *       For now, it's easier to just include both,
-		 *       since you hardly want one without the other.
-		 */
-		wmKeyMap *keymap_general = WM_keymap_ensure(wm->defaultconf, "Grease Pencil", 0, 0);
-		wmKeyMap *keymap_edit = WM_keymap_ensure(wm->defaultconf, "Grease Pencil Stroke Edit Mode", 0, 0);
-
-		WM_event_add_keymap_handler(handlers, keymap_general);
-		WM_event_add_keymap_handler(handlers, keymap_edit);
-	}
 	if (flag & ED_KEYMAP_HEADER) {
 		/* standard keymap for headers regions */
 		wmKeyMap *keymap = WM_keymap_ensure(wm->defaultconf, "Header", 0, 0);

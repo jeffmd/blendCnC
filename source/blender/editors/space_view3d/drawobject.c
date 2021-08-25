@@ -262,9 +262,8 @@ bool draw_glsl_material(Scene *scene, Object *ob, View3D *v3d, const char dt)
 {
 	if (G.f & G_PICKSEL)
 		return false;
+
 	if (!check_object_draw_texture(scene, v3d, dt))
-		return false;
-	if (ob == OBACT && (ob && ob->mode & OB_MODE_WEIGHT_PAINT))
 		return false;
 
 	if (v3d->flag2 & V3D_SHOW_SOLID_MATCAP)
@@ -279,9 +278,6 @@ bool draw_glsl_material(Scene *scene, Object *ob, View3D *v3d, const char dt)
 static bool check_alpha_pass(Base *base)
 {
 	if (G.f & G_PICKSEL)
-		return false;
-
-	if (base->object->mode & OB_MODE_ALL_PAINT)
 		return false;
 
 	return (base->object->dtx & OB_DRAWTRANSP);
@@ -1981,21 +1977,6 @@ static void draw_dm_verts__mapFunc(void *userData, int index, const float co[3],
 	BMVert *eve = BM_vert_at_index(data->bm, index);
 
 	if (!BM_elem_flag_test(eve, BM_ELEM_HIDDEN) && BM_elem_flag_test(eve, BM_ELEM_SELECT) == data->sel) {
-		/* skin nodes: draw a red circle around the root node(s) */
-		if (data->cd_vskin_offset != -1) {
-			const MVertSkin *vs = BM_ELEM_CD_GET_VOID_P(eve, data->cd_vskin_offset);
-			if (vs->flag & MVERT_SKIN_ROOT) {
-				float radius = (vs->radius[0] + vs->radius[1]) * 0.5f;
-				glEnd();
-
-				glColor4ubv(data->th_skin_root);
-				drawcircball(GL_LINES, co, radius, data->imat);
-
-				glColor4ubv(data->sel ? data->th_vertex_select : data->th_vertex);
-				glBegin(GL_POINTS);
-			}
-		}
-
 		/* draw active in a different color - no need to stop/start point drawing for this :D */
 		if (eve == data->eve_act) {
 			glColor4ubv(data->th_editmesh_active);
@@ -3236,8 +3217,7 @@ static void draw_em_fancy(Scene *scene, ARegion *ar, View3D *v3d,
 
 static void draw_mesh_object_outline(View3D *v3d, Object *ob, DerivedMesh *dm)
 {
-	if ((v3d->transp == false) &&  /* not when we draw the transparent pass */
-	    (ob->mode & OB_MODE_ALL_PAINT) == false) /* not when painting (its distracting) - campbell */
+	if ((v3d->transp == false))  /* not when we draw the transparent pass */
 	{
 		glLineWidth(UI_GetThemeValuef(TH_OUTLINE_WIDTH) * 2.0f);
 		glDepthMask(0);
@@ -3319,8 +3299,7 @@ static void draw_mesh_fancy(Scene *scene, ARegion *ar, View3D *v3d, RegionView3D
 	else if ((dt == OB_WIRE) || no_faces) {
 		draw_wire = OBDRAW_WIRE_ON; /* draw wire only, no depth buffer stuff */
 	}
-	else if (((is_obact && ob->mode & OB_MODE_TEXTURE_PAINT)) ||
-	         check_object_draw_texture(scene, v3d, dt))
+	else if (check_object_draw_texture(scene, v3d, dt))
 	{
 		bool draw_loose = true;
 
@@ -5144,25 +5123,6 @@ void draw_object(Main *bmain, Scene *scene, ARegion *ar, View3D *v3d, Base *base
 	short dtx = 0;
 
 
-	/* faceselect exception: also draw solid when (dt == wire), except in editmode */
-	if (is_obact) {
-		if (ob->mode & (OB_MODE_VERTEX_PAINT | OB_MODE_WEIGHT_PAINT | OB_MODE_TEXTURE_PAINT)) {
-			if (ob->type == OB_MESH) {
-				if (dt < OB_SOLID) {
-					zbufoff = true;
-					dt = OB_SOLID;
-				}
-
-				if (ob->mode & (OB_MODE_VERTEX_PAINT | OB_MODE_WEIGHT_PAINT)) {
-					dt = OB_PAINT;
-				}
-
-				is_paint = true;
-				glEnable(GL_DEPTH_TEST);
-			}
-		}
-	}
-
 	/* matcap check - only when not painting color */
 	if ((v3d->flag2 & V3D_SOLID_MATCAP) &&
 	    (dt == OB_SOLID) &&
@@ -5331,7 +5291,7 @@ void draw_object(Main *bmain, Scene *scene, ARegion *ar, View3D *v3d, Base *base
 	}
 
 	/* object centers, need to be drawn in viewmat space for speed, but OK for picking select */
-	if (!is_obact || !(ob->mode & OB_MODE_ALL_PAINT)) {
+	{
 		int do_draw_center = -1; /* defines below are zero or positive... */
 
 		if (render_override) {
@@ -5673,16 +5633,7 @@ void draw_object_backbufsel(Scene *scene, View3D *v3d, RegionView3D *rv3d, Objec
 				dm->release(dm);
 			}
 			else {
-				Mesh *me = ob->data;
-				if ((me->editflag & ME_EDIT_PAINT_VERT_SEL) &&
-				    /* currently vertex select supports weight paint and vertex paint*/
-				    ((ob->mode & OB_MODE_WEIGHT_PAINT) || (ob->mode & OB_MODE_VERTEX_PAINT)))
-				{
-					bbs_mesh_solid_verts(scene, ob);
-				}
-				else {
-					bbs_mesh_solid_faces(scene, ob);
-				}
+				bbs_mesh_solid_faces(scene, ob);
 			}
 			break;
 		case OB_CURVE:

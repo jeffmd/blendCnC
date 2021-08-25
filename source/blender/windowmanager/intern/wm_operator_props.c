@@ -79,21 +79,11 @@ void WM_operator_properties_filesel(
 	RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
 	prop = RNA_def_boolean(ot->srna, "filter_image", (filter & FILE_TYPE_IMAGE) != 0, "Filter image files", "");
 	RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
-	prop = RNA_def_boolean(ot->srna, "filter_movie", (filter & FILE_TYPE_MOVIE) != 0, "Filter movie files", "");
-	RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
 	prop = RNA_def_boolean(ot->srna, "filter_python", (filter & FILE_TYPE_PYSCRIPT) != 0, "Filter python files", "");
 	RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
 	prop = RNA_def_boolean(ot->srna, "filter_font", (filter & FILE_TYPE_FTFONT) != 0, "Filter font files", "");
 	RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
-	prop = RNA_def_boolean(ot->srna, "filter_sound", (filter & FILE_TYPE_SOUND) != 0, "Filter sound files", "");
-	RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
 	prop = RNA_def_boolean(ot->srna, "filter_text", (filter & FILE_TYPE_TEXT) != 0, "Filter text files", "");
-	RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
-	prop = RNA_def_boolean(ot->srna, "filter_btx", (filter & FILE_TYPE_BTX) != 0, "Filter btx files", "");
-	RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
-	prop = RNA_def_boolean(ot->srna, "filter_collada", (filter & FILE_TYPE_COLLADA) != 0, "Filter COLLADA files", "");
-	RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
-	prop = RNA_def_boolean(ot->srna, "filter_alembic", (filter & FILE_TYPE_ALEMBIC) != 0, "Filter Alembic files", "");
 	RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
 	prop = RNA_def_boolean(ot->srna, "filter_folder", (filter & FILE_TYPE_FOLDER) != 0, "Filter folders", "");
 	RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
@@ -108,7 +98,7 @@ void WM_operator_properties_filesel(
 	if (flag & WM_FILESEL_RELPATH)
 		RNA_def_boolean(ot->srna, "relative_path", true, "Relative Path", "Select the file relative to the blend file");
 
-	if ((filter & FILE_TYPE_IMAGE) || (filter & FILE_TYPE_MOVIE)) {
+	if ((filter & FILE_TYPE_IMAGE)) {
 		prop = RNA_def_boolean(ot->srna, "show_multiview", 0, "Enable Multi-View", "");
 		RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
 		prop = RNA_def_boolean(ot->srna, "use_multiview", 0, "Use Multi-View", "");

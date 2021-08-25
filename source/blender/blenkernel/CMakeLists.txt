@@ -55,8 +55,6 @@ set(INC_SYS
 set(SRC
 	intern/CCGSubSurf.c
 	intern/CCGSubSurf_legacy.c
-	intern/CCGSubSurf_opensubdiv.c
-	intern/CCGSubSurf_opensubdiv_converter.c
 	intern/CCGSubSurf_util.c
 	intern/DerivedMesh.c
 	intern/addon.c

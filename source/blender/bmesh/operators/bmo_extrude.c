@@ -164,16 +164,6 @@ static void bm_extrude_copy_face_loop_attributes(BMesh *bm, BMFace *f)
 	BM_elem_attrs_copy(bm, bm, l_other_1, l_first_2);
 }
 
-/* Disable the skin root flag on the input vert, assumes that the vert
- * data includes an CD_MVERT_SKIN layer */
-static void bm_extrude_disable_skin_root(BMesh *bm, BMVert *v)
-{
-	MVertSkin *vs;
-
-	vs = CustomData_bmesh_get(&bm->vdata, v->head.data, CD_MVERT_SKIN);
-	vs->flag &= ~MVERT_SKIN_ROOT;
-}
-
 void bmo_extrude_edge_only_exec(BMesh *bm, BMOperator *op)
 {
 	BMOIter siter;
@@ -194,14 +184,6 @@ void bmo_extrude_edge_only_exec(BMesh *bm, BMOperator *op)
 	        EXT_INPUT, BMO_slot_bool_get(op->slots_in, "use_select_history"));
 
 	BMO_op_exec(bm, &dupeop);
-
-	/* disable root flag on all new skin nodes */
-	if (CustomData_has_layer(&bm->vdata, CD_MVERT_SKIN)) {
-		BMVert *v;
-		BMO_ITER (v, &siter, dupeop.slots_out, "geom.out", BM_VERT) {
-			bm_extrude_disable_skin_root(bm, v);
-		}
-	}
 
 	for (e = BMO_iter_new(&siter, dupeop.slots_out, "boundary_map.out", 0); e; e = BMO_iter_step(&siter)) {
 		BMVert *f_verts[4];
@@ -247,7 +229,6 @@ void bmo_extrude_vert_indiv_exec(BMesh *bm, BMOperator *op)
 	BMOIter siter;
 	BMVert *v, *dupev;
 	BMEdge *e;
-	const bool has_vskin = CustomData_has_layer(&bm->vdata, CD_MVERT_SKIN);
 	GHash *select_history_map = NULL;
 
 	if (use_select_history) {
@@ -257,9 +238,6 @@ void bmo_extrude_vert_indiv_exec(BMesh *bm, BMOperator *op)
 	for (v = BMO_iter_new(&siter, op->slots_in, "verts", BM_VERT); v; v = BMO_iter_step(&siter)) {
 		dupev = BM_vert_create(bm, v->co, v, BM_CREATE_NOP);
 		BMO_vert_flag_enable(bm, dupev, EXT_KEEP);
-
-		if (has_vskin)
-			bm_extrude_disable_skin_root(bm, v);
 
 		if (select_history_map) {
 			BMEditSelection *ese;
@@ -419,13 +397,6 @@ void bmo_extrude_face_region_exec(BMesh *bm, BMOperator *op)
 	BMO_slot_copy(op,      slots_in, "geom",
 	              &dupeop, slots_in, "geom");
 	BMO_op_exec(bm, &dupeop);
-
-	/* disable root flag on all new skin nodes */
-	if (CustomData_has_layer(&bm->vdata, CD_MVERT_SKIN)) {
-		BMO_ITER (v, &siter, dupeop.slots_out, "geom.out", BM_VERT) {
-			bm_extrude_disable_skin_root(bm, v);
-		}
-	}
 
 	slot_facemap_out = BMO_slot_get(dupeop.slots_out, "face_map.out");
 	if (bm->act_face && BMO_face_flag_test(bm, bm->act_face, EXT_INPUT)) {

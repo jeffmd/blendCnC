@@ -146,7 +146,6 @@ bool ED_operator_object_active_editable_font(struct bContext *C);
 bool ED_operator_editmesh(struct bContext *C);
 bool ED_operator_editmesh_view3d(struct bContext *C);
 bool ED_operator_editmesh_region_view3d(struct bContext *C);
-bool ED_operator_editarmature(struct bContext *C);
 bool ED_operator_editcurve(struct bContext *C);
 bool ED_operator_editcurve_3d(struct bContext *C);
 bool ED_operator_editsurf(struct bContext *C);
@@ -154,9 +153,6 @@ bool ED_operator_editsurfcurve(struct bContext *C);
 bool ED_operator_editsurfcurve_region_view3d(struct bContext *C);
 bool ED_operator_editfont(struct bContext *C);
 bool ED_operator_editlattice(struct bContext *C);
-bool ED_operator_uvedit(struct bContext *C);
-bool ED_operator_uvedit_space_image(struct bContext *C);
-bool ED_operator_uvmap(struct bContext *C);
 
 /* Cache display helpers */
 void ED_region_cache_draw_background(const struct ARegion *ar);
@@ -166,10 +162,6 @@ void ED_region_cache_draw_cached_segments(const struct ARegion *ar, const int nu
 /* default keymaps, bitflags */
 #define ED_KEYMAP_UI        1
 #define ED_KEYMAP_VIEW2D    2
-#define ED_KEYMAP_MARKERS   4
-#define ED_KEYMAP_ANIMATION 8
-#define ED_KEYMAP_FRAMES    16
-#define ED_KEYMAP_GPENCIL   32
 #define ED_KEYMAP_HEADER    64
 
 #endif /* __ED_SCREEN_H__ */

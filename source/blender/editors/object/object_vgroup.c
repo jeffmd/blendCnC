@@ -77,9 +77,6 @@ static bool vertex_group_use_vert_sel(Object *ob)
 	if (ob->mode == OB_MODE_EDIT) {
 		return true;
 	}
-	else if (ob->type == OB_MESH && ((Mesh *)ob->data)->editflag & ME_EDIT_PAINT_VERT_SEL) {
-		return true;
-	}
 	else {
 		return false;
 	}
@@ -2425,20 +2422,6 @@ static bool vertex_group_vert_poll_ex(bContext *C, const bool needs_select, cons
 
 	if (BKE_object_is_in_editmode_vgroup(ob)) {
 		return true;
-	}
-	else if (ob->mode & OB_MODE_WEIGHT_PAINT) {
-		if (needs_select) {
-			if (BKE_object_is_in_wpaint_select_vert(ob)) {
-				return true;
-			}
-			else {
-				CTX_wm_operator_poll_msg_set(C, "Vertex select needs to be enabled in weight paint mode");
-				return false;
-			}
-		}
-		else {
-			return true;
-		}
 	}
 	else {
 		return false;

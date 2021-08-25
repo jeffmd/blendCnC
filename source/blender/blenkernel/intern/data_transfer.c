@@ -453,13 +453,6 @@ static void data_transfer_layersmapping_add_item_cd(
 {
 	uint64_t data_flag = 0;
 
-	if (cddata_type == CD_FREESTYLE_EDGE) {
-		data_flag = FREESTYLE_EDGE_MARK;
-	}
-	else if (cddata_type == CD_FREESTYLE_FACE) {
-		data_flag = FREESTYLE_FACE_MARK;
-	}
-
 	data_transfer_layersmapping_add_item(
 	        r_map, cddata_type, mix_mode, mix_factor, mix_weights, data_src, data_dst,
 	        0, 0, 0, 0, 0, data_flag, interp, interp_data);

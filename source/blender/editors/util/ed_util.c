@@ -157,15 +157,9 @@ bool ED_editors_flush_edits(const bContext *C, bool for_render)
 	Main *bmain = CTX_data_main(C);
 
 	/* loop through all data to find edit mode or object mode, because during
-	 * exiting we might not have a context for edit object and multiple sculpt
-	 * objects can exist at the same time */
+	 * exiting we might not have a context for edit object */
 	for (ob = bmain->object.first; ob; ob = ob->id.next) {
-		if (ob->mode & OB_MODE_SCULPT) {
-			/* Don't allow flushing while in the middle of a stroke (frees data in use).
-			 * Auto-save prevents this from happening but scripts
-			 * may cause a flush on saving: T53986. */
-		}
-		else if (ob->mode & OB_MODE_EDIT) {
+		if (ob->mode & OB_MODE_EDIT) {
 			/* get editmode results */
 			has_edited = true;
 			ED_object_editmode_load(bmain, ob);

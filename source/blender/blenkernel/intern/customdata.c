@@ -592,38 +592,6 @@ static size_t layerFilesize_mdisps(CDataFile *UNUSED(cdf), const void *data, int
 	return size;
 }
 
-static void layerCopy_grid_paint_mask(const void *source, void *dest, int count)
-{
-	int i;
-	const GridPaintMask *s = source;
-	GridPaintMask *d = dest;
-
-	for (i = 0; i < count; ++i) {
-		if (s[i].data) {
-			d[i].data = MEM_dupallocN(s[i].data);
-			d[i].level = s[i].level;
-		}
-		else {
-			d[i].data = NULL;
-			d[i].level = 0;
-		}
-
-	}
-}
-
-static void layerFree_grid_paint_mask(void *data, int count, int UNUSED(size))
-{
-	int i;
-	GridPaintMask *gpm = data;
-
-	for (i = 0; i < count; ++i) {
-		if (gpm[i].data)
-			MEM_freeN(gpm[i].data);
-		gpm[i].data = NULL;
-		gpm[i].level = 0;
-	}
-}
-
 /* --------- */
 static void layerCopyValue_mloopcol(const void *source, void *dest, const int mixmode, const float mixfactor)
 {
@@ -1074,67 +1042,6 @@ static void layerInterp_bweight(
 	*((float *)dest) = f;
 }
 
-static void layerInterp_shapekey(
-        const void **sources, const float *weights,
-        const float *UNUSED(sub_weights), int count, void *dest)
-{
-	float co[3];
-	float **in = (float **)sources;
-	int i;
-
-	if (count <= 0) return;
-
-	zero_v3(co);
-
-	if (weights) {
-		for (i = 0; i < count; ++i) {
-			madd_v3_v3fl(co, in[i], weights[i]);
-		}
-	}
-	else {
-		for (i = 0; i < count; ++i) {
-			add_v3_v3(co, in[i]);
-		}
-	}
-
-	/* delay writing to the destination incase dest is in sources */
-	copy_v3_v3((float *)dest, co);
-}
-
-static void layerDefault_mvert_skin(void *data, int count)
-{
-	MVertSkin *vs = data;
-	int i;
-
-	for (i = 0; i < count; i++) {
-		copy_v3_fl(vs[i].radius, 0.25f);
-		vs[i].flag = 0;
-	}
-}
-
-static void layerInterp_mvert_skin(
-        const void **sources, const float *weights,
-        const float *UNUSED(sub_weights),
-        int count, void *dest)
-{
-	MVertSkin *vs_dst = dest;
-	float radius[3], w;
-	int i;
-
-	zero_v3(radius);
-	for (i = 0; i < count; i++) {
-		const MVertSkin *vs_src = sources[i];
-		w = weights ? weights[i] : 1.0f;
-
-		madd_v3_v3fl(radius, vs_src->radius, w);
-	}
-
-	/* delay writing to the destination incase dest is in sources */
-	vs_dst = dest;
-	copy_v3_v3(vs_dst->radius, radius);
-	vs_dst->flag &= ~MVERT_SKIN_ROOT;
-}
-
 static void layerSwap_flnor(void *data, const int *corner_indices)
 {
 	short (*flnors)[4][3] = data;
@@ -1225,8 +1132,6 @@ static const LayerTypeInfo LAYERTYPEINFO[CD_NUMTYPES] = {
 	{sizeof(MLoop), "MLoop", 1, N_("NGon Face-Vertex"), NULL, NULL, NULL, NULL, NULL},
 	/* 27: CD_SHAPE_KEYINDEX */
 	{sizeof(int), "", 0, NULL, NULL, NULL, NULL, NULL, NULL},
-	/* 28: CD_SHAPEKEY */
-	{sizeof(float) * 3, "", 0, N_("ShapeKey"), NULL, NULL, layerInterp_shapekey},
 	/* 29: CD_BWEIGHT */
 	{sizeof(float), "", 0, N_("BevelWeight"), NULL, NULL, layerInterp_bweight},
 	/* 30: CD_CREASE */
@@ -1245,18 +1150,6 @@ static const LayerTypeInfo LAYERTYPEINFO[CD_NUMTYPES] = {
 
 /* END BMESH ONLY */
 
-	/* 34: CD_PAINT_MASK */
-	{sizeof(float), "", 0, NULL, NULL, NULL, NULL, NULL, NULL},
-	/* 35: CD_GRID_PAINT_MASK */
-	{sizeof(GridPaintMask), "GridPaintMask", 1, NULL, layerCopy_grid_paint_mask,
-	 layerFree_grid_paint_mask, NULL, NULL, NULL},
-	/* 36: CD_MVERT_SKIN */
-	{sizeof(MVertSkin), "MVertSkin", 1, NULL, NULL, NULL,
-	 layerInterp_mvert_skin, NULL, layerDefault_mvert_skin},
-	/* 37: CD_FREESTYLE_EDGE */
-	{sizeof(FreestyleEdge), "FreestyleEdge", 1, NULL, NULL, NULL, NULL, NULL, NULL},
-	/* 38: CD_FREESTYLE_FACE */
-	{sizeof(FreestyleFace), "FreestyleFace", 1, NULL, NULL, NULL, NULL, NULL, NULL},
 	/* 39: CD_MLOOPTANGENT */
 	{sizeof(float[4]), "", 0, NULL, NULL, NULL, NULL, NULL, NULL},
 	/* 40: CD_TESSLOOPNORMAL */
@@ -1275,9 +1168,7 @@ static const char *LAYERTYPENAMES[CD_NUMTYPES] = {
 
 /* BMESH ONLY */
 	/* 25-29 */ "CDMPoly", "CDMLoop", "CDShapeKeyIndex", "CDShapeKey", "CDBevelWeight",
-	/* 30-34 */ "CDSubSurfCrease", "CDOrigSpaceLoop", "CDPreviewLoopCol", "CDBMElemPyPtr", "CDPaintMask",
-	/* 35-36 */ "CDGridPaintMask", "CDMVertSkin",
-	/* 37-38 */ "CDFreestyleEdge", "CDFreestyleFace",
+	/* 30-34 */ "CDSubSurfCrease", "CDOrigSpaceLoop", "CDPreviewLoopCol", "CDBMElemPyPtr",
 	/* 39-41 */ "CDMLoopTangent", "CDTessLoopNormal", "CDCustomLoopNormal",
 };
 

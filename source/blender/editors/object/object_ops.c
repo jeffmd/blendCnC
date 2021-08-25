@@ -224,14 +224,6 @@ void ED_keymap_object(wmKeyConfig *keyconf)
 	RNA_enum_set(kmi->ptr, "mode", OB_MODE_EDIT);
 	RNA_boolean_set(kmi->ptr, "toggle", true);
 
-	kmi = WM_keymap_add_item(keymap, "OBJECT_OT_mode_set", VKEY, KM_PRESS, 0, 0);
-	RNA_enum_set(kmi->ptr, "mode", OB_MODE_VERTEX_PAINT);
-	RNA_boolean_set(kmi->ptr, "toggle", true);
-
-	kmi = WM_keymap_add_item(keymap, "OBJECT_OT_mode_set", TABKEY, KM_PRESS, KM_CTRL, 0);
-	RNA_enum_set(kmi->ptr, "mode", OB_MODE_WEIGHT_PAINT);
-	RNA_boolean_set(kmi->ptr, "toggle", true);
-
 	WM_keymap_add_item(keymap, "OBJECT_OT_origin_set", CKEY, KM_PRESS, KM_ALT | KM_SHIFT | KM_CTRL, 0);
 
 	/* Object Mode ---------------------------------------------------------------- */
