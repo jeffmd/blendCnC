@@ -26,7 +26,6 @@
 #include "DNA_camera_types.h"
 #include "DNA_curve_types.h"
 #include "DNA_lamp_types.h"
-#include "DNA_lattice_types.h"
 #include "DNA_material_types.h"
 #include "DNA_mesh_types.h"
 #include "DNA_rigidbody_types.h"
@@ -49,7 +48,6 @@
 #include "BKE_font.h"
 #include "BKE_global.h"
 #include "BKE_image.h"
-#include "BKE_lattice.h"
 #include "BKE_main.h"
 #include "BKE_mesh.h"
 #include "BKE_material.h"
@@ -1670,123 +1668,6 @@ static void drawspeaker(Scene *UNUSED(scene), View3D *UNUSED(v3d), RegionView3D 
 	}
 
 	glDisable(GL_BLEND);
-}
-
-static void lattice_draw_verts(Lattice *lt, DispList *dl, BPoint *actbp, short sel)
-{
-	BPoint *bp = lt->def;
-	const float *co = dl ? dl->verts : NULL;
-
-	const int color = sel ? TH_VERTEX_SELECT : TH_VERTEX;
-	UI_ThemeColor(color);
-
-	glPointSize(UI_GetThemeValuef(TH_VERTEX_SIZE));
-	glBegin(GL_POINTS);
-
-	for (int w = 0; w < lt->pntsw; w++) {
-		int wxt = (w == 0 || w == lt->pntsw - 1);
-		for (int v = 0; v < lt->pntsv; v++) {
-			int vxt = (v == 0 || v == lt->pntsv - 1);
-			for (int u = 0; u < lt->pntsu; u++, bp++, co += 3) {
-				int uxt = (u == 0 || u == lt->pntsu - 1);
-				if (!(lt->flag & LT_OUTSIDE) || uxt || vxt || wxt) {
-					if (bp->hide == 0) {
-						/* check for active BPoint and ensure selected */
-						if ((bp == actbp) && (bp->f1 & SELECT)) {
-							UI_ThemeColor(TH_ACTIVE_VERT);
-							glVertex3fv(dl ? co : bp->vec);
-							UI_ThemeColor(color);
-						}
-						else if ((bp->f1 & SELECT) == sel) {
-							glVertex3fv(dl ? co : bp->vec);
-						}
-					}
-				}
-			}
-		}
-	}
-
-	glEnd();
-}
-
-static void drawlattice__point(Lattice *lt, DispList *dl, int u, int v, int w, int actdef_wcol)
-{
-	int index = ((w * lt->pntsv + v) * lt->pntsu) + u;
-
-	if (actdef_wcol) {
-		float col[3];
-		MDeformWeight *mdw = defvert_find_index(lt->dvert + index, actdef_wcol - 1);
-
-		weight_to_rgb(col, mdw ? mdw->weight : 0.0f);
-		glColor3fv(col);
-
-	}
-
-	if (dl) {
-		glVertex3fv(&dl->verts[index * 3]);
-	}
-	else {
-		glVertex3fv(lt->def[index].vec);
-	}
-}
-
-/* lattice color is hardcoded, now also shows weightgroup values in edit mode */
-static void drawlattice(View3D *v3d, Object *ob)
-{
-	Lattice *lt = ob->data;
-	DispList *dl;
-	int u, v, w;
-	int actdef_wcol = 0;
-	const bool is_edit = (lt->editlatt != NULL);
-
-	dl = BKE_displist_find(&ob->curve_cache->disp, DL_VERTS);
-
-	if (is_edit) {
-		lt = lt->editlatt->latt;
-
-		UI_ThemeColor(TH_WIRE_EDIT);
-
-		if (ob->defbase.first && lt->dvert) {
-			actdef_wcol = ob->actdef;
-		}
-	}
-
-	glLineWidth(1);
-	glBegin(GL_LINES);
-	for (w = 0; w < lt->pntsw; w++) {
-		int wxt = (w == 0 || w == lt->pntsw - 1);
-		for (v = 0; v < lt->pntsv; v++) {
-			int vxt = (v == 0 || v == lt->pntsv - 1);
-			for (u = 0; u < lt->pntsu; u++) {
-				int uxt = (u == 0 || u == lt->pntsu - 1);
-
-				if (w && ((uxt || vxt) || !(lt->flag & LT_OUTSIDE))) {
-					drawlattice__point(lt, dl, u, v, w - 1, actdef_wcol);
-					drawlattice__point(lt, dl, u, v, w, actdef_wcol);
-				}
-				if (v && ((uxt || wxt) || !(lt->flag & LT_OUTSIDE))) {
-					drawlattice__point(lt, dl, u, v - 1, w, actdef_wcol);
-					drawlattice__point(lt, dl, u, v, w, actdef_wcol);
-				}
-				if (u && ((vxt || wxt) || !(lt->flag & LT_OUTSIDE))) {
-					drawlattice__point(lt, dl, u - 1, v, w, actdef_wcol);
-					drawlattice__point(lt, dl, u, v, w, actdef_wcol);
-				}
-			}
-		}
-	}
-	glEnd();
-
-	if (is_edit) {
-		BPoint *actbp = BKE_lattice_active_point_get(lt);
-
-		if (v3d->zbuf) glDisable(GL_DEPTH_TEST);
-
-		lattice_draw_verts(lt, dl, actbp, 0);
-		lattice_draw_verts(lt, dl, actbp, 1);
-
-		if (v3d->zbuf) glEnable(GL_DEPTH_TEST);
-	}
 }
 
 /* ***************** ******************** */
@@ -4763,9 +4644,6 @@ static void draw_bounding_volume(Object *ob, char type)
 	else if (ELEM(ob->type, OB_CURVE, OB_SURF, OB_FONT)) {
 		bb = BKE_curve_boundbox_get(ob);
 	}
-	else if (ob->type == OB_LATTICE) {
-		bb = BKE_lattice_boundbox_get(ob);
-	}
 	else {
 		const float min[3] = {-1.0f, -1.0f, -1.0f}, max[3] = {1.0f, 1.0f, 1.0f};
 		bb = &bb_local;
@@ -5212,19 +5090,6 @@ void draw_object(Main *bmain, Scene *scene, ARegion *ar, View3D *v3d, Base *base
 				    (rv3d->persp == RV3D_CAMOB && v3d->camera == ob)) /* special exception for active camera */
 				{
 					drawcamera(scene, v3d, rv3d, base, dflag, ob_wire_col);
-				}
-				break;
-			case OB_LATTICE:
-				if (!render_override) {
-					/* Do not allow boundbox in edit nor pose mode! */
-					if ((dt == OB_BOUNDBOX) && (ob->mode & OB_MODE_EDIT))
-						dt = OB_WIRE;
-					if (dt == OB_BOUNDBOX) {
-						draw_bounding_volume(ob, ob->boundtype);
-					}
-					else {
-						drawlattice(v3d, ob);
-					}
 				}
 				break;
 			default:

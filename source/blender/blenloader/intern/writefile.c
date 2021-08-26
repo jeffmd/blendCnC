@@ -100,7 +100,6 @@
 #include "DNA_genfile.h"
 #include "DNA_group_types.h"
 #include "DNA_fileglobal_types.h"
-#include "DNA_lattice_types.h"
 #include "DNA_lamp_types.h"
 #include "DNA_mesh_types.h"
 #include "DNA_meshdata_types.h"
@@ -1229,22 +1228,6 @@ static void write_mesh(WriteData *wd, Mesh *mesh)
 	}
 }
 
-static void write_lattice(WriteData *wd, Lattice *lt)
-{
-	if (lt->id.us > 0 || wd->use_memfile) {
-		/* write LibData */
-		writestruct(wd, ID_LT, Lattice, 1, lt);
-		write_iddata(wd, &lt->id);
-
-		/* write animdata */
-
-		/* direct data */
-		writestruct(wd, DATA, BPoint, lt->pntsu * lt->pntsv * lt->pntsw, lt->def);
-
-		write_dverts(wd, lt->pntsu * lt->pntsv * lt->pntsw, lt->dvert);
-	}
-}
-
 static void write_image(WriteData *wd, Image *ima)
 {
 	if (ima->id.us > 0 || wd->use_memfile) {
@@ -1861,9 +1844,6 @@ static bool write_file_handle(
 					break;
 				case ID_LA:
 					write_lamp(wd, (Lamp *)id);
-					break;
-				case ID_LT:
-					write_lattice(wd, (Lattice *)id);
 					break;
 				case ID_VF:
 					write_vfont(wd, (VFont *)id);

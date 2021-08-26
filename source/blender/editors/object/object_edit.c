@@ -48,7 +48,6 @@
 #include "DNA_meshdata_types.h"
 #include "DNA_vfont_types.h"
 #include "DNA_mesh_types.h"
-#include "DNA_lattice_types.h"
 
 #include "IMB_imbuf_types.h"
 
@@ -56,21 +55,18 @@
 #include "BKE_curve.h"
 #include "BKE_global.h"
 #include "BKE_image.h"
-#include "BKE_lattice.h"
 #include "BKE_library.h"
 #include "BKE_main.h"
 #include "BKE_material.h"
 #include "BKE_mesh.h"
 #include "BKE_object.h"
 #include "BKE_modifier.h"
-#include "BKE_editlattice.h"
 #include "BKE_editmesh.h"
 #include "BKE_report.h"
 #include "BKE_undo_system.h"
 
 #include "ED_curve.h"
 #include "ED_mesh.h"
-#include "ED_lattice.h"
 #include "ED_object.h"
 #include "ED_screen.h"
 #include "ED_undo.h"
@@ -367,16 +363,6 @@ static bool ED_object_editmode_load_ex(Main *bmain, Object *obedit, const bool f
 			ED_curve_editfont_free(obedit);
 		}
 	}
-	else if (obedit->type == OB_LATTICE) {
-		const Lattice *lt = obedit->data;
-		if (lt->editlatt == NULL) {
-			return false;
-		}
-		BKE_editlattice_load(obedit);
-		if (freedata) {
-			BKE_editlattice_free(obedit);
-		}
-	}
 
 	return true;
 }
@@ -513,13 +499,6 @@ bool ED_object_editmode_enter(bContext *C, int flag)
 		ED_curve_editfont_make(ob);
 
 		WM_event_add_notifier(C, NC_SCENE | ND_MODE | NS_EDITMODE_TEXT, scene);
-	}
-	else if (ob->type == OB_LATTICE) {
-		scene->obedit = ob; /* XXX for context */
-		ok = 1;
-		BKE_editlattice_make(ob);
-
-		WM_event_add_notifier(C, NC_SCENE | ND_MODE | NS_EDITMODE_LATTICE, scene);
 	}
 	else if (ob->type == OB_SURF || ob->type == OB_CURVE) {
 		ok = 1;
@@ -878,7 +857,7 @@ static void UNUSED_FUNCTION(copy_attr_menu) (Main *bmain, Scene *scene, View3D *
 
 	strcat(str, "|Pass Index %x30");
 
-	if (ob->type == OB_MESH || ob->type == OB_CURVE || ob->type == OB_LATTICE || ob->type == OB_SURF) {
+	if (ob->type == OB_MESH || ob->type == OB_CURVE || ob->type == OB_SURF) {
 		strcat(str, "|Modifiers ... %x24");
 	}
 
@@ -1169,16 +1148,6 @@ bool ED_object_editmode_calc_active_center(Object *obedit, const bool select_onl
 			Curve *cu = obedit->data;
 
 			if (ED_curve_active_center(cu, r_center)) {
-				return true;
-			}
-			break;
-		}
-		case OB_LATTICE:
-		{
-			BPoint *actbp = BKE_lattice_active_point_get(obedit->data);
-
-			if (actbp) {
-				copy_v3_v3(r_center, actbp->vec);
 				return true;
 			}
 			break;

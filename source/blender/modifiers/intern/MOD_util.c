@@ -37,7 +37,6 @@
 #include "BKE_cdderivedmesh.h"
 #include "BKE_deform.h"
 #include "BKE_image.h"
-#include "BKE_lattice.h"
 #include "BKE_mesh.h"
 
 #include "BKE_modifier.h"
@@ -127,7 +126,6 @@ void get_texture_coords(
 
 void modifier_vgroup_cache(ModifierData *md, float (*vertexCos)[3])
 {
-	/* lattice/mesh modifier too */
 }
 
 /* returns a cdderivedmesh if dm == NULL or is another type of derivedmesh */
@@ -204,9 +202,7 @@ void modifier_get_vgroup(Object *ob, DerivedMesh *dm, const char *name, MDeformV
 	*dvert = NULL;
 
 	if (*defgrp_index != -1) {
-		if (ob->type == OB_LATTICE)
-			*dvert = BKE_lattice_deform_verts_get(ob);
-		else if (dm)
+		if (dm)
 			*dvert = dm->getVertDataArray(dm, CD_MDEFORMVERT);
 	}
 }
@@ -218,7 +214,6 @@ void modifier_type_init(ModifierTypeInfo *types[])
 #define INIT_TYPE(typeName) (types[eModifierType_##typeName] = &modifierType_##typeName)
 	INIT_TYPE(None);
 	INIT_TYPE(Curve);
-	INIT_TYPE(Lattice);
 	INIT_TYPE(Subsurf);
 	INIT_TYPE(Build);
 	INIT_TYPE(Array);

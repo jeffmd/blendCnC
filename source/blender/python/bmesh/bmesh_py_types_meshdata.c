@@ -362,7 +362,6 @@ PyObject *BPy_BMLoopColor_CreatePyObject(struct MLoopCol *data)
  *
  * \note: there is nothing BMesh specific here,
  * its only that BMesh is the only part of blender that uses a hand written api like this.
- * This type could eventually be used to access lattice weights.
  *
  * \note: Many of blender-api's dict-like-wrappers act like ordered dicts,
  * This is intentionally _not_ ordered, the weights can be in any order and it won't matter,

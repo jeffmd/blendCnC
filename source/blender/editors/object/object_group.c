@@ -88,7 +88,6 @@ static const EnumPropertyItem *group_object_active_itemf(bContext *C, PointerRNA
 		group = NULL;
 		while ((group = BKE_group_object_find(bmain, group, ob))) {
 			item_tmp.identifier = item_tmp.name = group->id.name + 2;
-			/* item_tmp.icon = ICON_ARMATURE_DATA; */
 			item_tmp.value = i;
 			RNA_enum_item_add(&item, &totitem, &item_tmp);
 			i++;

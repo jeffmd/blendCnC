@@ -223,7 +223,6 @@ typedef enum ID_Type {
 	ID_MA   = MAKE_ID2('M', 'A'), /* Material */
 	ID_TE   = MAKE_ID2('T', 'E'), /* Tex (Texture) */
 	ID_IM   = MAKE_ID2('I', 'M'), /* Image */
-	ID_LT   = MAKE_ID2('L', 'T'), /* Lattice */
 	ID_LA   = MAKE_ID2('L', 'A'), /* Lamp */
 	ID_CA   = MAKE_ID2('C', 'A'), /* Camera */
 	ID_WO   = MAKE_ID2('W', 'O'), /* World */
@@ -352,7 +351,6 @@ enum {
 	FILTER_ID_GR        = (1 << 6),
 	FILTER_ID_IM        = (1 << 7),
 	FILTER_ID_LA        = (1 << 8),
-	FILTER_ID_LT        = (1 << 10),
 	FILTER_ID_MA        = (1 << 11),
 	FILTER_ID_ME        = (1 << 14),
 	FILTER_ID_OB        = (1 << 17),
@@ -375,7 +373,6 @@ enum {
 	INDEX_ID_CF,
 	INDEX_ID_ME,
 	INDEX_ID_CU,
-	INDEX_ID_LT,
 	INDEX_ID_LA,
 	INDEX_ID_CA,
 	INDEX_ID_TXT,

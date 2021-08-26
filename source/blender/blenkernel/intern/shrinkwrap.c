@@ -40,7 +40,6 @@
 
 #include "BKE_shrinkwrap.h"
 #include "BKE_DerivedMesh.h"
-#include "BKE_lattice.h"
 
 #include "BKE_deform.h"
 #include "BKE_editmesh.h"
@@ -631,9 +630,6 @@ void shrinkwrapModifier_deform(ShrinkwrapModifierData *smd, Object *ob, DerivedM
 	calc.vgroup = defgroup_name_index(calc.ob, calc.smd->vgroup_name);
 	if (dm) {
 		calc.dvert = dm->getVertDataArray(dm, CD_MDEFORMVERT);
-	}
-	else if (calc.ob->type == OB_LATTICE) {
-		calc.dvert = BKE_lattice_deform_verts_get(calc.ob);
 	}
 
 

@@ -28,7 +28,6 @@
 #include <float.h>
 
 #include "DNA_curve_types.h"
-#include "DNA_lattice_types.h"
 #include "DNA_screen_types.h"
 #include "DNA_scene_types.h"
 #include "DNA_view3d_types.h"
@@ -45,7 +44,6 @@
 #include "BKE_global.h"
 #include "BKE_main.h"
 #include "BKE_editmesh.h"
-#include "BKE_lattice.h"
 
 #include "BIF_gl.h"
 
@@ -307,26 +305,6 @@ static int calc_manipulator_stats(const bContext *C, struct TransformBounds *tbo
 						}
 					}
 					nu = nu->next;
-				}
-			}
-		}
-		else if (obedit->type == OB_LATTICE) {
-			Lattice *lt = ((Lattice *)obedit->data)->editlatt->latt;
-			BPoint *bp;
-
-			if ((v3d->around == V3D_AROUND_ACTIVE) && (bp = BKE_lattice_active_point_get(lt))) {
-				calc_tw_center(tbounds, bp->vec);
-				totsel++;
-			}
-			else {
-				bp = lt->def;
-				a = lt->pntsu * lt->pntsv * lt->pntsw;
-				while (a--) {
-					if (bp->f1 & SELECT) {
-						calc_tw_center(tbounds, bp->vec);
-						totsel++;
-					}
-					bp++;
 				}
 			}
 		}

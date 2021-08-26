@@ -46,7 +46,6 @@
 #include "ED_physics.h"
 #include "ED_screen.h"
 #include "ED_space_api.h"
-#include "ED_lattice.h"
 
 #include "io_ops.h"
 
@@ -75,7 +74,6 @@ void ED_spacetypes_init(void)
 	/* register operator types for screen and all spaces */
 	ED_operatortypes_screen();
 	ED_operatortypes_object();
-	ED_operatortypes_lattice();
 	ED_operatortypes_mesh();
 	ED_operatortypes_physics();
 	ED_operatortypes_curve();
@@ -123,7 +121,6 @@ void ED_spacetypes_keymap(wmKeyConfig *keyconf)
 
 	ED_keymap_screen(keyconf);
 	ED_keymap_object(keyconf);
-	ED_keymap_lattice(keyconf);
 	ED_keymap_mesh(keyconf);
 	ED_keymap_curve(keyconf);
 	ED_keymap_physics(keyconf);

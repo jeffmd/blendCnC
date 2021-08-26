@@ -69,7 +69,7 @@ class VIEW3D_PT_tools_object(View3DPanel, Panel):
                 col = layout.column(align=True)
                 col.operator("object.join")
 
-            if obj_type in {'MESH', 'CURVE', 'SURFACE', 'FONT', 'LATTICE'}:
+            if obj_type in {'MESH', 'CURVE', 'SURFACE', 'FONT'}:
                 col = layout.column(align=True)
                 col.operator_menu_enum("object.origin_set", "type", text="Set Origin")
 
@@ -153,7 +153,6 @@ class VIEW3D_PT_tools_add_object(View3DPanel, Panel):
     @staticmethod
     def draw_add_other(layout):
         layout.operator("object.text_add", text="Text", icon='OUTLINER_OB_FONT')
-        layout.operator("object.add", text="Lattice", icon='OUTLINER_OB_LATTICE').type = 'LATTICE'
         layout.operator("object.empty_add", text="Empty", icon='OUTLINER_OB_EMPTY').type = 'PLAIN_AXES'
         layout.operator("object.camera_add", text="Camera", icon='OUTLINER_OB_CAMERA')
 
@@ -214,34 +213,6 @@ class VIEW3D_PT_tools_relations(View3DPanel, Panel):
         col.label(text="Linked Objects:")
         col.operator("object.make_local")
         col.operator("object.proxy_make")
-
-
-class VIEW3D_PT_tools_animation(View3DPanel, Panel):
-    bl_category = "Animation"
-    bl_context = "objectmode"
-    bl_label = "Animation"
-
-    def draw(self, context):
-        layout = self.layout
-
-        ob = context.active_object
-        mpath = ob.motion_path if ob else None
-
-        draw_keyframing_tools(context, layout)
-
-        col = layout.column(align=True)
-        col.label(text="Motion Paths:")
-        if mpath:
-            row = col.row(align=True)
-            row.operator("object.paths_update", text="Update")
-            row.operator("object.paths_clear", text="", icon='X')
-        else:
-            col.operator("object.paths_calculate", text="Calculate")
-
-        col.separator()
-
-        col.label(text="Action:")
-        col.operator("nla.bake", text="Bake Action")
 
 
 class VIEW3D_PT_tools_rigid_body(View3DPanel, Panel):
@@ -661,184 +632,6 @@ class VIEW3D_PT_tools_textedit(View3DPanel, Panel):
         col.operator("font.style_toggle", text="Italic").style = 'ITALIC'
         col.operator("font.style_toggle", text="Underline").style = 'UNDERLINE'
 
-
-# ********** default tools for editmode_armature ****************
-
-
-class VIEW3D_PT_tools_armatureedit_transform(View3DPanel, Panel):
-    bl_category = "Tools"
-    bl_context = "armature_edit"
-    bl_label = "Transform"
-
-    def draw(self, context):
-        layout = self.layout
-
-        col = layout.column(align=True)
-        col.operator("transform.translate")
-        col.operator("transform.rotate")
-        col.operator("transform.resize", text="Scale")
-
-
-class VIEW3D_PT_tools_armatureedit(View3DPanel, Panel):
-    bl_category = "Tools"
-    bl_context = "armature_edit"
-    bl_label = "Armature Tools"
-
-    def draw(self, context):
-        layout = self.layout
-
-        col = layout.column(align=True)
-        col.label(text="Bones:")
-        col.operator("armature.bone_primitive_add", text="Add")
-        col.operator("armature.duplicate_move", text="Duplicate")
-        col.operator("armature.delete", text="Delete")
-
-        col = layout.column(align=True)
-        col.label(text="Modeling:")
-        col.operator("armature.extrude_move")
-        col.operator("armature.subdivide", text="Subdivide")
-
-        col = layout.column(align=True)
-        col.label(text="Deform:")
-        col.operator("transform.vertex_random")
-
-
-class VIEW3D_PT_tools_armatureedit_options(View3DPanel, Panel):
-    bl_category = "Options"
-    bl_context = "armature_edit"
-    bl_label = "Armature Options"
-
-    def draw(self, context):
-        arm = context.active_object.data
-
-        self.layout.prop(arm, "use_mirror_x")
-
-
-# ********** default tools for editmode_mball ****************
-
-
-class VIEW3D_PT_tools_mballedit(View3DPanel, Panel):
-    bl_category = "Tools"
-    bl_context = "mball_edit"
-    bl_label = "Meta Tools"
-
-    def draw(self, context):
-        layout = self.layout
-
-        col = layout.column(align=True)
-        col.label(text="Transform:")
-        col.operator("transform.translate")
-        col.operator("transform.rotate")
-        col.operator("transform.resize", text="Scale")
-
-        col = layout.column(align=True)
-        col.label(text="Deform:")
-        col.operator("transform.vertex_random")
-
-
-class VIEW3D_PT_tools_add_mball_edit(View3DPanel, Panel):
-    bl_category = "Create"
-    bl_context = "mball_edit"
-    bl_label = "Add Metaball"
-
-    def draw(self, context):
-        layout = self.layout
-
-        col = layout.column(align=True)
-
-        VIEW3D_PT_tools_add_object.draw_add_mball(col)
-
-
-# ********** default tools for editmode_lattice ****************
-
-
-class VIEW3D_PT_tools_latticeedit(View3DPanel, Panel):
-    bl_category = "Tools"
-    bl_context = "lattice_edit"
-    bl_label = "Lattice Tools"
-
-    def draw(self, context):
-        layout = self.layout
-
-        col = layout.column(align=True)
-        col.label(text="Transform:")
-        col.operator("transform.translate")
-        col.operator("transform.rotate")
-        col.operator("transform.resize", text="Scale")
-
-        col = layout.column(align=True)
-        col.operator("lattice.make_regular")
-
-        col = layout.column(align=True)
-        col.label(text="Deform:")
-        col.operator("transform.vertex_random")
-
-
-# ********** default tools for pose-mode ****************
-
-
-class VIEW3D_PT_tools_posemode(View3DPanel, Panel):
-    bl_category = "Tools"
-    bl_context = "posemode"
-    bl_label = "Pose Tools"
-
-    def draw(self, context):
-        layout = self.layout
-
-        col = layout.column(align=True)
-        col.label(text="Transform:")
-        col.operator("transform.translate")
-        col.operator("transform.rotate")
-        col.operator("transform.resize", text="Scale")
-
-        col = layout.column(align=True)
-        col.label(text="In-Between:")
-        row = col.row(align=True)
-        row.operator("pose.push", text="Push")
-        row.operator("pose.relax", text="Relax")
-        col.operator("pose.breakdown", text="Breakdowner")
-
-        col = layout.column(align=True)
-        col.label(text="Pose:")
-        row = col.row(align=True)
-        row.operator("pose.copy", text="Copy")
-        row.operator("pose.paste", text="Paste")
-
-        row = layout.row(align=True)
-        row.operator("pose.propagate", text="Propagate")
-        row.menu("VIEW3D_MT_pose_propagate", icon='TRIA_RIGHT', text="")
-
-        col = layout.column(align=True)
-        col.operator("poselib.pose_add", text="Add To Library")
-
-        draw_keyframing_tools(context, layout)
-
-        ob = context.object
-        avs = ob.pose.animation_visualization
-
-        col = layout.column(align=True)
-        col.label(text="Motion Paths:")
-        if avs.motion_path.has_motion_paths:
-            row = col.row(align=True)
-            row.operator("pose.paths_update", text="Update")
-            row.operator("pose.paths_clear", text="", icon='X')
-        else:
-            col.operator("pose.paths_calculate", text="Calculate")
-
-
-class VIEW3D_PT_tools_posemode_options(View3DPanel, Panel):
-    bl_category = "Options"
-    bl_context = "posemode"
-    bl_label = "Pose Options"
-
-    def draw(self, context):
-        arm = context.active_object.data
-
-        self.layout.prop(arm, "use_auto_ik")
-
-# ********** default tools for paint modes ****************
-
-
 # Note: moved here so that it's always in last position in 'Tools' panels!
 class VIEW3D_PT_tools_history(View3DPanel, Panel):
     bl_category = "Tools"
@@ -862,7 +655,6 @@ class VIEW3D_PT_tools_history(View3DPanel, Panel):
         col.operator("screen.repeat_last")
         col.operator("screen.repeat_history", text="History...")
 
-
 classes = (
     VIEW3D_PT_tools_transform,
     VIEW3D_PT_tools_object,
@@ -883,7 +675,6 @@ classes = (
     VIEW3D_PT_tools_surfaceedit,
     VIEW3D_PT_tools_add_surface_edit,
     VIEW3D_PT_tools_textedit,
-    VIEW3D_PT_tools_latticeedit,
     VIEW3D_PT_tools_history,
 )
 

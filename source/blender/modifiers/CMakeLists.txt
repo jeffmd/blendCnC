@@ -58,7 +58,6 @@ set(SRC
 	intern/MOD_hook.c
 	intern/MOD_laplaciandeform.c
 	intern/MOD_laplaciansmooth.c
-	intern/MOD_lattice.c
 	intern/MOD_meshcache.c
 	intern/MOD_meshcache_mdd.c
 	intern/MOD_meshcache_pc2.c

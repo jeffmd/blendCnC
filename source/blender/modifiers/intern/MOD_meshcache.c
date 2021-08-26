@@ -284,7 +284,6 @@ ModifierTypeInfo modifierType_MeshCache = {
 	/* structSize */        sizeof(MeshCacheModifierData),
 	/* type */              eModifierTypeType_OnlyDeform,
 	/* flags */             eModifierTypeFlag_AcceptsCVs |
-	                        eModifierTypeFlag_AcceptsLattice |
 	                        eModifierTypeFlag_SupportsEditmode,
 
 	/* copyData */          modifier_copyData_generic,

@@ -37,7 +37,6 @@
 #include "BKE_global.h"
 #include "BKE_image.h"
 #include "BKE_lamp.h"
-#include "BKE_lattice.h"
 #include "BKE_main.h"
 #include "BKE_material.h"
 #include "BKE_object.h"
@@ -110,10 +109,6 @@ void BKE_object_handle_data_update(
 			BKE_displist_make_curveTypes(scene, ob, 0);
 			break;
 
-		case OB_LATTICE:
-			BKE_lattice_modifiers_calc(scene, ob);
-			break;
-
 	}
 
 	/* related materials */
@@ -178,7 +173,6 @@ void BKE_object_eval_uber_data(Main *bmain,
                                Scene *scene,
                                Object *ob)
 {
-	BLI_assert(ob->type != OB_ARMATURE);
 	BKE_object_handle_data_update(bmain, scene, ob);
 
 	ob->recalc &= ~(OB_RECALC_DATA | OB_RECALC_TIME);

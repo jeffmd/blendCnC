@@ -138,9 +138,6 @@ wmKeyMap *WM_keymap_guess_opname(const bContext *C, const char *opname)
 			km = WM_keymap_find_all(C, "Object Mode", 0, 0);
 		}
 	}
-	else if (STRPREFIX(opname, "LATTICE_OT")) {
-		km = WM_keymap_find_all(C, "Lattice", 0, 0);
-	}
 	else if (STRPREFIX(opname, "FONT_OT")) {
 		km = WM_keymap_find_all(C, "Font", 0, 0);
 	}

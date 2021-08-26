@@ -26,7 +26,6 @@
 
 #include "DNA_curve_types.h"
 #include "DNA_group_types.h"
-#include "DNA_lattice_types.h"
 #include "DNA_scene_types.h"
 #include "DNA_object_types.h"
 
@@ -175,22 +174,6 @@ static void stats_object_edit(Object *obedit, SceneStats *stats)
 					bp++;
 				}
 			}
-		}
-	}
-	else if (obedit->type == OB_LATTICE) {
-		/* Lattice Edit */
-		Lattice *lt = obedit->data;
-		Lattice *editlatt = lt->editlatt->latt;
-		BPoint *bp;
-		int a;
-
-		bp = editlatt->def;
-
-		a = editlatt->pntsu * editlatt->pntsv * editlatt->pntsw;
-		while (a--) {
-			stats->totvert++;
-			if (bp->f1 & SELECT) stats->totvertsel++;
-			bp++;
 		}
 	}
 }

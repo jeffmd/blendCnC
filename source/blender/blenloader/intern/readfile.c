@@ -53,7 +53,6 @@
 #include "DNA_fileglobal_types.h"
 #include "DNA_genfile.h"
 #include "DNA_group_types.h"
-#include "DNA_lattice_types.h"
 #include "DNA_lamp_types.h"
 #include "DNA_material_types.h"
 #include "DNA_mesh_types.h"
@@ -2701,31 +2700,6 @@ static void direct_link_mesh(FileData *fd, Mesh *mesh)
 	}
 }
 
-/* ************ READ LATTICE ***************** */
-
-static void lib_link_latt(FileData *fd, Main *main)
-{
-	for (Lattice *lt = main->latt.first; lt; lt = lt->id.next) {
-		if (lt->id.tag & LIB_TAG_NEED_LINK) {
-			IDP_LibLinkProperty(lt->id.properties, fd);
-
-			lt->id.tag &= ~LIB_TAG_NEED_LINK;
-		}
-	}
-}
-
-static void direct_link_latt(FileData *fd, Lattice *lt)
-{
-	lt->def = newdataadr(fd, lt->def);
-
-	lt->dvert = newdataadr(fd, lt->dvert);
-	direct_link_dverts(fd, lt->pntsu * lt->pntsv * lt->pntsw, lt->dvert);
-
-	lt->editlatt = NULL;
-
-}
-
-
 /* ************ READ OBJECT ***************** */
 
 static void lib_link_modifiers__linkModifiers(
@@ -4098,7 +4072,6 @@ static const char *dataname(short id_code)
 		case ID_GR: return "Data from GR";
 		case ID_LI: return "Data from LI";
 		case ID_IM: return "Data from IM";
-		case ID_LT: return "Data from LT";
 		case ID_LA: return "Data from LA";
 		case ID_CA: return "Data from CA";
 		case ID_WO: return "Data from WO";
@@ -4289,9 +4262,6 @@ static BHead *read_libblock(FileData *fd, Main *main, BHead *bhead, const int ta
 		case ID_TXT:
 			direct_link_text(fd, (Text *)id);
 			break;
-		case ID_LT:
-			direct_link_latt(fd, (Lattice *)id);
-			break;
 		case ID_WO:
 			direct_link_world(fd, (World *)id);
 			break;
@@ -4463,7 +4433,6 @@ static void lib_link_all(FileData *fd, Main *main)
 	lib_link_image(fd, main);
 	lib_link_world(fd, main);
 	lib_link_lamp(fd, main);
-	lib_link_latt(fd, main);
 	lib_link_text(fd, main);
 	lib_link_camera(fd, main);
 	lib_link_group(fd, main);

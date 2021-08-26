@@ -108,7 +108,6 @@ bool BLT_lang_is_ime_supported(void);
 
 /* ID-types contexts. */
 /* WARNING! Keep it in sync with idtypes in blenkernel/intern/idcode.c */
-#define BLT_I18NCONTEXT_ID_BRUSH                "Brush"
 #define BLT_I18NCONTEXT_ID_CAMERA               "Camera"
 #define BLT_I18NCONTEXT_ID_CACHEFILE            "CacheFile"
 #define BLT_I18NCONTEXT_ID_CURVE                "Curve"
@@ -117,12 +116,9 @@ bool BLT_lang_is_ime_supported(void);
 #define BLT_I18NCONTEXT_ID_IMAGE                "Image"
 #define BLT_I18NCONTEXT_ID_LAMP                 "Lamp"
 #define BLT_I18NCONTEXT_ID_LIBRARY              "Library"
-#define BLT_I18NCONTEXT_ID_LATTICE              "Lattice"
 #define BLT_I18NCONTEXT_ID_MATERIAL             "Material"
 #define BLT_I18NCONTEXT_ID_MESH                 "Mesh"
 #define BLT_I18NCONTEXT_ID_OBJECT               "Object"
-#define BLT_I18NCONTEXT_ID_PAINTCURVE           "PaintCurve"
-#define BLT_I18NCONTEXT_ID_PALETTE              "Palette"
 #define BLT_I18NCONTEXT_ID_SCENE                "Scene"
 #define BLT_I18NCONTEXT_ID_SCREEN               "Screen"
 #define BLT_I18NCONTEXT_ID_TEXTURE              "Texture"
@@ -146,7 +142,6 @@ typedef struct {
 	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_OPERATOR_DEFAULT, "operator_default"),                                       \
 	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_UI_EVENTS, "ui_events_keymaps"),                                             \
 	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_PLURAL, "plural"),                                                           \
-	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_ID_BRUSH, "id_brush"),                                                       \
 	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_ID_CAMERA, "id_camera"),                                                     \
 	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_ID_CACHEFILE, "id_cachefile"),                                               \
 	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_ID_CURVE, "id_curve"),                                                       \
@@ -155,12 +150,9 @@ typedef struct {
 	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_ID_IMAGE, "id_image"),                                                       \
 	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_ID_LAMP, "id_lamp"),                                                         \
 	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_ID_LIBRARY, "id_library"),                                                   \
-	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_ID_LATTICE, "id_lattice"),                                                   \
 	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_ID_MATERIAL, "id_material"),                                                 \
 	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_ID_MESH, "id_mesh"),                                                         \
 	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_ID_OBJECT, "id_object"),                                                     \
-	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_ID_PAINTCURVE, "id_paintcurve"),                                             \
-	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_ID_PALETTE, "id_palette"),                                                   \
 	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_ID_SCENE, "id_scene"),                                                       \
 	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_ID_SCREEN, "id_screen"),                                                     \
 	BLT_I18NCONTEXTS_ITEM(BLT_I18NCONTEXT_ID_TEXTURE, "id_texture"),                                                   \

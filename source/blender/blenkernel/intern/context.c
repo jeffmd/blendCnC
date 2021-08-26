@@ -836,8 +836,6 @@ int CTX_data_mode_enum(const bContext *C)
 				return CTX_MODE_EDIT_SURFACE;
 			case OB_FONT:
 				return CTX_MODE_EDIT_TEXT;
-			case OB_LATTICE:
-				return CTX_MODE_EDIT_LATTICE;
 		}
 	}
 
@@ -852,11 +850,6 @@ static const char *data_mode_strings[] = {
 	"curve_edit",
 	"surface_edit",
 	"text_edit",
-	"lattice_edit",
-	"sculpt_mode",
-	"weightpaint",
-	"vertexpaint",
-	"imagepaint",
 	"objectmode",
 	NULL
 };

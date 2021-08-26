@@ -23,7 +23,6 @@
 #include "BLI_utildefines.h"
 
 #include "ED_curve.h"
-#include "ED_lattice.h"
 #include "ED_mesh.h"
 #include "ED_text.h"
 #include "ED_undo.h"
@@ -39,7 +38,6 @@ void ED_undosys_type_init(void)
 	/* Edit Modes */
 	BKE_undosys_type_append(ED_curve_undosys_type);
 	BKE_undosys_type_append(ED_font_undosys_type);
-	BKE_undosys_type_append(ED_lattice_undosys_type);
 	BKE_undosys_type_append(ED_mesh_undosys_type);
 
 	/* Text editor */

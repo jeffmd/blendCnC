@@ -62,16 +62,7 @@ void ED_keymap_object(struct wmKeyConfig *keyconf);
 /* object_relations.c */
 typedef enum eParentType {
 	PAR_OBJECT,
-	PAR_ARMATURE,
-	PAR_ARMATURE_NAME,
-	PAR_ARMATURE_ENVELOPE,
-	PAR_ARMATURE_AUTO,
-	PAR_BONE,
-	PAR_BONE_RELATIVE,
 	PAR_CURVE,
-	PAR_FOLLOW,
-	PAR_PATH_CONST,
-	PAR_LATTICE,
 	PAR_VERTEX,
 	PAR_VERTEX_TRI,
 } eParentType;

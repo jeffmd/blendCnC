@@ -86,9 +86,6 @@ static bool g_undo_callback_running = false;
  */
 const UndoType *BKE_UNDOSYS_TYPE_IMAGE = NULL;
 const UndoType *BKE_UNDOSYS_TYPE_MEMFILE = NULL;
-const UndoType *BKE_UNDOSYS_TYPE_PAINTCURVE = NULL;
-const UndoType *BKE_UNDOSYS_TYPE_PARTICLE = NULL;
-const UndoType *BKE_UNDOSYS_TYPE_SCULPT = NULL;
 const UndoType *BKE_UNDOSYS_TYPE_TEXT = NULL;
 /** \} */
 

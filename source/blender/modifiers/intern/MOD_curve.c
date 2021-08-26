@@ -29,7 +29,6 @@
 #include "BLI_utildefines.h"
 
 #include "BKE_cdderivedmesh.h"
-#include "BKE_lattice.h"
 #include "BKE_library_query.h"
 #include "BKE_modifier.h"
 
@@ -76,12 +75,7 @@ static void deformVerts(
         int numVerts,
         ModifierApplyFlag UNUSED(flag))
 {
-	CurveModifierData *cmd = (CurveModifierData *) md;
 
-	/* silly that defaxis and curve_deform_verts are off by 1
-	 * but leave for now to save having to call do_versions */
-	curve_deform_verts(md->scene, cmd->object, ob, derivedData, vertexCos, numVerts,
-	                   cmd->name, cmd->defaxis - 1);
 }
 
 static void deformVertsEM(
@@ -104,7 +98,6 @@ ModifierTypeInfo modifierType_Curve = {
 	/* structSize */        sizeof(CurveModifierData),
 	/* type */              eModifierTypeType_OnlyDeform,
 	/* flags */             eModifierTypeFlag_AcceptsCVs |
-	                        eModifierTypeFlag_AcceptsLattice |
 	                        eModifierTypeFlag_SupportsEditmode,
 
 	/* copyData */          modifier_copyData_generic,

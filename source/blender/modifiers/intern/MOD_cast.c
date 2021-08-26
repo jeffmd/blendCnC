@@ -446,7 +446,6 @@ ModifierTypeInfo modifierType_Cast = {
 	/* structSize */        sizeof(CastModifierData),
 	/* type */              eModifierTypeType_OnlyDeform,
 	/* flags */             eModifierTypeFlag_AcceptsCVs |
-	                        eModifierTypeFlag_AcceptsLattice |
 	                        eModifierTypeFlag_SupportsEditmode,
 
 	/* copyData */          modifier_copyData_generic,

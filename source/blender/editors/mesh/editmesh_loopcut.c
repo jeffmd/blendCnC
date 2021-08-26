@@ -549,9 +549,6 @@ static int loopcut_init(bContext *C, wmOperator *op, const wmEvent *event)
 	Object *obedit = CTX_data_edit_object(C);
 	RingSelOpData *lcd;
 
-	if (modifiers_isDeformedByLattice(obedit))
-		BKE_report(op->reports, RPT_WARNING, "Loop cut does not work well on deformed edit mesh display");
-
 	view3d_operator_needs_opengl(C);
 
 	/* for re-execution, check edge index is in range before we setup ringsel */

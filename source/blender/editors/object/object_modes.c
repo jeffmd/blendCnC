@@ -64,10 +64,6 @@ bool ED_object_mode_compat_test(const Object *ob, eObjectMode mode)
 				if (mode & (OB_MODE_EDIT))
 					return true;
 				break;
-			case OB_LATTICE:
-				if (mode & (OB_MODE_EDIT))
-					return true;
-				break;
 		}
 	}
 

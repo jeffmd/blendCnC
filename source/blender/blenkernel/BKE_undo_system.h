@@ -77,7 +77,7 @@ typedef enum eUndoTypeMode {
 	 * Each undo step is a series of edits.
 	 * This means to change states we need to apply each edit.
 	 * It also means the 'step_decode' callback needs to detect the difference between undo and redo.
-	 * (Currently used for text edit and image & sculpt painting).
+	 * (Currently used for text edit and image ).
 	 */
 	BKE_UNDOTYPE_MODE_ACCUMULATE = 2,
 } eUndoTypeMode;
@@ -92,7 +92,7 @@ typedef struct UndoType {
 	/**
 	 * When NULL, we don't consider this undo type for context checks.
 	 * Operators must explicitly set the undo type and handle adding the undo step.
-	 * This is needed when tools operate on data which isn't the primary mode (eg, paint-curve in sculpt mode).
+	 * This is needed when tools operate on data which isn't the primary mode.
 	 */
 	bool (*poll)(struct bContext *C);
 
@@ -123,9 +123,6 @@ typedef struct UndoType {
 /* expose since we need to perform operations on spesific undo types (rarely). */
 extern const UndoType *BKE_UNDOSYS_TYPE_IMAGE;
 extern const UndoType *BKE_UNDOSYS_TYPE_MEMFILE;
-extern const UndoType *BKE_UNDOSYS_TYPE_PAINTCURVE;
-extern const UndoType *BKE_UNDOSYS_TYPE_PARTICLE;
-extern const UndoType *BKE_UNDOSYS_TYPE_SCULPT;
 extern const UndoType *BKE_UNDOSYS_TYPE_TEXT;
 
 UndoStack      *BKE_undosys_stack_create(void);

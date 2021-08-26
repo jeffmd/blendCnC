@@ -1054,8 +1054,6 @@ int UI_idcode_icon_get(const int idcode)
 			return ICON_IMAGE_DATA;
 		case ID_LA:
 			return ICON_LAMP_DATA;
-		case ID_LT:
-			return ICON_LATTICE_DATA;
 		case ID_MA:
 			return ICON_MATERIAL_DATA;
 		case ID_ME:

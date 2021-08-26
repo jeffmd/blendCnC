@@ -31,7 +31,6 @@
 #include "DNA_object_enums.h"
 #include "DNA_scene_types.h"
 #include "DNA_group_types.h"
-#include "DNA_lattice_types.h"
 #include "DNA_curve_types.h"
 
 #include "BLI_math.h"
@@ -46,7 +45,6 @@
 #include "BKE_object.h"
 #include "BKE_report.h"
 #include "BKE_editmesh.h"
-#include "BKE_lattice.h"
 
 #include "RNA_define.h"
 #include "RNA_access.h"
@@ -389,7 +387,7 @@ static int apply_objects_internal(
 	/* first check if we can execute */
 	CTX_DATA_BEGIN (C, Object *, ob, selected_editable_objects)
 	{
-		if (ELEM(ob->type, OB_MESH, OB_LATTICE, OB_CURVE, OB_SURF, OB_FONT)) {
+		if (ELEM(ob->type, OB_MESH, OB_CURVE, OB_SURF, OB_FONT)) {
 			ID *obdata = ob->data;
 			if (ID_REAL_USERS(obdata) > 1) {
 				BKE_reportf(reports, RPT_ERROR,
@@ -497,11 +495,6 @@ static int apply_objects_internal(
 
 			/* update normals */
 			BKE_mesh_calc_normals(me);
-		}
-		else if (ob->type == OB_LATTICE) {
-			Lattice *lt = ob->data;
-
-			BKE_lattice_transform(lt, mat, true);
 		}
 		else if (ELEM(ob->type, OB_CURVE, OB_SURF)) {
 			Curve *cu = ob->data;
@@ -876,20 +869,6 @@ static int object_origin_set_exec(bContext *C, wmOperator *op)
 					cu->id.tag |= LIB_TAG_DOIT;
 					do_inverse_offset = true;
 				}
-			}
-			else if (ob->type == OB_LATTICE) {
-				Lattice *lt = ob->data;
-
-				if      (centermode == ORIGIN_TO_CURSOR)     { /* done */ }
-				else if (around == V3D_AROUND_CENTER_MEDIAN) { BKE_lattice_center_median(lt, cent); }
-				else                                         { BKE_lattice_center_bounds(lt, cent); }
-
-				negate_v3_v3(cent_neg, cent);
-				BKE_lattice_translate(lt, cent_neg, 1);
-
-				tot_change++;
-				lt->id.tag |= LIB_TAG_DOIT;
-				do_inverse_offset = true;
 			}
 
 			/* offset other selected objects */

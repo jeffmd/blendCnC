@@ -39,7 +39,6 @@
 #include "DNA_curve_types.h"
 #include "DNA_group_types.h"
 #include "DNA_lamp_types.h"
-#include "DNA_lattice_types.h"
 #include "DNA_material_types.h"
 #include "DNA_mesh_types.h"
 #include "DNA_modifier_types.h"
@@ -74,7 +73,6 @@
 #include "BKE_idprop.h"
 #include "BKE_image.h"
 #include "BKE_lamp.h"
-#include "BKE_lattice.h"
 #include "BKE_library.h"
 #include "BKE_library_query.h"
 #include "BKE_library_remap.h"
@@ -357,9 +355,6 @@ bool id_make_local(Main *bmain, ID *id, const bool test, const bool lib_local)
 		case ID_IM:
 			if (!test) BKE_image_make_local(bmain, (Image *)id, lib_local);
 			return true;
-		case ID_LT:
-			if (!test) BKE_lattice_make_local(bmain, (Lattice *)id, lib_local);
-			return true;
 		case ID_LA:
 			if (!test) BKE_lamp_make_local(bmain, (Lamp *)id, lib_local);
 			return true;
@@ -485,9 +480,6 @@ bool BKE_id_copy_ex(Main *bmain, const ID *id, ID **r_newid, const int flag, con
 			break;
 		case ID_IM:
 			BKE_image_copy_data(bmain, (Image *)*r_newid, (Image *)id, flag);
-			break;
-		case ID_LT:
-			BKE_lattice_copy_data(bmain, (Lattice *)*r_newid, (Lattice *)id, flag);
 			break;
 		case ID_LA:
 			BKE_lamp_copy_data(bmain, (Lamp *)*r_newid, (Lamp *)id, flag);
@@ -688,8 +680,6 @@ ListBase *which_libbase(Main *mainlib, short type)
 			return &(mainlib->tex);
 		case ID_IM:
 			return &(mainlib->image);
-		case ID_LT:
-			return &(mainlib->latt);
 		case ID_LA:
 			return &(mainlib->lamp);
 		case ID_CA:
@@ -814,7 +804,6 @@ int set_listbasepointers(Main *main, ListBase **lb)
 	lb[INDEX_ID_ME] = &(main->mesh);
 	lb[INDEX_ID_CU] = &(main->curve);
 
-	lb[INDEX_ID_LT] = &(main->latt);
 	lb[INDEX_ID_LA] = &(main->lamp);
 	lb[INDEX_ID_CA] = &(main->camera);
 
@@ -865,7 +854,6 @@ size_t BKE_libblock_get_alloc_info(short type, const char **name)
 		CASE_RETURN(ID_MA,  Material);
 		CASE_RETURN(ID_TE,  Tex);
 		CASE_RETURN(ID_IM,  Image);
-		CASE_RETURN(ID_LT,  Lattice);
 		CASE_RETURN(ID_LA,  Lamp);
 		CASE_RETURN(ID_CA,  Camera);
 		CASE_RETURN(ID_WO,  World);
@@ -977,9 +965,6 @@ void BKE_libblock_init_empty(ID *id)
 			break;
 		case ID_IM:
 			BKE_image_init((Image *)id);
-			break;
-		case ID_LT:
-			BKE_lattice_init((Lattice *)id);
 			break;
 		case ID_LA:
 			BKE_lamp_init((Lamp *)id);

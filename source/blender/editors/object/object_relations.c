@@ -31,7 +31,6 @@
 #include "DNA_mesh_types.h"
 #include "DNA_group_types.h"
 #include "DNA_lamp_types.h"
-#include "DNA_lattice_types.h"
 #include "DNA_material_types.h"
 #include "DNA_scene_types.h"
 #include "DNA_world_types.h"
@@ -57,7 +56,6 @@
 #include "BKE_group.h"
 #include "BKE_idprop.h"
 #include "BKE_lamp.h"
-#include "BKE_lattice.h"
 #include "BKE_library.h"
 #include "BKE_library_query.h"
 #include "BKE_library_remap.h"
@@ -93,7 +91,7 @@
 
 static bool vertex_parent_set_poll(bContext *C)
 {
-	return ED_operator_editmesh(C) || ED_operator_editsurfcurve(C) || ED_operator_editlattice(C);
+	return ED_operator_editmesh(C) || ED_operator_editsurfcurve(C);
 }
 
 static int vertex_parent_set_exec(bContext *C, wmOperator *op)
@@ -177,23 +175,6 @@ static int vertex_parent_set_exec(bContext *C, wmOperator *op)
 				}
 			}
 			nu = nu->next;
-		}
-	}
-	else if (obedit->type == OB_LATTICE) {
-		Lattice *lt = obedit->data;
-
-		a = lt->editlatt->latt->pntsu * lt->editlatt->latt->pntsv * lt->editlatt->latt->pntsw;
-		bp = lt->editlatt->latt->def;
-		while (a--) {
-			if (bp->f1 & SELECT) {
-				if (v1 == 0) v1 = nr;
-				else if (v2 == 0) v2 = nr;
-				else if (v3 == 0) v3 = nr;
-				else if (v4 == 0) v4 = nr;
-				else break;
-			}
-			nr++;
-			bp++;
 		}
 	}
 
@@ -423,7 +404,7 @@ EnumPropertyItem prop_clear_parent_types[] = {
 /* Helper for ED_object_parent_clear() - Remove deform-modifiers associated with parent */
 static void object_remove_parent_deform_modifiers(Object *ob, const Object *par)
 {
-	if (ELEM(par->type, OB_LATTICE, OB_CURVE)) {
+	if (ELEM(par->type, OB_CURVE)) {
 		ModifierData *md, *mdn;
 
 		/* assume that we only need to remove the first instance of matching deform modifier here */
@@ -433,13 +414,7 @@ static void object_remove_parent_deform_modifiers(Object *ob, const Object *par)
 			mdn = md->next;
 
 			/* need to match types (modifier + parent) and references */
-			if ((md->type == eModifierType_Lattice) && (par->type == OB_LATTICE)) {
-				LatticeModifierData *lmd = (LatticeModifierData *)md;
-				if (lmd->object == par) {
-					free = true;
-				}
-			}
-			else if ((md->type == eModifierType_Curve) && (par->type == OB_CURVE)) {
+			if ((md->type == eModifierType_Curve) && (par->type == OB_CURVE)) {
 				CurveModifierData *cmd = (CurveModifierData *)md;
 				if (cmd->object == par) {
 					free = true;
@@ -557,9 +532,6 @@ void ED_object_parent(Object *ob, Object *par, const int type, const char *subst
 EnumPropertyItem prop_make_parent_types[] = {
 	{PAR_OBJECT, "OBJECT", 0, "Object", ""},
 	{PAR_CURVE, "CURVE", 0, "Curve Deform", ""},
-	{PAR_FOLLOW, "FOLLOW", 0, "Follow Path", ""},
-	{PAR_PATH_CONST, "PATH_CONST", 0, "Path Constraint", ""},
-	{PAR_LATTICE, "LATTICE", 0, "Lattice Deform", ""},
 	{PAR_VERTEX, "VERTEX", 0, "Vertex", ""},
 	{PAR_VERTEX_TRI, "VERTEX_TRI", 0, "Vertex (Triangle)", ""},
 	{0, NULL, 0, NULL, NULL}
@@ -568,27 +540,6 @@ EnumPropertyItem prop_make_parent_types[] = {
 bool ED_object_parent_set(ReportList *reports, Main *bmain, Scene *scene, Object *ob, Object *par,
                           int partype, const bool xmirror, const bool keep_transform, const int vert_par[3])
 {
-	/* preconditions */
-	if (partype == PAR_FOLLOW || partype == PAR_PATH_CONST) {
-		if (par->type != OB_CURVE)
-			return 0;
-		else {
-			Curve *cu = par->data;
-
-			if ((cu->flag & CU_PATH) == 0) {
-				cu->flag |= CU_PATH | CU_FOLLOW;
-				BKE_displist_make_curveTypes(scene, par, 0);  /* force creation of path data */
-			}
-			else {
-				cu->flag |= CU_FOLLOW;
-			}
-
-
-			/* fall back on regular parenting now (for follow only) */
-			if (partype == PAR_FOLLOW)
-				partype = PAR_OBJECT;
-		}
-	}
 
 	if (ob != par) {
 		if (BKE_object_parent_loop_check(par, ob)) {
@@ -603,20 +554,14 @@ bool ED_object_parent_set(ReportList *reports, Main *bmain, Scene *scene, Object
 				BKE_object_apply_mat4(ob, ob->obmat, false, false);
 			}
 
-			/* set the parent (except for follow-path constraint option) */
-			if (partype != PAR_PATH_CONST) {
-				ob->parent = par;
-				/* Always clear parentinv matrix for sake of consistency, see T41950. */
-				unit_m4(ob->parentinv);
-			}
+			ob->parent = par;
+			/* Always clear parentinv matrix for sake of consistency, see T41950. */
+			unit_m4(ob->parentinv);
 
 			/* handle types */
 			ob->parsubstr[0] = 0;
 
-			if (partype == PAR_PATH_CONST) {
-				/* don't do anything here, since this is not technically "parenting" */
-			}
-			else if ((partype == PAR_CURVE) || (partype == PAR_LATTICE)) {
+			if (partype == PAR_CURVE) {
 				/* partype is now set to PAROBJECT so that invisible 'virtual' modifiers don't need to be created
 				 * NOTE: the old (2.4x) method was to set ob->partype = PARSKEL, creating the virtual modifiers
 				 */
@@ -627,9 +572,8 @@ bool ED_object_parent_set(ReportList *reports, Main *bmain, Scene *scene, Object
 				 * - We need to ensure that the modifier we're adding doesn't already exist, so we check this by
 				 *   assuming that the parent is selected too...
 				 */
-				/* XXX currently this should only happen for meshes, curves, surfaces,
-				 * and lattices - this stuff isn't available for metas yet */
-				if (ELEM(ob->type, OB_MESH, OB_CURVE, OB_SURF, OB_FONT, OB_LATTICE)) {
+				/* XXX currently this should only happen for meshes, curves, and surfaces */
+				if (ELEM(ob->type, OB_MESH, OB_CURVE, OB_SURF, OB_FONT)) {
 					ModifierData *md;
 
 					switch (partype) {
@@ -638,14 +582,6 @@ bool ED_object_parent_set(ReportList *reports, Main *bmain, Scene *scene, Object
 								md = ED_object_modifier_add(reports, bmain, scene, ob, NULL, eModifierType_Curve);
 								if (md) {
 									((CurveModifierData *)md)->object = par;
-								}
-							}
-							break;
-						case PAR_LATTICE: /* lattice deform */
-							if (modifiers_isDeformedByLattice(ob) != par) {
-								md = ED_object_modifier_add(reports, bmain, scene, ob, NULL, eModifierType_Lattice);
-								if (md) {
-									((LatticeModifierData *)md)->object = par;
 								}
 							}
 							break;
@@ -784,11 +720,6 @@ static int parent_set_invoke(bContext *C, wmOperator *UNUSED(op), const wmEvent 
 	/* ob becomes parent, make the associated menus */
 	if (ob->type == OB_CURVE) {
 		uiItemEnumO_ptr(layout, ot, NULL, 0, "type", PAR_CURVE);
-		uiItemEnumO_ptr(layout, ot, NULL, 0, "type", PAR_FOLLOW);
-		uiItemEnumO_ptr(layout, ot, NULL, 0, "type", PAR_PATH_CONST);
-	}
-	else if (ob->type == OB_LATTICE) {
-		uiItemEnumO_ptr(layout, ot, NULL, 0, "type", PAR_LATTICE);
 	}
 
 	/* vertex parenting */
@@ -1477,7 +1408,6 @@ static void single_obdata_users(Main *bmain, Scene *scene, const int flag)
 	/* Camera *cam; */
 	Base *base;
 	Mesh *me;
-	Lattice *lat;
 	ID *id;
 	int a;
 
@@ -1510,9 +1440,6 @@ static void single_obdata_users(Main *bmain, Scene *scene, const int flag)
 						ob->data = cu = ID_NEW_SET(ob->data, BKE_curve_copy(bmain, ob->data));
 						ID_NEW_REMAP(cu->bevobj);
 						ID_NEW_REMAP(cu->taperobj);
-						break;
-					case OB_LATTICE:
-						ob->data = lat = ID_NEW_SET(ob->data, BKE_lattice_copy(bmain, ob->data));
 						break;
 					default:
 						if (G.debug & G_DEBUG)

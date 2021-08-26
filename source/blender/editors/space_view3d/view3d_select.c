@@ -66,7 +66,6 @@
 #include "RNA_enum_types.h"
 
 #include "ED_curve.h"
-#include "ED_lattice.h"
 #include "ED_mesh.h"
 #include "ED_object.h"
 #include "ED_screen.h"
@@ -452,32 +451,6 @@ static void do_lasso_select_curve(ViewContext *vc, const int mcords[][2], short 
 	BKE_curve_nurb_vert_active_validate(vc->obedit->data);
 }
 
-static void do_lasso_select_lattice__doSelect(void *userData, BPoint *bp, const float screen_co[2])
-{
-	LassoSelectUserData *data = userData;
-
-	if (BLI_rctf_isect_pt_v(data->rect_fl, screen_co) &&
-	    BLI_lasso_is_point_inside(data->mcords, data->moves, screen_co[0], screen_co[1], IS_CLIPPED))
-	{
-		bp->f1 = data->select ? (bp->f1 | SELECT) : (bp->f1 & ~SELECT);
-	}
-}
-static void do_lasso_select_lattice(ViewContext *vc, const int mcords[][2], short moves, bool extend, bool select)
-{
-	LassoSelectUserData data;
-	rcti rect;
-
-	BLI_lasso_boundbox(&rect, mcords, moves);
-
-	view3d_userdata_lassoselect_init(&data, vc, &rect, mcords, moves, select);
-
-	if (extend == false && select)
-		ED_lattice_flags_set(vc->obedit, 0);
-
-	ED_view3d_init_mats_rv3d(vc->obedit, vc->rv3d); /* for foreach's screen/vert projection */
-	lattice_foreachScreenVert(vc, do_lasso_select_lattice__doSelect, &data, V3D_PROJ_TEST_CLIP_DEFAULT);
-}
-
 static void view3d_lasso_select(
         bContext *C, ViewContext *vc,
         const int mcords[][2], short moves,
@@ -495,9 +468,6 @@ static void view3d_lasso_select(
 			case OB_CURVE:
 			case OB_SURF:
 				do_lasso_select_curve(vc, mcords, moves, extend, select);
-				break;
-			case OB_LATTICE:
-				do_lasso_select_lattice(vc, mcords, moves, extend, select);
 				break;
 			default:
 				assert(!"lasso select on incorrect object type");
@@ -1150,29 +1120,6 @@ static int do_nurbs_box_select(ViewContext *vc, rcti *rect, bool select, bool ex
 	return OPERATOR_FINISHED;
 }
 
-static void do_lattice_box_select__doSelect(void *userData, BPoint *bp, const float screen_co[2])
-{
-	BoxSelectUserData *data = userData;
-
-	if (BLI_rctf_isect_pt_v(data->rect_fl, screen_co)) {
-		bp->f1 = data->select ? (bp->f1 | SELECT) : (bp->f1 & ~SELECT);
-	}
-}
-static int do_lattice_box_select(ViewContext *vc, rcti *rect, bool select, bool extend)
-{
-	BoxSelectUserData data;
-
-	view3d_userdata_boxselect_init(&data, vc, rect, select);
-
-	if (extend == false && select)
-		ED_lattice_flags_set(vc->obedit, 0);
-
-	ED_view3d_init_mats_rv3d(vc->obedit, vc->rv3d); /* for foreach's screen/vert projection */
-	lattice_foreachScreenVert(vc, do_lattice_box_select__doSelect, &data, V3D_PROJ_TEST_CLIP_DEFAULT);
-
-	return OPERATOR_FINISHED;
-}
-
 static void do_mesh_box_select__doSelectVert(void *userData, BMVert *eve, const float screen_co[2], int UNUSED(index))
 {
 	BoxSelectUserData *data = userData;
@@ -1296,12 +1243,6 @@ static int view3d_borderselect_exec(bContext *C, wmOperator *op)
 					WM_event_add_notifier(C, NC_GEOM | ND_SELECT, vc.obedit->data);
 				}
 				break;
-			case OB_LATTICE:
-				ret = do_lattice_box_select(&vc, &rect, select, extend);
-				if (ret & OPERATOR_FINISHED) {
-					WM_event_add_notifier(C, NC_GEOM | ND_SELECT, vc.obedit->data);
-				}
-				break;
 			default:
 				assert(!"border select on incorrect object type");
 				break;
@@ -1370,8 +1311,6 @@ static int view3d_select_exec(bContext *C, wmOperator *op)
 	if (obedit) {
 		if (obedit->type == OB_MESH)
 			retval = EDBM_select_pick(C, location, extend, deselect, toggle);
-		else if (obedit->type == OB_LATTICE)
-			retval = ED_lattice_select_pick(C, location, extend, deselect, toggle);
 		else if (ELEM(obedit->type, OB_CURVE, OB_SURF))
 			retval = ED_curve_editnurb_select_pick(C, location, extend, deselect, toggle);
 		else if (obedit->type == OB_FONT)
@@ -1567,26 +1506,6 @@ static void nurbscurve_circle_select(ViewContext *vc, const bool select, const i
 	BKE_curve_nurb_vert_active_validate(vc->obedit->data);
 }
 
-
-static void latticecurve_circle_doSelect(void *userData, BPoint *bp, const float screen_co[2])
-{
-	CircleSelectUserData *data = userData;
-
-	if (len_squared_v2v2(data->mval_fl, screen_co) <= data->radius_squared) {
-		bp->f1 = data->select ? (bp->f1 | SELECT) : (bp->f1 & ~SELECT);
-	}
-}
-static void lattice_circle_select(ViewContext *vc, const bool select, const int mval[2], float rad)
-{
-	CircleSelectUserData data;
-
-	view3d_userdata_circleselect_init(&data, vc, select, mval, rad);
-
-	ED_view3d_init_mats_rv3d(vc->obedit, vc->rv3d); /* for foreach's screen/vert projection */
-	lattice_foreachScreenVert(vc, latticecurve_circle_doSelect, &data, V3D_PROJ_TEST_CLIP_DEFAULT);
-}
-
-
 /** Callbacks for circle selection in Editmode */
 
 static void obedit_circle_select(ViewContext *vc, const bool select, const int mval[2], float rad)
@@ -1598,9 +1517,6 @@ static void obedit_circle_select(ViewContext *vc, const bool select, const int m
 		case OB_CURVE:
 		case OB_SURF:
 			nurbscurve_circle_select(vc, select, mval, rad);
-			break;
-		case OB_LATTICE:
-			lattice_circle_select(vc, select, mval, rad);
 			break;
 		default:
 			return;

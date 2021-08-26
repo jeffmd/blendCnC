@@ -33,7 +33,6 @@
 #include "BLI_utildefines.h"
 
 #include "DNA_curve_types.h"
-#include "DNA_lattice_types.h"
 #include "DNA_mesh_types.h"
 #include "DNA_meshdata_types.h"
 #include "DNA_object_types.h"
@@ -151,68 +150,6 @@ static void select_editbmesh_hook(Object *ob, HookModifierData *hmd)
 	EDBM_select_flush(em);
 }
 
-static int return_editlattice_indexar(
-        Lattice *editlatt,
-        int *r_tot, int **r_indexar, float r_cent[3])
-{
-	BPoint *bp;
-	int *index, nr, totvert = 0, a;
-
-	/* count */
-	a = editlatt->pntsu * editlatt->pntsv * editlatt->pntsw;
-	bp = editlatt->def;
-	while (a--) {
-		if (bp->f1 & SELECT) {
-			if (bp->hide == 0) totvert++;
-		}
-		bp++;
-	}
-
-	if (totvert == 0) return 0;
-
-	*r_indexar = index = MEM_mallocN(4 * totvert, "hook indexar");
-	*r_tot = totvert;
-	nr = 0;
-	zero_v3(r_cent);
-
-	a = editlatt->pntsu * editlatt->pntsv * editlatt->pntsw;
-	bp = editlatt->def;
-	while (a--) {
-		if (bp->f1 & SELECT) {
-			if (bp->hide == 0) {
-				*index = nr; index++;
-				add_v3_v3(r_cent, bp->vec);
-			}
-		}
-		bp++;
-		nr++;
-	}
-
-	mul_v3_fl(r_cent, 1.0f / (float)totvert);
-
-	return totvert;
-}
-
-static void select_editlattice_hook(Object *obedit, HookModifierData *hmd)
-{
-	Lattice *lt = obedit->data, *editlt;
-	BPoint *bp;
-	int index = 0, nr = 0, a;
-
-	editlt = lt->editlatt->latt;
-	/* count */
-	a = editlt->pntsu * editlt->pntsv * editlt->pntsw;
-	bp = editlt->def;
-	while (a--) {
-		if (hmd->indexar[index] == nr) {
-			bp->f1 |= SELECT;
-			if (index < hmd->totindex - 1) index++;
-		}
-		nr++;
-		bp++;
-	}
-}
-
 static int return_editcurve_indexar(
         Object *obedit,
         int *r_tot, int **r_indexar, float r_cent[3])
@@ -325,11 +262,6 @@ static bool object_hook_index_array(Main *bmain, Scene *scene, Object *obedit,
 			ED_curve_editnurb_load(bmain, obedit);
 			ED_curve_editnurb_make(obedit);
 			return return_editcurve_indexar(obedit, r_tot, r_indexar, r_cent);
-		case OB_LATTICE:
-		{
-			Lattice *lt = obedit->data;
-			return return_editlattice_indexar(lt->editlatt->latt, r_tot, r_indexar, r_cent);
-		}
 		default:
 			return false;
 	}
@@ -413,7 +345,6 @@ static void object_hook_select(Object *ob, HookModifierData *hmd)
 		return;
 
 	if (ob->type == OB_MESH) select_editbmesh_hook(ob, hmd);
-	else if (ob->type == OB_LATTICE) select_editlattice_hook(ob, hmd);
 	else if (ob->type == OB_CURVE) select_editcurve_hook(ob, hmd);
 	else if (ob->type == OB_SURF) select_editcurve_hook(ob, hmd);
 }
@@ -427,8 +358,6 @@ static bool hook_op_edit_poll(bContext *C)
 	if (obedit) {
 		if (ED_operator_editmesh(C)) return 1;
 		if (ED_operator_editsurfcurve(C)) return 1;
-		if (ED_operator_editlattice(C)) return 1;
-		//if (ED_operator_editmball(C)) return 1;
 	}
 
 	return 0;

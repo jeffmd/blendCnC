@@ -2441,7 +2441,7 @@ static void rna_def_fileselect_params(BlenderRNA *brna)
 	     "SCENE", ICON_SCENE_DATA, "Scenes", "Show/hide scenes"},
 		{FILTER_ID_OB | FILTER_ID_GR,
 	     "OBJECT", ICON_GROUP, "Objects & Groups", "Show/hide objects and groups"},
-		{FILTER_ID_CU | FILTER_ID_LT | FILTER_ID_ME,
+		{FILTER_ID_CU | FILTER_ID_ME,
 	     "GEOMETRY", ICON_MESH_DATA, "Geometry", "Show/hide meshes, and curves data"},
 		{FILTER_ID_MA | FILTER_ID_TE,
 	     "SHADING", ICON_MATERIAL_DATA, "Shading",

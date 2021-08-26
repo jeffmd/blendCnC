@@ -322,7 +322,6 @@ typedef struct wmNotifier {
 #define NS_EDITMODE_CURVE		(3<<8)
 #define NS_EDITMODE_SURFACE		(4<<8)
 #define NS_EDITMODE_TEXT		(5<<8)
-#define NS_EDITMODE_LATTICE		(7<<8)
 
 /* subtype 3d view editing */
 #define NS_VIEW3D_GPU			(16<<8)

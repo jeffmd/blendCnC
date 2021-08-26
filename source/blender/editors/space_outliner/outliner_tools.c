@@ -94,7 +94,7 @@ static void set_operation_types(SpaceOops *soops, ListBase *lb,
 						*objectlevel = 1;
 						break;
 
-					case ID_ME: case ID_CU: case ID_LT:
+					case ID_ME: case ID_CU:
 					case ID_LA: case ID_CA: 
 					case ID_MA: case ID_IM:
 					case ID_WO: case ID_TXT: case ID_GR: 

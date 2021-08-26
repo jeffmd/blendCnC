@@ -53,7 +53,6 @@
 #include "BKE_font.h"
 #include "BKE_group.h"
 #include "BKE_lamp.h"
-#include "BKE_lattice.h"
 #include "BKE_library.h"
 #include "BKE_library_query.h"
 #include "BKE_library_remap.h"
@@ -405,14 +404,7 @@ static int object_add_exec(bContext *C, wmOperator *op)
 	radius = RNA_float_get(op->ptr, "radius");
 	ob = ED_object_add_type(C, RNA_enum_get(op->ptr, "type"), NULL, loc, rot, enter_editmode, layer);
 
-	if (ob->type == OB_LATTICE) {
-		/* lattice is a special case!
-		 * we never want to scale the obdata since that is the rest-state */
-		copy_v3_fl(ob->size, radius);
-	}
-	else {
-		BKE_object_obdata_size_init(ob, radius);
-	}
+	BKE_object_obdata_size_init(ob, radius);
 
 	return OPERATOR_FINISHED;
 }
@@ -1400,16 +1392,6 @@ static Base *object_add_duplicate_internal(Main *bmain, Scene *scene, Base *base
 					ID_NEW_REMAP_US2(obn->data)
 					else {
 						obn->data = ID_NEW_SET(obn->data, BKE_lamp_copy(bmain, obn->data));
-						didit = 1;
-					}
-					id_us_min(id);
-				}
-				break;
-			case OB_LATTICE:
-				if (dupflag != 0) {
-					ID_NEW_REMAP_US2(obn->data)
-					else {
-						obn->data = ID_NEW_SET(obn->data, BKE_lattice_copy(bmain, obn->data));
 						didit = 1;
 					}
 					id_us_min(id);

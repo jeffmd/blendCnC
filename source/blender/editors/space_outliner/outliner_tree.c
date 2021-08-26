@@ -280,10 +280,7 @@ static void outliner_add_object_contents(SpaceOops *soops, TreeElement *te, Tree
 			ten->name = md->name;
 			ten->directdata = md;
 
-			if (md->type == eModifierType_Lattice) {
-				outliner_add_element(soops, &ten->subtree, ((LatticeModifierData *) md)->object, ten, TSE_LINKED_OB, 0);
-			}
-			else if (md->type == eModifierType_Curve) {
+			if (md->type == eModifierType_Curve) {
 				outliner_add_element(soops, &ten->subtree, ((CurveModifierData *) md)->object, ten, TSE_LINKED_OB, 0);
 			}
 			else if (md->type == eModifierType_Hook) {

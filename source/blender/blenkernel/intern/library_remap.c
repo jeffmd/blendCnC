@@ -35,7 +35,6 @@
 #include "DNA_curve_types.h"
 #include "DNA_group_types.h"
 #include "DNA_lamp_types.h"
-#include "DNA_lattice_types.h"
 #include "DNA_material_types.h"
 #include "DNA_mesh_types.h"
 #include "DNA_object_types.h"
@@ -57,7 +56,6 @@
 #include "BKE_idprop.h"
 #include "BKE_image.h"
 #include "BKE_lamp.h"
-#include "BKE_lattice.h"
 #include "BKE_library.h"
 #include "BKE_library_query.h"
 #include "BKE_library_remap.h"
@@ -688,9 +686,6 @@ void BKE_libblock_free_datablock(ID *id, const int UNUSED(flag))
 			break;
 		case ID_IM:
 			BKE_image_free((Image *)id);
-			break;
-		case ID_LT:
-			BKE_lattice_free((Lattice *)id);
 			break;
 		case ID_LA:
 			BKE_lamp_free((Lamp *)id);

@@ -28,7 +28,6 @@
 
 #include "BLI_sys_types.h" /* for intptr_t support */
 
-#include "DNA_lattice_types.h"
 #include "DNA_screen_types.h"
 #include "DNA_space_types.h"
 #include "DNA_scene_types.h"
@@ -51,7 +50,6 @@
 #include "BIF_glutil.h"
 
 #include "BKE_curve.h"
-#include "BKE_lattice.h"
 #include "BKE_library.h"
 #include "BKE_main.h"
 #include "BKE_context.h"
@@ -243,15 +241,6 @@ static void recalcData_objects(TransInfo *t)
 					nu = nu->next;
 				}
 			}
-		}
-		else if (t->obedit->type == OB_LATTICE) {
-			Lattice *la = t->obedit->data;
-
-			if (t->state != TRANS_CANCEL) {
-				applyProject(t);
-			}
-
-			if (la->editlatt->latt->flag & LT_OUTSIDE) outside_lattice(la->editlatt->latt);
 		}
 		else if (t->obedit->type == OB_MESH) {
 			BMEditMesh *em = BKE_editmesh_from_object(t->obedit);

@@ -52,7 +52,6 @@ set(SRC
 	../include/ED_fileselect.h
 	../include/ED_image.h
 	../include/ED_info.h
-	../include/ED_lattice.h
 	../include/ED_mesh.h
 	../include/ED_numinput.h
 	../include/ED_object.h

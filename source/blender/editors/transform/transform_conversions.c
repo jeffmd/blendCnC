@@ -25,7 +25,6 @@
 #include <math.h>
 #include <limits.h>
 
-#include "DNA_lattice_types.h"
 #include "DNA_mesh_types.h"
 #include "DNA_screen_types.h"
 #include "DNA_space_types.h"
@@ -726,66 +725,6 @@ static void createTransCurveVerts(TransInfo *t)
 #undef SEL_F1
 #undef SEL_F2
 #undef SEL_F3
-}
-
-/* ********************* lattice *************** */
-
-static void createTransLatticeVerts(TransInfo *t)
-{
-	Lattice *latt = ((Lattice *)t->obedit->data)->editlatt->latt;
-	TransData *td = NULL;
-	BPoint *bp;
-	float mtx[3][3], smtx[3][3];
-	int a;
-	int count = 0, countsel = 0;
-	const bool is_prop_edit = (t->flag & T_PROP_EDIT) != 0;
-
-	bp = latt->def;
-	a  = latt->pntsu * latt->pntsv * latt->pntsw;
-	while (a--) {
-		if (bp->hide == 0) {
-			if (bp->f1 & SELECT) countsel++;
-			if (is_prop_edit) count++;
-		}
-		bp++;
-	}
-
-	/* note: in prop mode we need at least 1 selected */
-	if (countsel == 0) return;
-
-	if (is_prop_edit) t->total = count;
-	else t->total = countsel;
-	t->data = MEM_callocN(t->total * sizeof(TransData), "TransObData(Lattice EditMode)");
-
-	copy_m3_m4(mtx, t->obedit->obmat);
-	pseudoinverse_m3_m3(smtx, mtx, PSEUDOINVERSE_EPSILON);
-
-	td = t->data;
-	bp = latt->def;
-	a  = latt->pntsu * latt->pntsv * latt->pntsw;
-	while (a--) {
-		if (is_prop_edit || (bp->f1 & SELECT)) {
-			if (bp->hide == 0) {
-				copy_v3_v3(td->iloc, bp->vec);
-				td->loc = bp->vec;
-				copy_v3_v3(td->center, td->loc);
-				if (bp->f1 & SELECT) {
-					td->flag = TD_SELECTED;
-				}
-				else {
-					td->flag = 0;
-				}
-				copy_m3_m3(td->smtx, smtx);
-				copy_m3_m3(td->mtx, mtx);
-
-				td->ext = NULL;
-				td->val = NULL;
-
-				td++;
-			}
-		}
-		bp++;
-	}
 }
 
 /* ********************* mesh ****************** */
@@ -1965,9 +1904,6 @@ void createTransData(bContext *C, TransInfo *t)
 		}
 		else if (ELEM(t->obedit->type, OB_CURVE, OB_SURF)) {
 			createTransCurveVerts(t);
-		}
-		else if (t->obedit->type == OB_LATTICE) {
-			createTransLatticeVerts(t);
 		}
 		else {
 			printf("edit type not implemented!\n");

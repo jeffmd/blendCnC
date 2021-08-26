@@ -38,7 +38,6 @@ set(SRC_DNA_INC
 	${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_group_types.h
 	${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_image_types.h
 	${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_lamp_types.h
-	${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_lattice_types.h
 	${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_listBase.h
 	${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_material_types.h
 	${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_mesh_types.h

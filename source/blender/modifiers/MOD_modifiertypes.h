@@ -27,7 +27,6 @@
 
 extern ModifierTypeInfo modifierType_None;
 extern ModifierTypeInfo modifierType_Subsurf;
-extern ModifierTypeInfo modifierType_Lattice;
 extern ModifierTypeInfo modifierType_Curve;
 extern ModifierTypeInfo modifierType_Build;
 extern ModifierTypeInfo modifierType_Mirror;

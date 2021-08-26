@@ -19,7 +19,6 @@
  */
 
 #include "DNA_curve_types.h"
-#include "DNA_lattice_types.h"
 #include "DNA_mesh_types.h"
 #include "DNA_object_types.h"
 #include "DNA_scene_types.h"
@@ -324,36 +323,3 @@ void nurbs_foreachScreenVert(
 		}
 	}
 }
-
-/* ------------------------------------------------------------------------ */
-
-void lattice_foreachScreenVert(
-        ViewContext *vc,
-        void (*func)(void *userData, BPoint *bp, const float screen_co[2]),
-        void *userData, const eV3DProjTest clip_flag)
-{
-	Object *obedit = vc->obedit;
-	Lattice *lt = obedit->data;
-	BPoint *bp = lt->editlatt->latt->def;
-	DispList *dl = obedit->curve_cache ? BKE_displist_find(&obedit->curve_cache->disp, DL_VERTS) : NULL;
-	const float *co = dl ? dl->verts : NULL;
-	int i, N = lt->editlatt->latt->pntsu * lt->editlatt->latt->pntsv * lt->editlatt->latt->pntsw;
-
-	ED_view3d_check_mats_rv3d(vc->rv3d);
-
-	if (clip_flag & V3D_PROJ_TEST_CLIP_BB) {
-		ED_view3d_clipping_local(vc->rv3d, obedit->obmat); /* for local clipping lookups */
-	}
-
-	for (i = 0; i < N; i++, bp++, co += 3) {
-		if (bp->hide == 0) {
-			float screen_co[2];
-			if (ED_view3d_project_float_object(vc->ar, dl ? co : bp->vec, screen_co, clip_flag) == V3D_PROJ_RET_OK) {
-				func(userData, bp, screen_co);
-			}
-		}
-	}
-}
-
-/* ------------------------------------------------------------------------ */
-

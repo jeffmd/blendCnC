@@ -29,7 +29,6 @@
 #include "DNA_curve_types.h"
 #include "DNA_group_types.h"
 #include "DNA_lamp_types.h"
-#include "DNA_lattice_types.h"
 #include "DNA_material_types.h"
 #include "DNA_mesh_types.h"
 #include "DNA_meshdata_types.h"
@@ -512,8 +511,6 @@ bool BKE_library_id_can_use_idtype(ID *id_owner, const short id_type_used)
 			return (ELEM(id_type_used, ID_TE, ID_GR));
 		case ID_TE:
 			return (ELEM(id_type_used, ID_IM, ID_OB));
-		case ID_LT:
-			return true;
 		case ID_LA:
 			return (ELEM(id_type_used, ID_TE));
 		case ID_CA:

@@ -72,12 +72,7 @@ void BKE_modifier_init(void)
 	virtualModifierCommonData.cmd = *((CurveModifierData *) md);
 	modifier_free(md);
 
-	md = modifier_new(eModifierType_Lattice);
-	virtualModifierCommonData.lmd = *((LatticeModifierData *) md);
-	modifier_free(md);
-
 	virtualModifierCommonData.cmd.modifier.mode |= eModifierMode_Virtual;
-	virtualModifierCommonData.lmd.modifier.mode |= eModifierMode_Virtual;
 }
 
 const ModifierTypeInfo *modifierType_getInfo(ModifierType type)
@@ -517,30 +512,6 @@ ModifierData *modifiers_getVirtualModifierList(Object *ob, VirtualModifierData *
 	*virtualModifierData = virtualModifierCommonData;
 
 	return md;
-}
-
-/* Takes an object and returns its first selected lattice, else just its lattice
- * This should work for multiple lattices per object
- */
-Object *modifiers_isDeformedByLattice(Object *ob)
-{
-	VirtualModifierData virtualModifierData;
-	ModifierData *md = modifiers_getVirtualModifierList(ob, &virtualModifierData);
-	LatticeModifierData *lmd = NULL;
-
-	/* return the first selected lattice, this lets us use multiple lattices */
-	for (; md; md = md->next) {
-		if (md->type == eModifierType_Lattice) {
-			lmd = (LatticeModifierData *) md;
-			if (lmd->object && (lmd->object->flag & SELECT))
-				return lmd->object;
-		}
-	}
-
-	if (lmd) /* if were still here then return the last lattice */
-		return lmd->object;
-
-	return NULL;
 }
 
 /* Takes an object and returns its first selected curve, else just its curve

@@ -165,11 +165,6 @@ void nurbs_foreachScreenVert(
         void (*func)(void *userData, struct Nurb *nu, struct BPoint *bp, struct BezTriple *bezt,
                      int beztindex, const float screen_co[2]),
         void *userData, const eV3DProjTest clip_flag);
-void lattice_foreachScreenVert(
-        struct ViewContext *vc,
-        void (*func)(void *userData, struct BPoint *bp,
-                     const float screen_co[2]),
-        void *userData, const eV3DProjTest clip_flag);
 /* *** end iterators *** */
 
 

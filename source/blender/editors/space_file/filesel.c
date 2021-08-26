@@ -201,7 +201,7 @@ short ED_fileselect_set_params(SpaceFile *sfile)
 
 		/* For now, always init filterid to 'all true' */
 		params->filter_id = FILTER_ID_CA | FILTER_ID_CU |
-		                    FILTER_ID_GR | FILTER_ID_IM | FILTER_ID_LA | FILTER_ID_LT | FILTER_ID_MA |
+		                    FILTER_ID_GR | FILTER_ID_IM | FILTER_ID_LA | FILTER_ID_MA |
 		                    FILTER_ID_ME | FILTER_ID_OB |
 		                    FILTER_ID_SCE |
 		                    FILTER_ID_TE | FILTER_ID_TXT | FILTER_ID_VF | FILTER_ID_WO | FILTER_ID_CF;

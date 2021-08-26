@@ -1506,7 +1506,7 @@ static int parent_drop_invoke(bContext *C, wmOperator *op, const wmEvent *event)
 			scene = CTX_data_scene(C);
 		}
 
-		if ((par->type != OB_CURVE) && (par->type != OB_LATTICE)) {
+		if (par->type != OB_CURVE) {
 			if (ED_object_parent_set(op->reports, bmain, scene, ob, par, partype, false, false, NULL)) {
 				WM_event_add_notifier(C, NC_OBJECT | ND_TRANSFORM, NULL);
 				WM_event_add_notifier(C, NC_OBJECT | ND_PARENT, NULL);
@@ -1531,21 +1531,6 @@ static int parent_drop_invoke(bContext *C, wmOperator *op, const wmEvent *event)
 				RNA_string_set(&ptr, "child", childname);
 				RNA_enum_set(&ptr, "type", PAR_CURVE);
 
-				uiItemFullO_ptr(layout, ot, IFACE_("Follow Path"), 0, NULL, WM_OP_EXEC_DEFAULT, 0, &ptr);
-				RNA_string_set(&ptr, "parent", parname);
-				RNA_string_set(&ptr, "child", childname);
-				RNA_enum_set(&ptr, "type", PAR_FOLLOW);
-
-				uiItemFullO_ptr(layout, ot, IFACE_("Path Constraint"), 0, NULL, WM_OP_EXEC_DEFAULT, 0, &ptr);
-				RNA_string_set(&ptr, "parent", parname);
-				RNA_string_set(&ptr, "child", childname);
-				RNA_enum_set(&ptr, "type", PAR_PATH_CONST);
-			}
-			else if (par->type == OB_LATTICE) {
-				uiItemFullO_ptr(layout, ot, IFACE_("Lattice Deform"), 0, NULL, WM_OP_EXEC_DEFAULT, 0, &ptr);
-				RNA_string_set(&ptr, "parent", parname);
-				RNA_string_set(&ptr, "child", childname);
-				RNA_enum_set(&ptr, "type", PAR_LATTICE);
 			}
 
 			UI_popup_menu_end(C, pup);

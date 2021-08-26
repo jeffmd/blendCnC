@@ -133,7 +133,6 @@ void RNA_def_context(BlenderRNA *brna)
 		{CTX_MODE_EDIT_CURVE, "EDIT_CURVE", 0, "Curve Edit", ""},
 		{CTX_MODE_EDIT_SURFACE, "EDIT_SURFACE", 0, "Surface Edit", ""},
 		{CTX_MODE_EDIT_TEXT, "EDIT_TEXT", 0, "Edit Edit", ""},
-		{CTX_MODE_EDIT_LATTICE, "EDIT_LATTICE", 0, "Lattice Edit", ""},
 		{CTX_MODE_OBJECT, "OBJECT", 0, "Object", ""},
 		{0, NULL, 0, NULL, NULL}
 	};

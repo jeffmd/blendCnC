@@ -47,7 +47,6 @@
 #include "BKE_displist.h"
 #include "BKE_DerivedMesh.h"
 #include "BKE_global.h"
-#include "BKE_lattice.h"
 #include "BKE_main.h"
 #include "BKE_mesh.h"
 #include "BKE_mesh_mapping.h"

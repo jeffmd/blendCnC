@@ -31,7 +31,6 @@
 #include "DNA_camera_types.h"
 #include "DNA_group_types.h"
 #include "DNA_lamp_types.h"
-#include "DNA_lattice_types.h"
 #include "DNA_material_types.h"
 #include "DNA_mesh_types.h"
 #include "DNA_meshdata_types.h"
@@ -66,7 +65,6 @@
 #include "BKE_group.h"
 #include "BKE_icons.h"
 #include "BKE_lamp.h"
-#include "BKE_lattice.h"
 #include "BKE_library.h"
 #include "BKE_library_query.h"
 #include "BKE_library_remap.h"
@@ -160,11 +158,7 @@ bool BKE_object_support_modifier_type_check(const Object *ob, int modifier_type)
 	mti = modifierType_getInfo(modifier_type);
 
 	/* only geometry objects should be able to get modifiers [#25291] */
-	if (!ELEM(ob->type, OB_MESH, OB_CURVE, OB_SURF, OB_FONT, OB_LATTICE)) {
-		return false;
-	}
-
-	if (ob->type == OB_LATTICE && (mti->flags & eModifierTypeFlag_AcceptsLattice) == 0) {
+	if (!ELEM(ob->type, OB_MESH, OB_CURVE, OB_SURF, OB_FONT)) {
 		return false;
 	}
 
@@ -182,7 +176,7 @@ void BKE_object_link_modifiers(struct Object *ob_dst, const struct Object *ob_sr
 	ModifierData *md;
 	BKE_object_free_modifiers(ob_dst, 0);
 
-	if (!ELEM(ob_dst->type, OB_MESH, OB_CURVE, OB_SURF, OB_FONT, OB_LATTICE)) {
+	if (!ELEM(ob_dst->type, OB_MESH, OB_CURVE, OB_SURF, OB_FONT)) {
 		/* only objects listed above can have modifiers and linking them to objects
 		 * which doesn't have modifiers stack is quite silly */
 		return;
@@ -311,12 +305,6 @@ bool BKE_object_is_in_editmode(const Object *ob)
 		if (cu->editfont)
 			return true;
 	}
-	else if (ob->type == OB_LATTICE) {
-		Lattice *lt = ob->data;
-
-		if (lt->editlatt)
-			return true;
-	}
 	else if (ob->type == OB_SURF || ob->type == OB_CURVE) {
 		Curve *cu = ob->data;
 
@@ -362,7 +350,6 @@ static const char *get_obdata_defname(int type)
 		case OB_FONT: return DATA_("Text");
 		case OB_CAMERA: return DATA_("Camera");
 		case OB_LAMP: return DATA_("Lamp");
-		case OB_LATTICE: return DATA_("Lattice");
 		case OB_EMPTY: return DATA_("Empty");
 		default:
 			printf("get_obdata_defname: Internal error, bad type: %d\n", type);
@@ -383,7 +370,6 @@ void *BKE_object_obdata_add_from_type(Main *bmain, int type, const char *name)
 		case OB_FONT:      return BKE_curve_add(bmain, name, OB_FONT);
 		case OB_CAMERA:    return BKE_camera_add(bmain, name);
 		case OB_LAMP:      return BKE_lamp_add(bmain, name);
-		case OB_LATTICE:   return BKE_lattice_add(bmain, name);
 		case OB_EMPTY:     return NULL;
 		default:
 			printf("%s: Internal error, bad type: %d\n", __func__, type);
@@ -766,19 +752,6 @@ void BKE_object_obdata_size_init(struct Object *ob, const float size)
 			lamp->area_size  *= size;
 			lamp->area_sizey *= size;
 			lamp->area_sizez *= size;
-			break;
-		}
-		/* Only lattice (not mesh, curve, mball...),
-		 * because its got data when newly added */
-		case OB_LATTICE:
-		{
-			struct Lattice *lt = ob->data;
-			float mat[4][4];
-
-			unit_m4(mat);
-			scale_m4_fl(mat, size);
-
-			BKE_lattice_transform(lt, (float (*)[4])mat, false);
 			break;
 		}
 	}
@@ -1165,28 +1138,6 @@ static void give_parvert(Object *par, int nr, float vec[3])
 
 		BKE_nurbList_index_get_co(nurb, nr, vec);
 	}
-	else if (par->type == OB_LATTICE) {
-		Lattice *latt  = par->data;
-		DispList *dl   = par->curve_cache ? BKE_displist_find(&par->curve_cache->disp, DL_VERTS) : NULL;
-		float (*co)[3] = dl ? (float (*)[3])dl->verts : NULL;
-		int tot;
-
-		if (latt->editlatt) latt = latt->editlatt->latt;
-
-		tot = latt->pntsu * latt->pntsv * latt->pntsw;
-
-		/* ensure dl is correct size */
-		BLI_assert(dl == NULL || dl->nr == tot);
-
-		if (nr < tot) {
-			if (co) {
-				copy_v3_v3(vec, co[nr]);
-			}
-			else {
-				copy_v3_v3(vec, latt->def[nr].vec);
-			}
-		}
-	}
 }
 
 static void ob_parvert3(Object *ob, Object *par, float mat[4][4])
@@ -1482,9 +1433,6 @@ BoundBox *BKE_object_boundbox_get(Object *ob)
 	else if (ELEM(ob->type, OB_CURVE, OB_SURF, OB_FONT)) {
 		bb = BKE_curve_boundbox_get(ob);
 	}
-	else if (ob->type == OB_LATTICE) {
-		bb = BKE_lattice_boundbox_get(ob);
-	}
 	return bb;
 }
 
@@ -1550,23 +1498,6 @@ void BKE_object_minmax(Object *ob, float min_r[3], float max_r[3], const bool us
 		{
 			bb = *BKE_curve_boundbox_get(ob);
 			BKE_boundbox_minmax(&bb, ob->obmat, min_r, max_r);
-			changed = true;
-			break;
-		}
-		case OB_LATTICE:
-		{
-			Lattice *lt = ob->data;
-			BPoint *bp = lt->def;
-			int u, v, w;
-
-			for (w = 0; w < lt->pntsw; w++) {
-				for (v = 0; v < lt->pntsv; v++) {
-					for (u = 0; u < lt->pntsu; u++, bp++) {
-						mul_v3_m4v3(vec, ob->obmat, bp->vec);
-						minmax_v3v3_v3(min_r, max_r, vec);
-					}
-				}
-			}
 			changed = true;
 			break;
 		}
@@ -2147,26 +2078,6 @@ KDTree *BKE_object_as_kdtree(Object *ob, int *r_tot)
 					}
 				}
 				nu = nu->next;
-			}
-
-			BLI_kdtree_balance(tree);
-			break;
-		}
-		case OB_LATTICE:
-		{
-			/* TODO: take deformation into account */
-			Lattice *lt = ob->data;
-			BPoint *bp;
-			unsigned int i;
-
-			tot = lt->pntsu * lt->pntsv * lt->pntsw;
-			tree = BLI_kdtree_new(tot);
-			i = 0;
-
-			for (bp = lt->def; i < tot; bp++) {
-				float co[3];
-				mul_v3_m4v3(co, ob->obmat, bp->vec);
-				BLI_kdtree_insert(tree, i++, co);
 			}
 
 			BLI_kdtree_balance(tree);

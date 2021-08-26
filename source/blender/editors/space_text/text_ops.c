@@ -658,44 +658,6 @@ void TEXT_OT_run_script(wmOperatorType *ot)
 
 static int text_refresh_pyconstraints_exec(bContext *UNUSED(C), wmOperator *UNUSED(op))
 {
-#ifdef WITH_PYTHON
-#if 0
-	Text *text = CTX_data_edit_text(C);
-	Object *ob;
-	bConstraint *con;
-	short update;
-
-	/* check all pyconstraints */
-	for (ob = CTX_data_main(C)->object.first; ob; ob = ob->id.next) {
-		update = 0;
-		if (ob->type == OB_ARMATURE && ob->pose) {
-			bPoseChannel *pchan;
-			for (pchan = ob->pose->chanbase.first; pchan; pchan = pchan->next) {
-				for (con = pchan->constraints.first; con; con = con->next) {
-					if (con->type == CONSTRAINT_TYPE_PYTHON) {
-						bPythonConstraint *data = con->data;
-						if (data->text == text) BPY_pyconstraint_update(ob, con);
-						update = 1;
-
-					}
-				}
-			}
-		}
-		for (con = ob->constraints.first; con; con = con->next) {
-			if (con->type == CONSTRAINT_TYPE_PYTHON) {
-				bPythonConstraint *data = con->data;
-				if (data->text == text) BPY_pyconstraint_update(ob, con);
-				update = 1;
-			}
-		}
-
-		if (update) {
-			DAG_id_tag_update(&ob->id, OB_RECALC_DATA);
-		}
-	}
-#endif
-#endif
-
 	return OPERATOR_FINISHED;
 }
 

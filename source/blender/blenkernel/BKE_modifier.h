@@ -93,7 +93,6 @@ typedef enum {
 
 	/* For modifiers that use CD_PREVIEW_MCOL for preview. */
 	eModifierTypeFlag_UsesPreview = (1 << 9),
-	eModifierTypeFlag_AcceptsLattice = (1 << 10),
 } ModifierTypeFlag;
 
 /* IMPORTANT! Keep ObjectWalkFunc and IDWalkFunc signatures compatible. */
@@ -256,8 +255,7 @@ typedef struct ModifierTypeInfo {
 	/* Return a boolean value indicating if this modifier is able to be
 	 * calculated based on the modifier data. This is *not* regarding the
 	 * md->flag, that is tested by the system, this is just if the data
-	 * validates (for example, a lattice will return false if the lattice
-	 * object is not defined).
+	 * validates.
 	 *
 	 * This function is optional (assumes never disabled if not present).
 	 */
@@ -374,7 +372,6 @@ int           modifiers_getCageIndex(struct Scene *scene, struct Object *ob,
 
 bool          modifiers_isModifierEnabled(struct Object *ob, int modifierType);
 
-struct Object *modifiers_isDeformedByLattice(struct Object *ob);
 struct Object *modifiers_isDeformedByCurve(struct Object *ob);
 bool          modifiers_isCorrectableDeformed(struct Scene *scene, struct Object *ob);
 void          modifier_freeTemporaryData(struct ModifierData *md);
@@ -402,7 +399,6 @@ struct ModifierData *modifiers_getLastPreview(struct Scene *scene,
 
 typedef struct VirtualModifierData {
 	CurveModifierData cmd;
-	LatticeModifierData lmd;
 } VirtualModifierData;
 
 struct ModifierData  *modifiers_getVirtualModifierList(struct Object *ob, struct VirtualModifierData *data);

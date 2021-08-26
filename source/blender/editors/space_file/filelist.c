@@ -2312,27 +2312,15 @@ static void filelist_readjob_main_rec(Main *bmain, FileList *filelist)
 		filelist->filelist.entries[2].entry->relpath = BLI_strdup("Object");
 		filelist->filelist.entries[3].entry->relpath = BLI_strdup("Mesh");
 		filelist->filelist.entries[4].entry->relpath = BLI_strdup("Curve");
-		filelist->filelist.entries[5].entry->relpath = BLI_strdup("Metaball");
 		filelist->filelist.entries[6].entry->relpath = BLI_strdup("Material");
 		filelist->filelist.entries[7].entry->relpath = BLI_strdup("Texture");
 		filelist->filelist.entries[8].entry->relpath = BLI_strdup("Image");
-		filelist->filelist.entries[9].entry->relpath = BLI_strdup("Ika");
-		filelist->filelist.entries[10].entry->relpath = BLI_strdup("Wave");
-		filelist->filelist.entries[11].entry->relpath = BLI_strdup("Lattice");
 		filelist->filelist.entries[12].entry->relpath = BLI_strdup("Lamp");
 		filelist->filelist.entries[13].entry->relpath = BLI_strdup("Camera");
-		filelist->filelist.entries[14].entry->relpath = BLI_strdup("Ipo");
 		filelist->filelist.entries[15].entry->relpath = BLI_strdup("World");
 		filelist->filelist.entries[16].entry->relpath = BLI_strdup("Screen");
 		filelist->filelist.entries[17].entry->relpath = BLI_strdup("VFont");
 		filelist->filelist.entries[18].entry->relpath = BLI_strdup("Text");
-		filelist->filelist.entries[19].entry->relpath = BLI_strdup("Armature");
-		filelist->filelist.entries[20].entry->relpath = BLI_strdup("Action");
-		filelist->filelist.entries[21].entry->relpath = BLI_strdup("NodeTree");
-		filelist->filelist.entries[22].entry->relpath = BLI_strdup("Speaker");
-#ifdef WITH_FREESTYLE
-		filelist->filelist.entries[23].entry->relpath = BLI_strdup("FreestyleLineStyle");
-#endif
 	}
 	else {
 		/* make files */

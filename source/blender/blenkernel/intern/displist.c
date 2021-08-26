@@ -46,7 +46,6 @@
 #include "BKE_main.h"
 #include "BKE_curve.h"
 #include "BKE_font.h"
-#include "BKE_lattice.h"
 #include "BKE_modifier.h"
 
 #include "BLI_sys_types.h" // for intptr_t support

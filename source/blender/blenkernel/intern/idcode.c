@@ -55,7 +55,6 @@ static IDType idtypes[] = {
 	{ ID_IM,   "Image",              "images",          BLT_I18NCONTEXT_ID_IMAGE,              IDTYPE_FLAGS_ISLINKABLE },
 	{ ID_LA,   "Lamp",               "lamps",           BLT_I18NCONTEXT_ID_LAMP,               IDTYPE_FLAGS_ISLINKABLE },
 	{ ID_LI,   "Library",            "libraries",       BLT_I18NCONTEXT_ID_LIBRARY,            0                       },
-	{ ID_LT,   "Lattice",            "lattices",        BLT_I18NCONTEXT_ID_LATTICE,            IDTYPE_FLAGS_ISLINKABLE },
 	{ ID_MA,   "Material",           "materials",       BLT_I18NCONTEXT_ID_MATERIAL,           IDTYPE_FLAGS_ISLINKABLE },
 	{ ID_ME,   "Mesh",               "meshes",          BLT_I18NCONTEXT_ID_MESH,               IDTYPE_FLAGS_ISLINKABLE },
 	{ ID_OB,   "Object",             "objects",         BLT_I18NCONTEXT_ID_OBJECT,             IDTYPE_FLAGS_ISLINKABLE },
@@ -162,7 +161,6 @@ int BKE_idcode_to_idfilter(const short idcode)
 		CASE_IDFILTER(GR);
 		CASE_IDFILTER(IM);
 		CASE_IDFILTER(LA);
-		CASE_IDFILTER(LT);
 		CASE_IDFILTER(MA);
 		CASE_IDFILTER(ME);
 		CASE_IDFILTER(OB);
@@ -192,7 +190,6 @@ short BKE_idcode_from_idfilter(const int idfilter)
 		CASE_IDFILTER(GR);
 		CASE_IDFILTER(IM);
 		CASE_IDFILTER(LA);
-		CASE_IDFILTER(LT);
 		CASE_IDFILTER(MA);
 		CASE_IDFILTER(ME);
 		CASE_IDFILTER(OB);
@@ -223,7 +220,6 @@ int BKE_idcode_to_index(const short idcode)
 		CASE_IDINDEX(IM);
 		CASE_IDINDEX(LA);
 		CASE_IDINDEX(LI);
-		CASE_IDINDEX(LT);
 		CASE_IDINDEX(MA);
 		CASE_IDINDEX(ME);
 		CASE_IDINDEX(OB);

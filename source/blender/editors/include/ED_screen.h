@@ -152,7 +152,6 @@ bool ED_operator_editsurf(struct bContext *C);
 bool ED_operator_editsurfcurve(struct bContext *C);
 bool ED_operator_editsurfcurve_region_view3d(struct bContext *C);
 bool ED_operator_editfont(struct bContext *C);
-bool ED_operator_editlattice(struct bContext *C);
 
 /* Cache display helpers */
 void ED_region_cache_draw_background(const struct ARegion *ar);

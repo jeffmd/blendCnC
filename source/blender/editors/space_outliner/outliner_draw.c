@@ -714,8 +714,6 @@ static void tselem_draw_icon(uiBlock *block, int xmax, float x, float y, TreeSto
 				switch ((ModifierType)md->type) {
 					case eModifierType_Subsurf:
 						UI_icon_draw(x, y, ICON_MOD_SUBSURF); break;
-					case eModifierType_Lattice:
-						UI_icon_draw(x, y, ICON_MOD_LATTICE); break;
 					case eModifierType_Curve:
 						UI_icon_draw(x, y, ICON_MOD_CURVE); break;
 					case eModifierType_Build:
@@ -823,8 +821,6 @@ static void tselem_draw_icon(uiBlock *block, int xmax, float x, float y, TreeSto
 					tselem_draw_icon_uibut(&arg, ICON_OUTLINER_OB_CAMERA); break;
 				case OB_CURVE:
 					tselem_draw_icon_uibut(&arg, ICON_OUTLINER_OB_CURVE); break;
-				case OB_LATTICE:
-					tselem_draw_icon_uibut(&arg, ICON_OUTLINER_OB_LATTICE); break;
 				case OB_FONT:
 					tselem_draw_icon_uibut(&arg, ICON_OUTLINER_OB_FONT); break;
 				case OB_SURF:
@@ -844,8 +840,6 @@ static void tselem_draw_icon(uiBlock *block, int xmax, float x, float y, TreeSto
 					tselem_draw_icon_uibut(&arg, ICON_OUTLINER_DATA_MESH); break;
 				case ID_CU:
 					tselem_draw_icon_uibut(&arg, ICON_OUTLINER_DATA_CURVE); break;
-				case ID_LT:
-					tselem_draw_icon_uibut(&arg, ICON_OUTLINER_DATA_LATTICE); break;
 				case ID_LA:
 				{
 					Lamp *la = (Lamp *)tselem->id;

@@ -84,7 +84,6 @@ set(SRC
 	intern/deform.c
 	intern/displist.c
 	intern/editderivedmesh.c
-	intern/editlattice.c
 	intern/editmesh.c
 	intern/editmesh_bvh.c
 	intern/font.c
@@ -96,7 +95,6 @@ set(SRC
 	intern/image.c
 	intern/image_gen.c
 	intern/lamp.c
-	intern/lattice.c
 	intern/library.c
 	intern/library_idmap.c
 	intern/library_query.c
@@ -160,7 +158,6 @@ set(SRC
 	BKE_data_transfer.h
 	BKE_deform.h
 	BKE_displist.h
-	BKE_editlattice.h
 	BKE_editmesh.h
 	BKE_editmesh_bvh.h
 	BKE_font.h
@@ -171,7 +168,6 @@ set(SRC
 	BKE_idprop.h
 	BKE_image.h
 	BKE_lamp.h
-	BKE_lattice.h
 	BKE_library.h
 	BKE_library_idmap.h
 	BKE_library_query.h

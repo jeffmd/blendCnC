@@ -31,7 +31,6 @@
 #include "BLI_string_utils.h"
 
 #include "DNA_curve_types.h"
-#include "DNA_lattice_types.h"
 #include "DNA_meshdata_types.h"
 #include "DNA_mesh_types.h"
 #include "DNA_modifier_types.h"
@@ -46,13 +45,6 @@
 
 /** \name Misc helpers
  * \{ */
-
-static Lattice *object_defgroup_lattice_get(ID *id)
-{
-	Lattice *lt = (Lattice *)id;
-	BLI_assert(GS(id->name) == ID_LT);
-	return (lt->editlatt) ? lt->editlatt->latt : lt;
-}
 
 /**
  * Update users of vgroups from this object, according to given map.
@@ -105,11 +97,6 @@ MDeformVert *BKE_object_defgroup_data_create(ID *id)
 		Mesh *me = (Mesh *)id;
 		me->dvert = CustomData_add_layer(&me->vdata, CD_MDEFORMVERT, CD_CALLOC, NULL, me->totvert);
 		return me->dvert;
-	}
-	else if (GS(id->name) == ID_LT) {
-		Lattice *lt = (Lattice *)id;
-		lt->dvert = MEM_callocN(sizeof(MDeformVert) * lt->pntsu * lt->pntsv * lt->pntsw, "lattice deformVert");
-		return lt->dvert;
 	}
 
 	return NULL;
@@ -168,26 +155,6 @@ bool BKE_object_defgroup_clear(Object *ob, bDeformGroup *dg, const bool use_sele
 						defvert_remove_group(dv, dw);  /* dw can be NULL */
 						changed = true;
 					}
-				}
-			}
-		}
-	}
-	else if (ob->type == OB_LATTICE) {
-		Lattice *lt = object_defgroup_lattice_get((ID *)(ob->data));
-
-		if (lt->dvert) {
-			BPoint *bp;
-			int i, tot = lt->pntsu * lt->pntsv * lt->pntsw;
-
-			for (i = 0, bp = lt->def; i < tot; i++, bp++) {
-				if (!use_selection || (bp->f1 & SELECT)) {
-					MDeformWeight *dw;
-
-					dv = &lt->dvert[i];
-
-					dw = defvert_find_index(dv, def_nr);
-					defvert_remove_group(dv, dw);  /* dw can be NULL */
-					changed = true;
 				}
 			}
 		}
@@ -255,13 +222,6 @@ static void object_defgroup_remove_common(Object *ob, bDeformGroup *dg, const in
 			Mesh *me = ob->data;
 			CustomData_free_layer_active(&me->vdata, CD_MDEFORMVERT, me->totvert);
 			me->dvert = NULL;
-		}
-		else if (ob->type == OB_LATTICE) {
-			Lattice *lt = object_defgroup_lattice_get((ID *)(ob->data));
-			if (lt->dvert) {
-				MEM_freeN(lt->dvert);
-				lt->dvert = NULL;
-			}
 		}
 	}
 	else if (ob->actdef < 1) {  /* Keep a valid active index if we still have some vgroups. */
@@ -334,23 +294,6 @@ static void object_defgroup_remove_edit_mode(Object *ob, bDeformGroup *dg)
 			}
 		}
 	}
-	else if (ob->type == OB_LATTICE) {
-		Lattice *lt = ((Lattice *)(ob->data))->editlatt->latt;
-		BPoint *bp;
-		MDeformVert *dvert = lt->dvert;
-		int a, tot;
-
-		if (dvert) {
-			tot = lt->pntsu * lt->pntsv * lt->pntsw;
-			for (a = 0, bp = lt->def; a < tot; a++, bp++, dvert++) {
-				for (i = 0; i < dvert->totweight; i++) {
-					if (dvert->dw[i].def_nr > def_nr) {
-						dvert->dw[i].def_nr--;
-					}
-				}
-			}
-		}
-	}
 
 	object_defgroup_remove_common(ob, dg, def_nr);
 }
@@ -395,13 +338,6 @@ void BKE_object_defgroup_remove_all_ex(struct Object *ob, bool only_unlocked)
 			Mesh *me = ob->data;
 			CustomData_free_layer_active(&me->vdata, CD_MDEFORMVERT, me->totvert);
 			me->dvert = NULL;
-		}
-		else if (ob->type == OB_LATTICE) {
-			Lattice *lt = object_defgroup_lattice_get((ID *)(ob->data));
-			if (lt->dvert) {
-				MEM_freeN(lt->dvert);
-				lt->dvert = NULL;
-			}
 		}
 		/* Fix counters/indices */
 		ob->actdef = 0;
@@ -495,13 +431,6 @@ bool BKE_object_defgroup_array_get(ID *id, MDeformVert **dvert_arr, int *dvert_t
 				Mesh *me = (Mesh *)id;
 				*dvert_arr = me->dvert;
 				*dvert_tot = me->totvert;
-				return true;
-			}
-			case ID_LT:
-			{
-				Lattice *lt = object_defgroup_lattice_get(id);
-				*dvert_arr = lt->dvert;
-				*dvert_tot = lt->pntsu * lt->pntsv * lt->pntsw;
 				return true;
 			}
 			default:

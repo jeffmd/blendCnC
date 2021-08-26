@@ -29,7 +29,6 @@
 #include "MEM_guardedalloc.h"
 
 #include "DNA_curve_types.h"
-#include "DNA_lattice_types.h"
 #include "DNA_meshdata_types.h"
 #include "DNA_mesh_types.h"
 #include "DNA_modifier_types.h"
@@ -55,7 +54,6 @@
 #include "BKE_DerivedMesh.h"
 #include "BKE_object_deform.h"
 #include "BKE_object.h"
-#include "BKE_lattice.h"
 
 #include "RNA_access.h"
 #include "RNA_define.h"
@@ -80,13 +78,6 @@ static bool vertex_group_use_vert_sel(Object *ob)
 	else {
 		return false;
 	}
-}
-
-static Lattice *vgroup_edit_lattice(Object *ob)
-{
-	Lattice *lt = ob->data;
-	BLI_assert(ob->type == OB_LATTICE);
-	return (lt->editlatt) ? lt->editlatt->latt : lt;
 }
 
 /**
@@ -174,34 +165,6 @@ bool ED_vgroup_parray_alloc(ID *id, MDeformVert ***dvert_arr, int *dvert_tot, co
 					else {
 						for (i = 0; i < me->totvert; i++) {
 							(*dvert_arr)[i] = me->dvert + i;
-						}
-					}
-
-					return true;
-				}
-				return false;
-			}
-			case ID_LT:
-			{
-				int i = 0;
-
-				Lattice *lt = (Lattice *)id;
-				lt = (lt->editlatt) ? lt->editlatt->latt : lt;
-
-				if (lt->dvert) {
-					BPoint *def = lt->def;
-					*dvert_tot = lt->pntsu * lt->pntsv * lt->pntsw;
-					*dvert_arr = MEM_mallocN(sizeof(void *) * (*dvert_tot), "vgroup parray from me");
-
-					if (use_vert_sel) {
-						for (i = 0; i < *dvert_tot; i++) {
-							(*dvert_arr)[i] = (def->f1 & SELECT) ?
-							                   &lt->dvert[i] : NULL;
-						}
-					}
-					else {
-						for (i = 0; i < *dvert_tot; i++) {
-							(*dvert_arr)[i] = lt->dvert + i;
 						}
 					}
 
@@ -713,7 +676,6 @@ static void vgroup_operator_subset_select_props(wmOperatorType *ot, bool use_act
 /***********************End weight transfer (WT)***********************************/
 
 /* for Mesh in Object mode */
-/* allows editmode for Lattice */
 static void ED_vgroup_nr_vert_add(
         Object *ob,
         const int def_nr, const int vertnum,
@@ -821,7 +783,7 @@ void ED_vgroup_vert_add(Object *ob, bDeformGroup *dg, int vertnum, float weight,
 	}
 }
 
-/* mesh object mode, lattice can be in editmode */
+/* mesh object mode */
 void ED_vgroup_vert_remove(Object *ob, bDeformGroup *dg, int vertnum)
 {
 	/* This routine removes the vertex from the specified
@@ -880,16 +842,6 @@ static float get_vert_def_nr(Object *ob, const int def_nr, const int vertnum)
 				}
 				dv = &me->dvert[vertnum];
 			}
-		}
-	}
-	else if (ob->type == OB_LATTICE) {
-		Lattice *lt = vgroup_edit_lattice(ob);
-
-		if (lt->dvert) {
-			if (vertnum >= lt->pntsu * lt->pntsv * lt->pntsw) {
-				return 0.0f;
-			}
-			dv = &lt->dvert[vertnum];
 		}
 	}
 
@@ -975,28 +927,6 @@ static void vgroup_select_verts(Object *ob, int select)
 				}
 
 				paintvert_flush_flags(ob);
-			}
-		}
-	}
-	else if (ob->type == OB_LATTICE) {
-		Lattice *lt = vgroup_edit_lattice(ob);
-
-		if (lt->dvert) {
-			MDeformVert *dv;
-			BPoint *bp, *actbp = BKE_lattice_active_point_get(lt);
-			int a, tot;
-
-			dv = lt->dvert;
-
-			tot = lt->pntsu * lt->pntsv * lt->pntsw;
-			for (a = 0, bp = lt->def; a < tot; a++, bp++, dv++) {
-				if (defvert_find_index(dv, def_nr)) {
-					if (select) bp->f1 |=  SELECT;
-					else {
-						bp->f1 &= ~SELECT;
-						if (actbp && bp == actbp) lt->actbp = LT_ACTBP_NONE;
-					}
-				}
 			}
 		}
 	}
@@ -2192,50 +2122,6 @@ void ED_vgroup_mirror(
 			}
 		}
 	}
-	else if (ob->type == OB_LATTICE) {
-		Lattice *lt = vgroup_edit_lattice(ob);
-		int i1, i2;
-		int u, v, w;
-		int pntsu_half;
-		/* half but found up odd value */
-
-		if (lt->pntsu == 1 || lt->dvert == NULL) {
-			goto cleanup;
-		}
-
-		/* unlike editmesh we know that by only looping over the first half of
-		 * the 'u' indices it will cover all points except the middle which is
-		 * ok in this case */
-		pntsu_half = lt->pntsu / 2;
-
-		for (w = 0; w < lt->pntsw; w++) {
-			for (v = 0; v < lt->pntsv; v++) {
-				for (u = 0; u < pntsu_half; u++) {
-					int u_inv = (lt->pntsu - 1) - u;
-					if (u != u_inv) {
-						BPoint *bp, *bp_mirr;
-
-						i1 = BKE_lattice_index_from_uvw(lt, u, v, w);
-						i2 = BKE_lattice_index_from_uvw(lt, u_inv, v, w);
-
-						bp = &lt->def[i1];
-						bp_mirr = &lt->def[i2];
-
-						sel = bp->f1 & SELECT;
-						sel_mirr = bp_mirr->f1 & SELECT;
-
-						if (sel || sel_mirr) {
-							dvert = &lt->dvert[i1];
-							dvert_mirr = &lt->dvert[i2];
-
-							VGROUP_MIRR_OP;
-							totmirr++;
-						}
-					}
-				}
-			}
-		}
-	}
 
 cleanup:
 	*r_totmirr = totmirr;
@@ -3281,7 +3167,6 @@ static int vgroup_do_remap(Object *ob, const char *name_array, wmOperator *op)
 			}
 		}
 		else {
-			BKE_report(op->reports, RPT_ERROR, "Editmode lattice is not supported yet");
 			MEM_freeN(sort_map_update);
 			return OPERATOR_CANCELLED;
 		}

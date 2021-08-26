@@ -31,7 +31,6 @@
 typedef enum ModifierType {
 	eModifierType_None              = 0,
 	eModifierType_Subsurf           = 1,
-	eModifierType_Lattice           = 2,
 	eModifierType_Curve             = 3,
 	eModifierType_Build             = 4,
 	eModifierType_Mirror            = 5,
@@ -121,15 +120,6 @@ typedef struct SubsurfModifierData {
 
 	void *emCache, *mCache;
 } SubsurfModifierData;
-
-typedef struct LatticeModifierData {
-	ModifierData modifier;
-
-	struct Object *object;
-	char name[64];          /* optional vertexgroup name, MAX_VGROUP_NAME */
-	float strength;
-	char pad[4];
-} LatticeModifierData;
 
 typedef struct CurveModifierData {
 	ModifierData modifier;

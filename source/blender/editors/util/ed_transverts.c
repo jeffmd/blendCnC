@@ -24,7 +24,6 @@
 #include "MEM_guardedalloc.h"
 
 #include "DNA_curve_types.h"
-#include "DNA_lattice_types.h"
 #include "DNA_scene_types.h"
 #include "DNA_object_types.h"
 
@@ -33,7 +32,6 @@
 #include "BLI_math.h"
 
 #include "BKE_curve.h"
-#include "BKE_lattice.h"
 #include "BKE_editmesh.h"
 #include "BKE_DerivedMesh.h"
 #include "BKE_context.h"
@@ -106,12 +104,6 @@ void ED_transverts_update_obedit(TransVertStore *tvs, Object *obedit)
 			nu = nu->next;
 		}
 	}
-	else if (obedit->type == OB_LATTICE) {
-		Lattice *lt = obedit->data;
-
-		if (lt->editlatt->latt->flag & LT_OUTSIDE)
-			outside_lattice(lt->editlatt->latt);
-	}
 }
 
 static void set_mapped_co(void *vuserdata, int index, const float co[3],
@@ -143,7 +135,7 @@ static void set_mapped_co(void *vuserdata, int index, const float co[3],
 
 bool ED_transverts_check_obedit(Object *obedit)
 {
-	return (ELEM(obedit->type, OB_LATTICE, OB_MESH, OB_SURF, OB_CURVE));
+	return (ELEM(obedit->type, OB_MESH, OB_SURF, OB_CURVE));
 }
 
 void ED_transverts_create_from_obedit(TransVertStore *tvs, Object *obedit, const int mode)
@@ -343,31 +335,9 @@ void ED_transverts_create_from_obedit(TransVertStore *tvs, Object *obedit, const
 			nu = nu->next;
 		}
 	}
-	else if (obedit->type == OB_LATTICE) {
-		Lattice *lt = obedit->data;
-
-		bp = lt->editlatt->latt->def;
-
-		a = lt->editlatt->latt->pntsu * lt->editlatt->latt->pntsv * lt->editlatt->latt->pntsw;
-
-		tv = tvs->transverts = MEM_callocN(a * sizeof(TransVert), __func__);
-
-		while (a--) {
-			if (bp->f1 & SELECT) {
-				if (bp->hide == 0) {
-					copy_v3_v3(tv->oldloc, bp->vec);
-					tv->loc = bp->vec;
-					tv->flag = bp->f1 & SELECT;
-					tv++;
-					tvs->transverts_tot++;
-				}
-			}
-			bp++;
-		}
-	}
 
 	if (!tvs->transverts_tot && tvs->transverts) {
-		/* prevent memory leak. happens for curves/latticies due to */
+		/* prevent memory leak. happens for curves due to */
 		/* difficult condition of adding points to trans data */
 		MEM_freeN(tvs->transverts);
 		tvs->transverts = NULL;

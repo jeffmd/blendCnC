@@ -418,7 +418,6 @@ static const char *template_id_browse_tip(StructRNA *type)
 			case ID_MA:  return N_("Browse Material to be linked");
 			case ID_TE:  return N_("Browse Texture to be linked");
 			case ID_IM:  return N_("Browse Image to be linked");
-			case ID_LT:  return N_("Browse Lattice Data to be linked");
 			case ID_LA:  return N_("Browse Lamp Data to be linked");
 			case ID_CA:  return N_("Browse Camera Data to be linked");
 			case ID_WO:  return N_("Browse World Settings to be linked");
@@ -570,7 +569,6 @@ static void template_ID(
 		        BLT_I18NCONTEXT_ID_MATERIAL,
 		        BLT_I18NCONTEXT_ID_TEXTURE,
 		        BLT_I18NCONTEXT_ID_IMAGE,
-		        BLT_I18NCONTEXT_ID_LATTICE,
 		        BLT_I18NCONTEXT_ID_LAMP,
 		        BLT_I18NCONTEXT_ID_CAMERA,
 		        BLT_I18NCONTEXT_ID_WORLD,

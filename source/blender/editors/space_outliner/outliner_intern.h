@@ -51,7 +51,7 @@ typedef struct TreeElement {
 }  TreeElement;
 
 #define TREESTORE_ID_TYPE(_id) \
-	(ELEM(GS((_id)->name), ID_SCE, ID_LI, ID_OB, ID_ME, ID_CU, ID_MA, ID_TE, ID_IM, ID_LT, ID_LA, ID_CA) || \
+	(ELEM(GS((_id)->name), ID_SCE, ID_LI, ID_OB, ID_ME, ID_CU, ID_MA, ID_TE, ID_IM, ID_LA, ID_CA) || \
 	 ELEM(GS((_id)->name), ID_WO, ID_GR) || \
 	 ELEM(GS((_id)->name), ID_SCR, ID_WM, ID_TXT, ID_VF, ID_CF))  /* Only in 'blendfile' mode ... :/ */
 
