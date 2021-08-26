@@ -750,30 +750,6 @@ class VIEW3D_MT_select_edit_text(Menu):
         layout.operator("font.select_all")
 
 
-class VIEW3D_MT_select_edit_lattice(Menu):
-    bl_label = "Select"
-
-    def draw(self, context):
-        layout = self.layout
-
-        layout.operator("view3d.select_border")
-        layout.operator("view3d.select_circle")
-
-        layout.separator()
-
-        layout.operator("lattice.select_all").action = 'TOGGLE'
-        layout.operator("lattice.select_all", text="Inverse").action = 'INVERT'
-
-        layout.separator()
-
-        layout.operator("lattice.select_mirror")
-        layout.operator("lattice.select_random")
-
-        layout.separator()
-
-        layout.operator("lattice.select_ungrouped", text="Ungrouped Verts")
-
-
 # XXX: INFO_MT_ names used to keep backwards compatibility (Add-ons etc. that hook into the menu)
 class INFO_MT_mesh_add(Menu):
     bl_idname = "INFO_MT_mesh_add"
@@ -874,7 +850,6 @@ class INFO_MT_add(Menu):
         layout.operator("object.text_add", text="Text", icon='OUTLINER_OB_FONT')
         layout.separator()
 
-        layout.operator("object.add", text="Lattice", icon='OUTLINER_OB_LATTICE').type = 'LATTICE'
         layout.operator_menu_enum("object.empty_add", "type", text="Empty", icon='OUTLINER_OB_EMPTY')
         layout.separator()
 
@@ -1952,33 +1927,6 @@ class VIEW3D_MT_edit_meta_showhide(Menu):
         layout.operator("mball.hide_metaelems", text="Hide Unselected").unselected = True
 
 
-class VIEW3D_MT_edit_lattice(Menu):
-    bl_label = "Lattice"
-
-    def draw(self, context):
-        layout = self.layout
-
-        layout.menu("VIEW3D_MT_undo_redo")
-
-        layout.separator()
-
-        layout.menu("VIEW3D_MT_transform")
-        layout.menu("VIEW3D_MT_mirror")
-        layout.menu("VIEW3D_MT_snap")
-        layout.operator_menu_enum("lattice.flip", "axis")
-
-        layout.separator()
-
-        layout.operator("lattice.make_regular")
-
-        layout.separator()
-
-        layout.operator("object.vertex_parent_set")
-
-        layout.separator()
-
-        layout.menu("VIEW3D_MT_edit_proportional")
-
 
 # ********** Panel **********
 
@@ -2452,7 +2400,6 @@ classes = (
     VIEW3D_MT_select_edit_curve,
     VIEW3D_MT_select_edit_surface,
     VIEW3D_MT_select_edit_text,
-    VIEW3D_MT_select_edit_lattice,
     INFO_MT_mesh_add,
     INFO_MT_curve_add,
     INFO_MT_surface_add,
@@ -2496,7 +2443,6 @@ classes = (
     VIEW3D_MT_edit_surface,
     VIEW3D_MT_edit_font,
     VIEW3D_MT_edit_text_chars,
-    VIEW3D_MT_edit_lattice,
     VIEW3D_PT_view3d_properties,
     VIEW3D_PT_view3d_cursor,
     VIEW3D_PT_view3d_name,

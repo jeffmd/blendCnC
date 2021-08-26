@@ -39,7 +39,6 @@ set(DEFSRC
 	rna_group.c
 	rna_image.c
 	rna_lamp.c
-	rna_lattice.c
 	rna_main.c
 	rna_material.c
 	rna_mesh.c
@@ -65,7 +64,6 @@ set(APISRC
 	rna_camera_api.c
 	rna_curve_api.c
 	rna_image_api.c
-	rna_lattice_api.c
 	rna_main_api.c
 	rna_material_api.c
 	rna_mesh_api.c

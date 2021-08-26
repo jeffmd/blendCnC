@@ -77,7 +77,6 @@ const EnumPropertyItem rna_enum_object_modifier_type_items[] = {
 	{eModifierType_Hook, "HOOK", ICON_HOOK, "Hook", ""},
 	{eModifierType_LaplacianSmooth, "LAPLACIANSMOOTH", ICON_MOD_SMOOTH, "Laplacian Smooth", ""},
 	{eModifierType_LaplacianDeform, "LAPLACIANDEFORM", ICON_MOD_MESHDEFORM, "Laplacian Deform", ""},
-	{eModifierType_Lattice, "LATTICE", ICON_MOD_LATTICE, "Lattice", ""},
 	{eModifierType_MeshDeform, "MESH_DEFORM", ICON_MOD_MESHDEFORM, "Mesh Deform", ""},
 	{eModifierType_Shrinkwrap, "SHRINKWRAP", ICON_MOD_SHRINKWRAP, "Shrinkwrap", ""},
 	{eModifierType_SimpleDeform, "SIMPLE_DEFORM", ICON_MOD_SIMPLEDEFORM, "Simple Deform", ""},
@@ -260,8 +259,6 @@ static StructRNA *rna_Modifier_refine(struct PointerRNA *ptr)
 	switch ((ModifierType)md->type) {
 		case eModifierType_Subsurf:
 			return &RNA_SubsurfModifier;
-		case eModifierType_Lattice:
-			return &RNA_LatticeModifier;
 		case eModifierType_Curve:
 			return &RNA_CurveModifier;
 		case eModifierType_Build:
@@ -398,7 +395,6 @@ RNA_MOD_VGROUP_NAME_SET(Displace, defgrp_name);
 RNA_MOD_VGROUP_NAME_SET(Hook, name);
 RNA_MOD_VGROUP_NAME_SET(LaplacianDeform, anchor_grp_name);
 RNA_MOD_VGROUP_NAME_SET(LaplacianSmooth, defgrp_name);
-RNA_MOD_VGROUP_NAME_SET(Lattice, name);
 RNA_MOD_VGROUP_NAME_SET(MeshDeform, defgrp_name);
 RNA_MOD_VGROUP_NAME_SET(NormalEdit, defgrp_name);
 RNA_MOD_VGROUP_NAME_SET(Shrinkwrap, vgroup_name);
@@ -446,7 +442,6 @@ RNA_MOD_OBJECT_SET(Boolean, object, OB_MESH);
 RNA_MOD_OBJECT_SET(Cast, object, OB_EMPTY);
 RNA_MOD_OBJECT_SET(Curve, object, OB_CURVE);
 RNA_MOD_OBJECT_SET(DataTransfer, ob_source, OB_MESH);
-RNA_MOD_OBJECT_SET(Lattice, object, OB_LATTICE);
 RNA_MOD_OBJECT_SET(MeshDeform, object, OB_MESH);
 RNA_MOD_OBJECT_SET(NormalEdit, target, OB_EMPTY);
 RNA_MOD_OBJECT_SET(Shrinkwrap, target, OB_MESH);
@@ -842,12 +837,6 @@ static void rna_def_modifier_subsurf(BlenderRNA *brna)
 	RNA_def_property_ui_text(prop, "Optimal Display", "Skip drawing/rendering of interior subdivided edges");
 	RNA_def_property_update(prop, 0, "rna_Modifier_update");
 
-#ifdef WITH_OPENSUBDIV
-	prop = RNA_def_property(srna, "use_opensubdiv", PROP_BOOLEAN, PROP_NONE);
-	RNA_def_property_boolean_sdna(prop, NULL, "use_opensubdiv", 1);
-	RNA_def_property_ui_text(prop, "Use OpenSubdiv", "Use OpenSubdiv for the subdivisions (viewport only)");
-	RNA_def_property_update(prop, 0, "rna_Modifier_update");
-#endif
 }
 
 static void rna_def_modifier_generic_map_info(StructRNA *srna)
@@ -927,36 +916,6 @@ static void rna_def_modifier_warp(BlenderRNA *brna)
 	RNA_def_property_update(prop, 0, "rna_Modifier_update");
 
 	rna_def_modifier_generic_map_info(srna);
-}
-
-static void rna_def_modifier_lattice(BlenderRNA *brna)
-{
-	StructRNA *srna;
-	PropertyRNA *prop;
-
-	srna = RNA_def_struct(brna, "LatticeModifier", "Modifier");
-	RNA_def_struct_ui_text(srna, "Lattice Modifier", "Lattice deformation modifier");
-	RNA_def_struct_sdna(srna, "LatticeModifierData");
-	RNA_def_struct_ui_icon(srna, ICON_MOD_LATTICE);
-
-	prop = RNA_def_property(srna, "object", PROP_POINTER, PROP_NONE);
-	RNA_def_property_ui_text(prop, "Object", "Lattice object to deform with");
-	RNA_def_property_pointer_funcs(prop, NULL, "rna_LatticeModifier_object_set", NULL, "rna_Lattice_object_poll");
-	RNA_def_property_flag(prop, PROP_EDITABLE | PROP_ID_SELF_CHECK);
-	RNA_def_property_update(prop, 0, "rna_Modifier_dependency_update");
-
-	prop = RNA_def_property(srna, "vertex_group", PROP_STRING, PROP_NONE);
-	RNA_def_property_string_sdna(prop, NULL, "name");
-	RNA_def_property_ui_text(prop, "Vertex Group",
-	                         "Name of Vertex Group which determines influence of modifier per point");
-	RNA_def_property_string_funcs(prop, NULL, NULL, "rna_LatticeModifier_name_set");
-	RNA_def_property_update(prop, 0, "rna_Modifier_update");
-
-	prop = RNA_def_property(srna, "strength", PROP_FLOAT, PROP_NONE);
-	RNA_def_property_range(prop, -FLT_MAX, FLT_MAX);
-	RNA_def_property_ui_range(prop, 0, 1, 10, 2);
-	RNA_def_property_ui_text(prop, "Strength", "Strength of modifier effect");
-	RNA_def_property_update(prop, 0, "rna_Modifier_update");
 }
 
 static void rna_def_modifier_curve(BlenderRNA *brna)
@@ -3498,7 +3457,6 @@ void RNA_def_modifier(BlenderRNA *brna)
 
 	/* types */
 	rna_def_modifier_subsurf(brna);
-	rna_def_modifier_lattice(brna);
 	rna_def_modifier_curve(brna);
 	rna_def_modifier_build(brna);
 	rna_def_modifier_mirror(brna);

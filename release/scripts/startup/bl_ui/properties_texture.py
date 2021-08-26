@@ -109,7 +109,7 @@ class TextureButtonsPanel:
     @classmethod
     def poll(cls, context):
         tex = context.texture
-        return tex and (tex.type != 'NONE' or tex.use_nodes) and (context.scene.render.engine in cls.COMPAT_ENGINES)
+        return tex
 
 
 class TEXTURE_PT_context_texture(TextureButtonsPanel, Panel):
@@ -119,18 +119,11 @@ class TEXTURE_PT_context_texture(TextureButtonsPanel, Panel):
 
     @classmethod
     def poll(cls, context):
-        engine = context.scene.render.engine
-        # if not (hasattr(context, "texture_slot") or hasattr(context, "texture_node")):
-        #     return False
         return ((context.material or
                  context.world or
                  context.lamp or
                  context.texture or
-                 context.line_style or
-                 context.particle_system or
-                 isinstance(context.space_data.pin_id, ParticleSettings) or
-                 context.texture_user) and
-                (engine in cls.COMPAT_ENGINES))
+                 context.texture_user))
 
     def draw(self, context):
         layout = self.layout
@@ -178,7 +171,7 @@ class TEXTURE_PT_context_texture(TextureButtonsPanel, Panel):
                         split.prop(tex, "type", text="")
             return
 
-        tex_collection = (pin_id is None) and (node is None) and (not isinstance(idblock, Brush))
+        tex_collection = (pin_id is None) and (node is None)
 
         if tex_collection:
             row = layout.row()
@@ -187,8 +180,6 @@ class TEXTURE_PT_context_texture(TextureButtonsPanel, Panel):
                               idblock, "active_texture_index", rows=2)
 
             col = row.column(align=True)
-            col.operator("texture.slot_move", text="", icon='TRIA_UP').type = 'UP'
-            col.operator("texture.slot_move", text="", icon='TRIA_DOWN').type = 'DOWN'
             col.menu("TEXTURE_MT_specials", icon='DOWNARROW_HLT', text="")
 
         if tex_collection:
@@ -203,18 +194,13 @@ class TEXTURE_PT_context_texture(TextureButtonsPanel, Panel):
 
         if tex:
             split = layout.split(percentage=0.2)
-            if tex.use_nodes:
-                if slot:
-                    split.label(text="Output:")
-                    split.prop(slot, "output_node", text="")
-            else:
-                split.label(text="Type:")
-                split.prop(tex, "type", text="")
+            split.label(text="Type:")
+            split.prop(tex, "type", text="")
 
 
 class TEXTURE_PT_preview(TextureButtonsPanel, Panel):
     bl_label = "Preview"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -228,15 +214,11 @@ class TEXTURE_PT_preview(TextureButtonsPanel, Panel):
         else:
             layout.template_preview(tex, slot=slot)
 
-        # Show Alpha Button for Brush Textures, see #29502
-        if context.space_data.texture_context == 'BRUSH':
-            layout.prop(tex, "use_preview_alpha")
-
 
 class TEXTURE_PT_colors(TextureButtonsPanel, Panel):
     bl_label = "Colors"
     bl_options = {'DEFAULT_CLOSED'}
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -269,15 +251,14 @@ class TEXTURE_PT_colors(TextureButtonsPanel, Panel):
 
 
 class TextureSlotPanel(TextureButtonsPanel):
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     @classmethod
     def poll(cls, context):
         if not hasattr(context, "texture_slot"):
             return False
 
-        engine = context.scene.render.engine
-        return TextureButtonsPanel.poll(cls, context) and (engine in cls.COMPAT_ENGINES)
+        return TextureButtonsPanel.poll(cls, context)
 
 
 # Texture Type Panels #
@@ -288,67 +269,14 @@ class TextureTypePanel(TextureButtonsPanel):
     @classmethod
     def poll(cls, context):
         tex = context.texture
-        engine = context.scene.render.engine
-        return tex and ((tex.type == cls.tex_type and not tex.use_nodes) and (engine in cls.COMPAT_ENGINES))
+        return tex and ((tex.type == cls.tex_type))
 
-
-class TEXTURE_PT_clouds(TextureTypePanel, Panel):
-    bl_label = "Clouds"
-    tex_type = 'CLOUDS'
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
-
-    def draw(self, context):
-        layout = self.layout
-
-        tex = context.texture
-
-        layout.row().prop(tex, "cloud_type", expand=True)
-        layout.label(text="Noise:")
-        layout.row().prop(tex, "noise_type", text="Type", expand=True)
-        layout.prop(tex, "noise_basis", text="Basis")
-
-        split = layout.split()
-
-        col = split.column()
-        col.prop(tex, "noise_scale", text="Size")
-        col.prop(tex, "noise_depth", text="Depth")
-
-        split.prop(tex, "nabla", text="Nabla")
-
-
-class TEXTURE_PT_wood(TextureTypePanel, Panel):
-    bl_label = "Wood"
-    tex_type = 'WOOD'
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
-
-    def draw(self, context):
-        layout = self.layout
-
-        tex = context.texture
-
-        layout.row().prop(tex, "noise_basis_2", expand=True)
-        layout.row().prop(tex, "wood_type", expand=True)
-
-        col = layout.column()
-        col.active = tex.wood_type in {'RINGNOISE', 'BANDNOISE'}
-        col.label(text="Noise:")
-        col.row().prop(tex, "noise_type", text="Type", expand=True)
-        layout.prop(tex, "noise_basis", text="Basis")
-
-        split = layout.split()
-        split.active = tex.wood_type in {'RINGNOISE', 'BANDNOISE'}
-
-        col = split.column()
-        col.prop(tex, "noise_scale", text="Size")
-        col.prop(tex, "turbulence")
-
-        split.prop(tex, "nabla")
 
 
 class TEXTURE_PT_marble(TextureTypePanel, Panel):
     bl_label = "Marble"
     tex_type = 'MARBLE'
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -375,7 +303,7 @@ class TEXTURE_PT_marble(TextureTypePanel, Panel):
 class TEXTURE_PT_magic(TextureTypePanel, Panel):
     bl_label = "Magic"
     tex_type = 'MAGIC'
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -390,7 +318,7 @@ class TEXTURE_PT_magic(TextureTypePanel, Panel):
 class TEXTURE_PT_blend(TextureTypePanel, Panel):
     bl_label = "Blend"
     tex_type = 'BLEND'
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -408,7 +336,7 @@ class TEXTURE_PT_blend(TextureTypePanel, Panel):
 class TEXTURE_PT_stucci(TextureTypePanel, Panel):
     bl_label = "Stucci"
     tex_type = 'STUCCI'
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -428,7 +356,7 @@ class TEXTURE_PT_stucci(TextureTypePanel, Panel):
 class TEXTURE_PT_image(TextureTypePanel, Panel):
     bl_label = "Image"
     tex_type = 'IMAGE'
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -455,13 +383,10 @@ class TEXTURE_PT_image_sampling(TextureTypePanel, Panel):
     bl_label = "Image Sampling"
     bl_options = {'DEFAULT_CLOSED'}
     tex_type = 'IMAGE'
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
-        if context.scene.render.engine == 'BLENDER_GAME':
-            self.draw_bge(context)
-        else:
-            self.draw_bi(context)
+        self.draw_bi(context)
 
     def draw_bi(self, context):
         layout = self.layout
@@ -535,7 +460,7 @@ class TEXTURE_PT_image_mapping(TextureTypePanel, Panel):
     bl_label = "Image Mapping"
     bl_options = {'DEFAULT_CLOSED'}
     tex_type = 'IMAGE'
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -590,7 +515,7 @@ class TEXTURE_PT_image_mapping(TextureTypePanel, Panel):
 class TEXTURE_PT_envmap(TextureTypePanel, Panel):
     bl_label = "Environment Map"
     tex_type = 'ENVIRONMENT_MAP'
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -629,7 +554,7 @@ class TEXTURE_PT_envmap_sampling(TextureTypePanel, Panel):
     bl_label = "Environment Map Sampling"
     bl_options = {'DEFAULT_CLOSED'}
     tex_type = 'ENVIRONMENT_MAP'
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -642,7 +567,7 @@ class TEXTURE_PT_envmap_sampling(TextureTypePanel, Panel):
 class TEXTURE_PT_musgrave(TextureTypePanel, Panel):
     bl_label = "Musgrave"
     tex_type = 'MUSGRAVE'
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -678,7 +603,7 @@ class TEXTURE_PT_musgrave(TextureTypePanel, Panel):
 class TEXTURE_PT_voronoi(TextureTypePanel, Panel):
     bl_label = "Voronoi"
     tex_type = 'VORONOI'
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -714,7 +639,7 @@ class TEXTURE_PT_voronoi(TextureTypePanel, Panel):
 class TEXTURE_PT_distortednoise(TextureTypePanel, Panel):
     bl_label = "Distorted Noise"
     tex_type = 'DISTORTED_NOISE'
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -735,13 +660,12 @@ class TEXTURE_PT_distortednoise(TextureTypePanel, Panel):
 
 class TEXTURE_PT_voxeldata(TextureButtonsPanel, Panel):
     bl_label = "Voxel Data"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     @classmethod
     def poll(cls, context):
         tex = context.texture
-        engine = context.scene.render.engine
-        return tex and (tex.type == 'VOXEL_DATA' and (engine in cls.COMPAT_ENGINES))
+        return tex and (tex.type == 'VOXEL_DATA')
 
     def draw(self, context):
         layout = self.layout
@@ -776,149 +700,18 @@ class TEXTURE_PT_voxeldata(TextureButtonsPanel, Panel):
         layout.prop(vd, "intensity")
 
 
-class TEXTURE_PT_pointdensity(TextureButtonsPanel, Panel):
-    bl_label = "Point Density"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
-
-    @classmethod
-    def poll(cls, context):
-        tex = context.texture
-        engine = context.scene.render.engine
-        return tex and (tex.type == 'POINT_DENSITY' and (engine in cls.COMPAT_ENGINES))
-
-    def draw(self, context):
-        layout = self.layout
-
-        tex = context.texture
-        pd = tex.point_density
-
-        layout.row().prop(pd, "point_source", expand=True)
-
-        split = layout.split()
-
-        col = split.column()
-        if pd.point_source == 'PARTICLE_SYSTEM':
-            col.label(text="Object:")
-            col.prop(pd, "object", text="")
-
-            sub = col.column()
-            sub.enabled = bool(pd.object)
-            if pd.object:
-                sub.label(text="System:")
-                sub.prop_search(pd, "particle_system", pd.object, "particle_systems", text="")
-            sub.label(text="Cache:")
-            sub.prop(pd, "particle_cache_space", text="")
-        else:
-            col.label(text="Object:")
-            col.prop(pd, "object", text="")
-            col.label(text="Cache:")
-            col.prop(pd, "vertex_cache_space", text="")
-
-        col.separator()
-
-        col.label(text="Color Source:")
-        if pd.point_source == 'PARTICLE_SYSTEM':
-            col.prop(pd, "particle_color_source", text="")
-            if pd.particle_color_source in {'PARTICLE_SPEED', 'PARTICLE_VELOCITY'}:
-                col.prop(pd, "speed_scale")
-            if pd.particle_color_source in {'PARTICLE_SPEED', 'PARTICLE_AGE'}:
-                layout.template_color_ramp(pd, "color_ramp", expand=True)
-        else:
-            col.prop(pd, "vertex_color_source", text="")
-            if pd.vertex_color_source == 'VERTEX_COLOR':
-                if pd.object and pd.object.data:
-                    col.prop_search(pd, "vertex_attribute_name", pd.object.data, "vertex_colors", text="")
-            if pd.vertex_color_source == 'VERTEX_WEIGHT':
-                if pd.object:
-                    col.prop_search(pd, "vertex_attribute_name", pd.object, "vertex_groups", text="")
-                layout.template_color_ramp(pd, "color_ramp", expand=True)
-
-        col = split.column()
-        col.label()
-        col.prop(pd, "radius")
-        col.label(text="Falloff:")
-        col.prop(pd, "falloff", text="")
-        if pd.falloff == 'SOFT':
-            col.prop(pd, "falloff_soft")
-        if pd.falloff == 'PARTICLE_VELOCITY':
-            col.prop(pd, "falloff_speed_scale")
-
-        col.prop(pd, "use_falloff_curve")
-
-        if pd.use_falloff_curve:
-            col = layout.column()
-            col.label(text="Falloff Curve")
-            col.template_curve_mapping(pd, "falloff_curve", brush=False)
-
-
-class TEXTURE_PT_pointdensity_turbulence(TextureButtonsPanel, Panel):
-    bl_label = "Turbulence"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
-
-    @classmethod
-    def poll(cls, context):
-        tex = context.texture
-        engine = context.scene.render.engine
-        return tex and (tex.type == 'POINT_DENSITY' and (engine in cls.COMPAT_ENGINES))
-
-    def draw_header(self, context):
-        pd = context.texture.point_density
-
-        self.layout.prop(pd, "use_turbulence", text="")
-
-    def draw(self, context):
-        layout = self.layout
-
-        tex = context.texture
-        pd = tex.point_density
-        layout.active = pd.use_turbulence
-
-        split = layout.split()
-
-        col = split.column()
-        col.label(text="Influence:")
-        col.prop(pd, "turbulence_influence", text="")
-        col.label(text="Noise Basis:")
-        col.prop(pd, "noise_basis", text="")
-
-        col = split.column()
-        col.label()
-        col.prop(pd, "turbulence_scale")
-        col.prop(pd, "turbulence_depth")
-        col.prop(pd, "turbulence_strength")
-
-
-class TEXTURE_PT_ocean(TextureTypePanel, Panel):
-    bl_label = "Ocean"
-    tex_type = 'OCEAN'
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
-
-    def draw(self, context):
-        layout = self.layout
-
-        tex = context.texture
-        ot = tex.ocean
-
-        col = layout.column()
-        col.prop(ot, "ocean_object")
-        col.prop(ot, "output")
-
-
 class TEXTURE_PT_mapping(TextureSlotPanel, Panel):
     bl_label = "Mapping"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     @classmethod
     def poll(cls, context):
         idblock = context_tex_datablock(context)
-        if isinstance(idblock, Brush) and not context.sculpt_object:
-            return False
 
         if not getattr(context, "texture_slot", None):
             return False
 
-        engine = context.scene.render.engine
-        return (engine in cls.COMPAT_ENGINES)
+        return True
 
     def draw(self, context):
         layout = self.layout
@@ -927,101 +720,81 @@ class TEXTURE_PT_mapping(TextureSlotPanel, Panel):
 
         tex = context.texture_slot
 
-        if not isinstance(idblock, Brush):
+        split = layout.split(percentage=0.3)
+        col = split.column()
+        col.label(text="Coordinates:")
+        col = split.column()
+        col.prop(tex, "texture_coords", text="")
+
+        if tex.texture_coords == 'ORCO':
+            """
+            ob = context.object
+            if ob and ob.type == 'MESH':
+                split = layout.split(percentage=0.3)
+                split.label(text="Mesh:")
+                split.prop(ob.data, "texco_mesh", text="")
+            """
+        elif tex.texture_coords == 'UV':
             split = layout.split(percentage=0.3)
-            col = split.column()
-            col.label(text="Coordinates:")
-            col = split.column()
-            col.prop(tex, "texture_coords", text="")
+            split.label(text="Map:")
+            ob = context.object
+            if ob and ob.type == 'MESH':
+                split.prop_search(tex, "uv_layer", ob.data, "uv_textures", text="")
+            else:
+                split.prop(tex, "uv_layer", text="")
 
-            if tex.texture_coords == 'ORCO':
-                """
-                ob = context.object
-                if ob and ob.type == 'MESH':
-                    split = layout.split(percentage=0.3)
-                    split.label(text="Mesh:")
-                    split.prop(ob.data, "texco_mesh", text="")
-                """
-            elif tex.texture_coords == 'UV':
-                split = layout.split(percentage=0.3)
-                split.label(text="Map:")
-                ob = context.object
-                if ob and ob.type == 'MESH':
-                    split.prop_search(tex, "uv_layer", ob.data, "uv_textures", text="")
-                else:
-                    split.prop(tex, "uv_layer", text="")
+        elif tex.texture_coords == 'OBJECT':
+            split = layout.split(percentage=0.3)
+            split.label(text="Object:")
+            split.prop(tex, "object", text="")
 
+        elif tex.texture_coords == 'ALONG_STROKE':
+            split = layout.split(percentage=0.3)
+            split.label(text="Use Tips:")
+            split.prop(tex, "use_tips", text="")
+
+        elif isinstance(idblock, Material):
+            split = layout.split(percentage=0.3)
+            split.label(text="Projection:")
+            split.prop(tex, "mapping", text="")
+
+            split = layout.split()
+
+            col = split.column()
+            if tex.texture_coords in {'ORCO', 'UV'}:
+                col.prop(tex, "use_from_dupli")
+                if (idblock.type == 'VOLUME' and tex.texture_coords == 'ORCO'):
+                    col.prop(tex, "use_map_to_bounds")
             elif tex.texture_coords == 'OBJECT':
-                split = layout.split(percentage=0.3)
-                split.label(text="Object:")
-                split.prop(tex, "object", text="")
+                col.prop(tex, "use_from_original")
+                if (idblock.type == 'VOLUME'):
+                    col.prop(tex, "use_map_to_bounds")
+            else:
+                col.label()
 
-            elif tex.texture_coords == 'ALONG_STROKE':
-                split = layout.split(percentage=0.3)
-                split.label(text="Use Tips:")
-                split.prop(tex, "use_tips", text="")
+            col = split.column()
+            row = col.row()
+            row.prop(tex, "mapping_x", text="")
+            row.prop(tex, "mapping_y", text="")
+            row.prop(tex, "mapping_z", text="")
 
-        if isinstance(idblock, Brush):
-            if context.sculpt_object or context.image_paint_object:
-                brush_texture_settings(layout, idblock, context.sculpt_object)
-        else:
-            if isinstance(idblock, FreestyleLineStyle):
-                split = layout.split(percentage=0.3)
-                split.label(text="Projection:")
-                split.prop(tex, "mapping", text="")
-
-                split = layout.split(percentage=0.3)
-                split.separator()
-                row = split.row()
-                row.prop(tex, "mapping_x", text="")
-                row.prop(tex, "mapping_y", text="")
-                row.prop(tex, "mapping_z", text="")
-
-            elif isinstance(idblock, Material):
-                split = layout.split(percentage=0.3)
-                split.label(text="Projection:")
-                split.prop(tex, "mapping", text="")
-
-                split = layout.split()
-
-                col = split.column()
-                if tex.texture_coords in {'ORCO', 'UV'}:
-                    col.prop(tex, "use_from_dupli")
-                    if (idblock.type == 'VOLUME' and tex.texture_coords == 'ORCO'):
-                        col.prop(tex, "use_map_to_bounds")
-                elif tex.texture_coords == 'OBJECT':
-                    col.prop(tex, "use_from_original")
-                    if (idblock.type == 'VOLUME'):
-                        col.prop(tex, "use_map_to_bounds")
-                else:
-                    col.label()
-
-                col = split.column()
-                row = col.row()
-                row.prop(tex, "mapping_x", text="")
-                row.prop(tex, "mapping_y", text="")
-                row.prop(tex, "mapping_z", text="")
-
-            row = layout.row()
-            row.column().prop(tex, "offset")
-            row.column().prop(tex, "scale")
+        row = layout.row()
+        row.column().prop(tex, "offset")
+        row.column().prop(tex, "scale")
 
 
 class TEXTURE_PT_influence(TextureSlotPanel, Panel):
     bl_label = "Influence"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     @classmethod
     def poll(cls, context):
         idblock = context_tex_datablock(context)
-        if isinstance(idblock, Brush):
-            return False
 
         if not getattr(context, "texture_slot", None):
             return False
 
-        engine = context.scene.render.engine
-        return (engine in cls.COMPAT_ENGINES)
+        return True
 
     def draw(self, context):
 
@@ -1133,8 +906,6 @@ class TEXTURE_PT_influence(TextureSlotPanel, Panel):
             col = split.column()
             factor_but(col, "use_map_zenith_up", "zenith_up_factor", "Zenith Up")
             factor_but(col, "use_map_zenith_down", "zenith_down_factor", "Zenith Down")
-        elif isinstance(idblock, ParticleSettings):
-            split = layout.split()
 
             col = split.column()
             col.label(text="General:")
@@ -1174,18 +945,17 @@ class TEXTURE_PT_influence(TextureSlotPanel, Panel):
 
         layout.separator()
 
-        if not isinstance(idblock, ParticleSettings):
-            split = layout.split()
+        split = layout.split()
 
-            col = split.column()
-            col.prop(tex, "blend_type", text="Blend")
-            col.prop(tex, "use_rgb_to_intensity")
-            # color is used on gray-scale textures even when use_rgb_to_intensity is disabled.
-            col.prop(tex, "color", text="")
+        col = split.column()
+        col.prop(tex, "blend_type", text="Blend")
+        col.prop(tex, "use_rgb_to_intensity")
+        # color is used on gray-scale textures even when use_rgb_to_intensity is disabled.
+        col.prop(tex, "color", text="")
 
-            col = split.column()
-            col.prop(tex, "invert", text="Negative")
-            col.prop(tex, "use_stencil")
+        col = split.column()
+        col.prop(tex, "invert", text="Negative")
+        col.prop(tex, "use_stencil")
 
         if isinstance(idblock, (Material, World)):
             col.prop(tex, "default_value", text="DVar", slider=True)
@@ -1217,7 +987,7 @@ class TEXTURE_PT_influence(TextureSlotPanel, Panel):
 
 
 class TEXTURE_PT_custom_props(TextureButtonsPanel, PropertyPanel, Panel):
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
     _context_path = "texture"
     _property_type = Texture
 
@@ -1229,24 +999,16 @@ classes = (
     TEXTURE_PT_context_texture,
     TEXTURE_PT_preview,
     TEXTURE_PT_colors,
-    TEXTURE_PT_clouds,
-    TEXTURE_PT_wood,
-    TEXTURE_PT_marble,
     TEXTURE_PT_magic,
     TEXTURE_PT_blend,
-    TEXTURE_PT_stucci,
     TEXTURE_PT_image,
     TEXTURE_PT_image_sampling,
     TEXTURE_PT_image_mapping,
     TEXTURE_PT_envmap,
     TEXTURE_PT_envmap_sampling,
-    TEXTURE_PT_musgrave,
     TEXTURE_PT_voronoi,
     TEXTURE_PT_distortednoise,
     TEXTURE_PT_voxeldata,
-    TEXTURE_PT_pointdensity,
-    TEXTURE_PT_pointdensity_turbulence,
-    TEXTURE_PT_ocean,
     TEXTURE_PT_mapping,
     TEXTURE_PT_influence,
     TEXTURE_PT_custom_props,

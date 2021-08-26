@@ -60,7 +60,6 @@
 #include "BKE_scene.h"
 #include "BKE_text.h"
 #include "BKE_group.h"
-#include "BKE_lattice.h"
 #include "BKE_world.h"
 #include "BKE_font.h"
 
@@ -72,7 +71,6 @@
 #include "DNA_text_types.h"
 #include "DNA_texture_types.h"
 #include "DNA_group_types.h"
-#include "DNA_lattice_types.h"
 #include "DNA_world_types.h"
 #include "DNA_vfont_types.h"
 
@@ -184,9 +182,6 @@ static Object *rna_Main_objects_new(Main *bmain, ReportList *reports, const char
 			case ID_CA:
 				type = OB_CAMERA;
 				break;
-			case ID_LT:
-				type = OB_LATTICE;
-				break;
 			default:
 			{
 				const char *idname;
@@ -292,16 +287,6 @@ static Image *rna_Main_images_load(Main *bmain, ReportList *reports, const char 
 	return ima;
 }
 
-static Lattice *rna_Main_lattices_new(Main *bmain, const char *name)
-{
-	char safe_name[MAX_ID_NAME - 2];
-	rna_idname_validate(name, safe_name);
-
-	Lattice *lt = BKE_lattice_add(bmain, safe_name);
-	id_us_min(&lt->id);
-	return lt;
-}
-
 static Curve *rna_Main_curves_new(Main *bmain, const char *name, int type)
 {
 	char safe_name[MAX_ID_NAME - 2];
@@ -403,7 +388,6 @@ RNA_MAIN_ID_TAG_FUNCS_DEF(libraries, library, ID_LI)
 RNA_MAIN_ID_TAG_FUNCS_DEF(screens, screen, ID_SCR)
 RNA_MAIN_ID_TAG_FUNCS_DEF(window_managers, wm, ID_WM)
 RNA_MAIN_ID_TAG_FUNCS_DEF(images, image, ID_IM)
-RNA_MAIN_ID_TAG_FUNCS_DEF(lattices, latt, ID_LT)
 RNA_MAIN_ID_TAG_FUNCS_DEF(curves, curve, ID_CU)
 RNA_MAIN_ID_TAG_FUNCS_DEF(fonts, vfont, ID_VF)
 RNA_MAIN_ID_TAG_FUNCS_DEF(textures, tex, ID_TE)
@@ -876,48 +860,6 @@ void RNA_def_main_images(BlenderRNA *brna, PropertyRNA *cprop)
 	RNA_def_property_boolean_funcs(prop, "rna_Main_images_is_updated_get", NULL);
 }
 
-void RNA_def_main_lattices(BlenderRNA *brna, PropertyRNA *cprop)
-{
-	StructRNA *srna;
-	FunctionRNA *func;
-	PropertyRNA *parm;
-	PropertyRNA *prop;
-
-	RNA_def_property_srna(cprop, "BlendDataLattices");
-	srna = RNA_def_struct(brna, "BlendDataLattices", NULL);
-	RNA_def_struct_sdna(srna, "Main");
-	RNA_def_struct_ui_text(srna, "Main Lattices", "Collection of lattices");
-
-	func = RNA_def_function(srna, "new", "rna_Main_lattices_new");
-	RNA_def_function_ui_description(func, "Add a new lattice to the main database");
-	parm = RNA_def_string(func, "name", "Lattice", 0, "", "New name for the data-block");
-	RNA_def_parameter_flags(parm, 0, PARM_REQUIRED);
-	/* return type */
-	parm = RNA_def_pointer(func, "lattice", "Lattice", "", "New lattices data-block");
-	RNA_def_function_return(func, parm);
-
-	func = RNA_def_function(srna, "remove", "rna_Main_ID_remove");
-	RNA_def_function_flag(func, FUNC_USE_REPORTS);
-	RNA_def_function_ui_description(func, "Remove a lattice from the current blendfile");
-	parm = RNA_def_pointer(func, "lattice", "Lattice", "", "Lattice to remove");
-	RNA_def_parameter_flags(parm, PROP_NEVER_NULL, PARM_REQUIRED | PARM_RNAPTR);
-	RNA_def_parameter_clear_flags(parm, PROP_THICK_WRAP, 0);
-	RNA_def_boolean(func, "do_unlink", true, "",
-	                "Unlink all usages of this lattice before deleting it "
-	                "(WARNING: will also delete objects instancing that lattice data)");
-	RNA_def_boolean(func, "do_id_user", true, "",
-	                "Decrement user counter of all datablocks used by this lattice data");
-	RNA_def_boolean(func, "do_ui_user", true, "",
-	                "Make sure interface does not reference this lattice data");
-
-	func = RNA_def_function(srna, "tag", "rna_Main_lattices_tag");
-	parm = RNA_def_boolean(func, "value", 0, "Value", "");
-	RNA_def_parameter_flags(parm, 0, PARM_REQUIRED);
-
-	prop = RNA_def_property(srna, "is_updated", PROP_BOOLEAN, PROP_NONE);
-	RNA_def_property_clear_flag(prop, PROP_EDITABLE);
-	RNA_def_property_boolean_funcs(prop, "rna_Main_lattices_is_updated_get", NULL);
-}
 void RNA_def_main_curves(BlenderRNA *brna, PropertyRNA *cprop)
 {
 	StructRNA *srna;

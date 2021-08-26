@@ -33,7 +33,6 @@
 #include "BLI_listbase.h"
 
 #include "BKE_camera.h"
-#include "BKE_editlattice.h"
 #include "BKE_editmesh.h"
 #include "BKE_group.h" /* needed for BKE_group_object_exists() */
 #include "BKE_object_deform.h"
@@ -88,7 +87,6 @@ const EnumPropertyItem rna_enum_object_type_items[] = {
 	OBTYPE_CU_SURF,
 	OBTYPE_CU_FONT,
 	{0, "", 0, NULL, NULL},
-	{OB_LATTICE, "LATTICE", 0, "Lattice", ""},
 	{OB_EMPTY, "EMPTY", 0, "Empty", ""},
 	{0, "", 0, NULL, NULL},
 	{OB_CAMERA, "CAMERA", 0, "Camera", ""},
@@ -117,7 +115,6 @@ const EnumPropertyItem rna_enum_object_axis_items[] = {
 
 #include "BLI_math.h"
 
-#include "DNA_lattice_types.h"
 #include "DNA_modifier_types.h"
 
 #include "BKE_bullet.h"
@@ -132,7 +129,6 @@ const EnumPropertyItem rna_enum_object_axis_items[] = {
 
 #include "ED_object.h"
 #include "ED_curve.h"
-#include "ED_lattice.h"
 
 static void rna_Object_internal_update_draw(Main *UNUSED(bmain), Scene *UNUSED(scene), PointerRNA *ptr)
 {
@@ -314,7 +310,6 @@ static StructRNA *rna_Object_data_typef(PointerRNA *ptr)
 		case OB_FONT: return &RNA_Curve;
 		case OB_LAMP: return &RNA_Lamp;
 		case OB_CAMERA: return &RNA_Camera;
-		case OB_LATTICE: return &RNA_Lattice;
 		default: return &RNA_ID;
 	}
 }
@@ -881,10 +876,6 @@ static float rna_VertexGroup_weight(ID *id, bDeformGroup *dg, ReportList *report
 }
 
 /* generic poll functions */
-bool rna_Lattice_object_poll(PointerRNA *UNUSED(ptr), PointerRNA value)
-{
-	return ((Object *)value.id.data)->type == OB_LATTICE;
-}
 
 bool rna_Curve_object_poll(PointerRNA *UNUSED(ptr), PointerRNA value)
 {

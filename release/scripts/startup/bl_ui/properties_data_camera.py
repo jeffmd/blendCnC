@@ -29,15 +29,14 @@ class CameraButtonsPanel:
 
     @classmethod
     def poll(cls, context):
-        engine = context.scene.render.engine
-        return context.camera and (engine in cls.COMPAT_ENGINES)
+        return context.camera
 
 
 class CAMERA_MT_presets(Menu):
     bl_label = "Camera Presets"
     preset_subdir = "camera"
     preset_operator = "script.execute_preset"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
     draw = Menu.draw_preset
 
 
@@ -45,14 +44,14 @@ class SAFE_AREAS_MT_presets(Menu):
     bl_label = "Camera Presets"
     preset_subdir = "safe_areas"
     preset_operator = "script.execute_preset"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
     draw = Menu.draw_preset
 
 
 class DATA_PT_context_camera(CameraButtonsPanel, Panel):
     bl_label = ""
     bl_options = {'HIDE_HEADER'}
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -72,7 +71,7 @@ class DATA_PT_context_camera(CameraButtonsPanel, Panel):
 
 class DATA_PT_lens(CameraButtonsPanel, Panel):
     bl_label = "Lens"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -95,33 +94,6 @@ class DATA_PT_lens(CameraButtonsPanel, Panel):
         elif cam.type == 'ORTHO':
             col.prop(cam, "ortho_scale")
 
-        elif cam.type == 'PANO':
-            engine = context.scene.render.engine
-            if engine == 'CYCLES':
-                ccam = cam.cycles
-                col.prop(ccam, "panorama_type", text="Type")
-                if ccam.panorama_type == 'FISHEYE_EQUIDISTANT':
-                    col.prop(ccam, "fisheye_fov")
-                elif ccam.panorama_type == 'FISHEYE_EQUISOLID':
-                    row = layout.row()
-                    row.prop(ccam, "fisheye_lens", text="Lens")
-                    row.prop(ccam, "fisheye_fov")
-                elif ccam.panorama_type == 'EQUIRECTANGULAR':
-                    row = layout.row()
-                    sub = row.column(align=True)
-                    sub.prop(ccam, "latitude_min")
-                    sub.prop(ccam, "latitude_max")
-                    sub = row.column(align=True)
-                    sub.prop(ccam, "longitude_min")
-                    sub.prop(ccam, "longitude_max")
-            elif engine == 'BLENDER_RENDER':
-                row = col.row()
-                if cam.lens_unit == 'MILLIMETERS':
-                    row.prop(cam, "lens")
-                elif cam.lens_unit == 'FOV':
-                    row.prop(cam, "angle")
-                row.prop(cam, "lens_unit", text="")
-
         split = layout.split()
 
         col = split.column(align=True)
@@ -135,55 +107,9 @@ class DATA_PT_lens(CameraButtonsPanel, Panel):
         col.prop(cam, "clip_end", text="End")
 
 
-class DATA_PT_camera_stereoscopy(CameraButtonsPanel, Panel):
-    bl_label = "Stereoscopy"
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
-
-    @classmethod
-    def poll(cls, context):
-        render = context.scene.render
-        return (super().poll(context) and render.use_multiview and
-                render.views_format == 'STEREO_3D')
-
-    def draw(self, context):
-        layout = self.layout
-        render = context.scene.render
-        st = context.camera.stereo
-        cam = context.camera
-
-        is_spherical_stereo = cam.type != 'ORTHO' and render.use_spherical_stereo
-        use_spherical_stereo = is_spherical_stereo and st.use_spherical_stereo
-
-        col = layout.column()
-        col.row().prop(st, "convergence_mode", expand=True)
-
-        sub = col.column()
-        sub.active = st.convergence_mode != 'PARALLEL'
-        sub.prop(st, "convergence_distance")
-
-        col.prop(st, "interocular_distance")
-
-        if is_spherical_stereo:
-            col.separator()
-            row = col.row()
-            row.prop(st, "use_spherical_stereo")
-            sub = row.row()
-            sub.active = st.use_spherical_stereo
-            sub.prop(st, "use_pole_merge")
-            row = col.row(align=True)
-            row.active = st.use_pole_merge
-            row.prop(st, "pole_merge_angle_from")
-            row.prop(st, "pole_merge_angle_to")
-
-        col.label(text="Pivot:")
-        row = col.row()
-        row.active = not use_spherical_stereo
-        row.prop(st, "pivot", expand=True)
-
-
 class DATA_PT_camera(CameraButtonsPanel, Panel):
     bl_label = "Camera"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -215,39 +141,9 @@ class DATA_PT_camera(CameraButtonsPanel, Panel):
         col.prop(cam, "sensor_fit", text="")
 
 
-class DATA_PT_camera_dof(CameraButtonsPanel, Panel):
-    bl_label = "Depth of Field"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
-
-    def draw(self, context):
-        layout = self.layout
-
-        cam = context.camera
-        dof_options = cam.gpu_dof
-
-        split = layout.split()
-
-        col = split.column()
-        col.label(text="Focus:")
-        col.prop(cam, "dof_object", text="")
-        sub = col.column()
-        sub.active = (cam.dof_object is None)
-        sub.prop(cam, "dof_distance", text="Distance")
-
-        hq_support = dof_options.is_hq_supported
-        col = split.column(align=True)
-        col.label("Viewport:")
-        sub = col.column()
-        sub.active = hq_support
-        sub.prop(dof_options, "use_high_quality")
-        col.prop(dof_options, "fstop")
-        if dof_options.use_high_quality and hq_support:
-            col.prop(dof_options, "blades")
-
-
 class DATA_PT_camera_display(CameraButtonsPanel, Panel):
     bl_label = "Display"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -277,7 +173,7 @@ class DATA_PT_camera_display(CameraButtonsPanel, Panel):
 class DATA_PT_camera_safe_areas(CameraButtonsPanel, Panel):
     bl_label = "Safe Areas"
     bl_options = {'DEFAULT_CLOSED'}
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw_header(self, context):
         cam = context.camera
@@ -293,7 +189,7 @@ class DATA_PT_camera_safe_areas(CameraButtonsPanel, Panel):
 
 
 class DATA_PT_custom_props_camera(CameraButtonsPanel, PropertyPanel, Panel):
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
     _context_path = "object.data"
     _property_type = bpy.types.Camera
 
@@ -331,8 +227,6 @@ classes = (
     DATA_PT_context_camera,
     DATA_PT_lens,
     DATA_PT_camera,
-    DATA_PT_camera_stereoscopy,
-    DATA_PT_camera_dof,
     DATA_PT_camera_display,
     DATA_PT_camera_safe_areas,
     DATA_PT_custom_props_camera,

@@ -52,7 +52,6 @@ const EnumPropertyItem rna_enum_id_type_items[] = {
 	{ID_IM, "IMAGE", ICON_IMAGE_DATA, "Image", ""},
 	{ID_LA, "LAMP", ICON_LAMP_DATA, "Lamp", ""},
 	{ID_LI, "LIBRARY", ICON_LIBRARY_DATA_DIRECT, "Library", ""},
-	{ID_LT, "LATTICE", ICON_LATTICE_DATA, "Lattice", ""},
 	{ID_MA, "MATERIAL", ICON_MATERIAL_DATA, "Material", ""},
 	{ID_ME, "MESH", ICON_MESH_DATA, "Mesh", ""},
 	{ID_OB, "OBJECT", ICON_OBJECT_DATA, "Object", ""},
@@ -126,7 +125,6 @@ short RNA_type_to_ID_code(const StructRNA *type)
 	if (base_type == &RNA_Image) return ID_IM;
 	if (base_type == &RNA_Lamp) return ID_LA;
 	if (base_type == &RNA_Library) return ID_LI;
-	if (base_type == &RNA_Lattice) return ID_LT;
 	if (base_type == &RNA_Material) return ID_MA;
 	if (base_type == &RNA_Mesh) return ID_ME;
 	if (base_type == &RNA_Object) return ID_OB;
@@ -153,7 +151,6 @@ StructRNA *ID_code_to_RNA_type(short idcode)
 		case ID_IM: return &RNA_Image;
 		case ID_LA: return &RNA_Lamp;
 		case ID_LI: return &RNA_Library;
-		case ID_LT: return &RNA_Lattice;
 		case ID_MA: return &RNA_Material;
 		case ID_ME: return &RNA_Mesh;
 		case ID_OB: return &RNA_Object;

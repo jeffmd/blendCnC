@@ -24,7 +24,7 @@ from rna_prop_ui import PropertyPanel
 
 class MESH_MT_vertex_group_specials(Menu):
     bl_label = "Vertex Group Specials"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -45,24 +45,6 @@ class MESH_MT_vertex_group_specials(Menu):
         layout.operator("object.vertex_group_lock", icon='UNLOCKED', text="UnLock All").action = 'UNLOCK'
         layout.operator("object.vertex_group_lock", icon='LOCKED', text="Lock Invert All").action = 'INVERT'
 
-
-class MESH_MT_shape_key_specials(Menu):
-    bl_label = "Shape Key Specials"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
-
-    def draw(self, context):
-        layout = self.layout
-
-        layout.operator("object.shape_key_transfer", icon='COPY_ID')  # icon is not ideal
-        layout.operator("object.join_shapes", icon='COPY_ID')  # icon is not ideal
-        layout.operator("object.shape_key_mirror", icon='ARROW_LEFTRIGHT').use_topology = False
-        layout.operator("object.shape_key_mirror", text="Mirror Shape Key (Topology)", icon='ARROW_LEFTRIGHT').use_topology = True
-        layout.operator("object.shape_key_add", icon='ZOOMIN', text="New Shape From Mix").from_mix = True
-        layout.operator("object.shape_key_remove", icon='X', text="Delete All Shapes").all = True
-        layout.operator("object.shape_key_move", icon='TRIA_UP_BAR', text="Move To Top").type = 'TOP'
-        layout.operator("object.shape_key_move", icon='TRIA_DOWN_BAR', text="Move To Bottom").type = 'BOTTOM'
-
-
 class MESH_UL_vgroups(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         # assert(isinstance(item, bpy.types.VertexGroup))
@@ -75,29 +57,6 @@ class MESH_UL_vgroups(UIList):
             layout.alignment = 'CENTER'
             layout.label(text="", icon_value=icon)
 
-
-class MESH_UL_shape_keys(UIList):
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        # assert(isinstance(item, bpy.types.ShapeKey))
-        obj = active_data
-        # key = data
-        key_block = item
-        if self.layout_type in {'DEFAULT', 'COMPACT'}:
-            split = layout.split(0.66, False)
-            split.prop(key_block, "name", text="", emboss=False, icon_value=icon)
-            row = split.row(align=True)
-            if key_block.mute or (obj.mode == 'EDIT' and not (obj.use_shape_key_edit_mode and obj.type == 'MESH')):
-                row.active = False
-            if not item.id_data.use_relative:
-                row.prop(key_block, "frame", text="", emboss=False)
-            elif index > 0:
-                row.prop(key_block, "value", text="", emboss=False)
-            else:
-                row.label(text="")
-            row.prop(key_block, "mute", text="", emboss=False)
-        elif self.layout_type == 'GRID':
-            layout.alignment = 'CENTER'
-            layout.label(text="", icon_value=icon)
 
 
 class MESH_UL_uvmaps_vcols(UIList):
@@ -119,14 +78,13 @@ class MeshButtonsPanel:
 
     @classmethod
     def poll(cls, context):
-        engine = context.scene.render.engine
-        return context.mesh and (engine in cls.COMPAT_ENGINES)
+        return context.mesh
 
 
 class DATA_PT_context_mesh(MeshButtonsPanel, Panel):
     bl_label = ""
     bl_options = {'HIDE_HEADER'}
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -143,7 +101,7 @@ class DATA_PT_context_mesh(MeshButtonsPanel, Panel):
 
 class DATA_PT_normals(MeshButtonsPanel, Panel):
     bl_label = "Normals"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -164,7 +122,7 @@ class DATA_PT_normals(MeshButtonsPanel, Panel):
 class DATA_PT_texture_space(MeshButtonsPanel, Panel):
     bl_label = "Texture Space"
     bl_options = {'DEFAULT_CLOSED'}
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -183,13 +141,12 @@ class DATA_PT_texture_space(MeshButtonsPanel, Panel):
 
 class DATA_PT_vertex_groups(MeshButtonsPanel, Panel):
     bl_label = "Vertex Groups"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     @classmethod
     def poll(cls, context):
-        engine = context.scene.render.engine
         obj = context.object
-        return (obj and obj.type in {'MESH', 'LATTICE'} and (engine in cls.COMPAT_ENGINES))
+        return (obj and obj.type in {'MESH', 'LATTICE'})
 
     def draw(self, context):
         layout = self.layout
@@ -228,102 +185,10 @@ class DATA_PT_vertex_groups(MeshButtonsPanel, Panel):
             layout.prop(context.tool_settings, "vertex_group_weight", text="Weight")
 
 
-class DATA_PT_shape_keys(MeshButtonsPanel, Panel):
-    bl_label = "Shape Keys"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
-
-    @classmethod
-    def poll(cls, context):
-        engine = context.scene.render.engine
-        obj = context.object
-        return (obj and obj.type in {'MESH', 'LATTICE', 'CURVE', 'SURFACE'} and (engine in cls.COMPAT_ENGINES))
-
-    def draw(self, context):
-        layout = self.layout
-
-        ob = context.object
-        key = ob.data.shape_keys
-        kb = ob.active_shape_key
-
-        enable_edit = ob.mode != 'EDIT'
-        enable_edit_value = False
-
-        if ob.show_only_shape_key is False:
-            if enable_edit or (ob.type == 'MESH' and ob.use_shape_key_edit_mode):
-                enable_edit_value = True
-
-        row = layout.row()
-
-        rows = 2
-        if kb:
-            rows = 4
-        row.template_list("MESH_UL_shape_keys", "", key, "key_blocks", ob, "active_shape_key_index", rows=rows)
-
-        col = row.column()
-
-        sub = col.column(align=True)
-        sub.operator("object.shape_key_add", icon='ZOOMIN', text="").from_mix = False
-        sub.operator("object.shape_key_remove", icon='ZOOMOUT', text="").all = False
-        sub.menu("MESH_MT_shape_key_specials", icon='DOWNARROW_HLT', text="")
-
-        if kb:
-            col.separator()
-
-            sub = col.column(align=True)
-            sub.operator("object.shape_key_move", icon='TRIA_UP', text="").type = 'UP'
-            sub.operator("object.shape_key_move", icon='TRIA_DOWN', text="").type = 'DOWN'
-
-            split = layout.split(percentage=0.4)
-            row = split.row()
-            row.enabled = enable_edit
-            row.prop(key, "use_relative")
-
-            row = split.row()
-            row.alignment = 'RIGHT'
-
-            sub = row.row(align=True)
-            sub.label()  # XXX, for alignment only
-            subsub = sub.row(align=True)
-            subsub.active = enable_edit_value
-            subsub.prop(ob, "show_only_shape_key", text="")
-            sub.prop(ob, "use_shape_key_edit_mode", text="")
-
-            sub = row.row()
-            if key.use_relative:
-                sub.operator("object.shape_key_clear", icon='X', text="")
-            else:
-                sub.operator("object.shape_key_retime", icon='RECOVER_LAST', text="")
-
-            if key.use_relative:
-                if ob.active_shape_key_index != 0:
-                    row = layout.row()
-                    row.active = enable_edit_value
-                    row.prop(kb, "value")
-
-                    split = layout.split()
-
-                    col = split.column(align=True)
-                    col.active = enable_edit_value
-                    col.label(text="Range:")
-                    col.prop(kb, "slider_min", text="Min")
-                    col.prop(kb, "slider_max", text="Max")
-
-                    col = split.column(align=True)
-                    col.active = enable_edit_value
-                    col.label(text="Blend:")
-                    col.prop_search(kb, "vertex_group", ob, "vertex_groups", text="")
-                    col.prop_search(kb, "relative_key", key, "key_blocks", text="")
-
-            else:
-                layout.prop(kb, "interpolation")
-                row = layout.column()
-                row.active = enable_edit_value
-                row.prop(key, "eval_time")
-
 
 class DATA_PT_uv_texture(MeshButtonsPanel, Panel):
     bl_label = "UV Maps"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -342,7 +207,7 @@ class DATA_PT_uv_texture(MeshButtonsPanel, Panel):
 
 class DATA_PT_vertex_colors(MeshButtonsPanel, Panel):
     bl_label = "Vertex Colors"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -362,7 +227,7 @@ class DATA_PT_vertex_colors(MeshButtonsPanel, Panel):
 class DATA_PT_customdata(MeshButtonsPanel, Panel):
     bl_label = "Geometry Data"
     bl_options = {'DEFAULT_CLOSED'}
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         layout = self.layout
@@ -388,22 +253,19 @@ class DATA_PT_customdata(MeshButtonsPanel, Panel):
 
 
 class DATA_PT_custom_props_mesh(MeshButtonsPanel, PropertyPanel, Panel):
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
+    COMPAT_ENGINES = {'BLENDER_RENDER'}
     _context_path = "object.data"
     _property_type = bpy.types.Mesh
 
 
 classes = (
     MESH_MT_vertex_group_specials,
-    MESH_MT_shape_key_specials,
     MESH_UL_vgroups,
-    MESH_UL_shape_keys,
     MESH_UL_uvmaps_vcols,
     DATA_PT_context_mesh,
     DATA_PT_normals,
     DATA_PT_texture_space,
     DATA_PT_vertex_groups,
-    DATA_PT_shape_keys,
     DATA_PT_uv_texture,
     DATA_PT_vertex_colors,
     DATA_PT_customdata,

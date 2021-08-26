@@ -49,31 +49,6 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
     # ...to avoid lengthy if statements
     # so each type must have a function here.
 
-    def ARMATURE(self, layout, ob, md):
-        split = layout.split()
-
-        col = split.column()
-        col.label(text="Object:")
-        col.prop(md, "object", text="")
-        col.prop(md, "use_deform_preserve_volume")
-
-        col = split.column()
-        col.label(text="Bind To:")
-        col.prop(md, "use_vertex_groups", text="Vertex Groups")
-        col.prop(md, "use_bone_envelopes", text="Bone Envelopes")
-
-        layout.separator()
-
-        split = layout.split()
-
-        row = split.row(align=True)
-        row.prop_search(md, "vertex_group", ob, "vertex_groups", text="")
-        sub = row.row(align=True)
-        sub.active = bool(md.vertex_group)
-        sub.prop(md, "invert_vertex_group", text="", icon='ARROW_LEFTRIGHT')
-
-        split.prop(md, "use_multi_modifier")
-
     def ARRAY(self, layout, ob, md):
         layout.prop(md, "fit_type")
 
@@ -269,9 +244,6 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         if md.object:
             col.prop(md, "use_transform")
 
-    def CLOTH(self, layout, ob, md):
-        layout.label(text="Settings are inside the Physics tab")
-
     def COLLISION(self, layout, ob, md):
         layout.label(text="Settings are inside the Physics tab")
 
@@ -365,9 +337,6 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         row.prop(md, "mid_level")
         row.prop(md, "strength")
 
-    def DYNAMIC_PAINT(self, layout, ob, md):
-        layout.label(text="Settings are inside the Physics tab")
-
     def EDGE_SPLIT(self, layout, ob, md):
         split = layout.split()
 
@@ -379,29 +348,6 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
 
         split.prop(md, "use_edge_sharp", text="Sharp Edges")
 
-    def EXPLODE(self, layout, ob, md):
-        split = layout.split()
-
-        col = split.column()
-        col.label(text="Vertex Group:")
-        col.prop_search(md, "vertex_group", ob, "vertex_groups", text="")
-        sub = col.column()
-        sub.active = bool(md.vertex_group)
-        sub.prop(md, "protect")
-        col.label(text="Particle UV")
-        col.prop_search(md, "particle_uv", ob.data, "uv_textures", text="")
-
-        col = split.column()
-        col.prop(md, "use_edge_cut")
-        col.prop(md, "show_unborn")
-        col.prop(md, "show_alive")
-        col.prop(md, "show_dead")
-        col.prop(md, "use_size")
-
-        layout.operator("object.explode_refresh", text="Refresh")
-
-    def FLUID_SIMULATION(self, layout, ob, md):
-        layout.label(text="Settings are inside the Physics tab")
 
     def HOOK(self, layout, ob, md):
         use_falloff = (md.falloff_type != 'NONE')
@@ -486,45 +432,6 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         layout.label(text="Vertex Group:")
         layout.prop_search(md, "vertex_group", ob, "vertex_groups", text="")
 
-    def LATTICE(self, layout, ob, md):
-        split = layout.split()
-
-        col = split.column()
-        col.label(text="Object:")
-        col.prop(md, "object", text="")
-
-        col = split.column()
-        col.label(text="Vertex Group:")
-        col.prop_search(md, "vertex_group", ob, "vertex_groups", text="")
-
-        layout.separator()
-        layout.prop(md, "strength", slider=True)
-
-    def MASK(self, layout, ob, md):
-        split = layout.split()
-
-        col = split.column()
-        col.label(text="Mode:")
-        col.prop(md, "mode", text="")
-
-        col = split.column()
-        if md.mode == 'ARMATURE':
-            col.label(text="Armature:")
-            row = col.row(align=True)
-            row.prop(md, "armature", text="")
-            sub = row.row(align=True)
-            sub.active = (md.armature is not None)
-            sub.prop(md, "invert_vertex_group", text="", icon='ARROW_LEFTRIGHT')
-        elif md.mode == 'VERTEX_GROUP':
-            col.label(text="Vertex Group:")
-            row = col.row(align=True)
-            row.prop_search(md, "vertex_group", ob, "vertex_groups", text="")
-            sub = row.row(align=True)
-            sub.active = bool(md.vertex_group)
-            sub.prop(md, "invert_vertex_group", text="", icon='ARROW_LEFTRIGHT')
-
-        col = layout.column()
-        col.prop(md, "threshold")
 
     def MESH_DEFORM(self, layout, ob, md):
         split = layout.split()
@@ -593,15 +500,6 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         col.label(text="Mirror Object:")
         col.prop(md, "mirror_object", text="")
 
-    def MULTIRES(self, layout, ob, md):
-        layout.row().prop(md, "subdivision_type", expand=True)
-
-        split = layout.split()
-        col = split.column()
-        col.prop(md, "levels", text="Preview")
-        col.prop(md, "sculpt_levels", text="Sculpt")
-        col.prop(md, "render_levels", text="Render")
-
         col = split.column()
 
         col.enabled = ob.mode != 'EDIT'
@@ -624,145 +522,6 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         else:
             row.operator("object.multires_external_save", text="Save External...")
             row.label()
-
-    def OCEAN(self, layout, ob, md):
-        if not bpy.app.build_options.mod_oceansim:
-            layout.label("Built without OceanSim modifier")
-            return
-
-        layout.prop(md, "geometry_mode")
-
-        if md.geometry_mode == 'GENERATE':
-            row = layout.row()
-            row.prop(md, "repeat_x")
-            row.prop(md, "repeat_y")
-
-        layout.separator()
-
-        split = layout.split()
-
-        col = split.column()
-        col.prop(md, "time")
-        col.prop(md, "depth")
-        col.prop(md, "random_seed")
-
-        col = split.column()
-        col.prop(md, "resolution")
-        col.prop(md, "size")
-        col.prop(md, "spatial_size")
-
-        layout.label("Waves:")
-
-        split = layout.split()
-
-        col = split.column()
-        col.prop(md, "choppiness")
-        col.prop(md, "wave_scale", text="Scale")
-        col.prop(md, "wave_scale_min")
-        col.prop(md, "wind_velocity")
-
-        col = split.column()
-        col.prop(md, "wave_alignment", text="Alignment")
-        sub = col.column()
-        sub.active = (md.wave_alignment > 0.0)
-        sub.prop(md, "wave_direction", text="Direction")
-        sub.prop(md, "damping")
-
-        layout.separator()
-
-        layout.prop(md, "use_normals")
-
-        split = layout.split()
-
-        col = split.column()
-        col.prop(md, "use_foam")
-        sub = col.row()
-        sub.active = md.use_foam
-        sub.prop(md, "foam_coverage", text="Coverage")
-
-        col = split.column()
-        col.active = md.use_foam
-        col.label("Foam Data Layer Name:")
-        col.prop(md, "foam_layer_name", text="")
-
-        layout.separator()
-
-        if md.is_cached:
-            layout.operator("object.ocean_bake", text="Free Bake").free = True
-        else:
-            layout.operator("object.ocean_bake").free = False
-
-        split = layout.split()
-        split.enabled = not md.is_cached
-
-        col = split.column(align=True)
-        col.prop(md, "frame_start", text="Start")
-        col.prop(md, "frame_end", text="End")
-
-        col = split.column(align=True)
-        col.label(text="Cache path:")
-        col.prop(md, "filepath", text="")
-
-        split = layout.split()
-        split.enabled = not md.is_cached
-
-        col = split.column()
-        col.active = md.use_foam
-        col.prop(md, "bake_foam_fade")
-
-        col = split.column()
-
-    def PARTICLE_INSTANCE(self, layout, ob, md):
-        layout.prop(md, "object")
-        if md.object:
-            layout.prop_search(md, "particle_system", md.object, "particle_systems", text="Particle System")
-        else:
-            layout.prop(md, "particle_system_index", text="Particle System")
-
-        split = layout.split()
-        col = split.column()
-        col.label(text="Create From:")
-        layout.prop(md, "space", text="")
-        col.prop(md, "use_normal")
-        col.prop(md, "use_children")
-        col.prop(md, "use_size")
-
-        col = split.column()
-        col.label(text="Show Particles When:")
-        col.prop(md, "show_alive")
-        col.prop(md, "show_unborn")
-        col.prop(md, "show_dead")
-
-        row = layout.row(align=True)
-        row.prop(md, "particle_amount", text="Amount")
-        row.prop(md, "particle_offset", text="Offset")
-
-        row = layout.row(align=True)
-        row.prop(md, "axis", expand=True)
-
-        layout.separator()
-
-        layout.prop(md, "use_path", text="Create Along Paths")
-
-        col = layout.column()
-        col.active = md.use_path
-        col.prop(md, "use_preserve_shape")
-
-        row = col.row(align=True)
-        row.prop(md, "position", slider=True)
-        row.prop(md, "random_position", text="Random", slider=True)
-        row = col.row(align=True)
-        row.prop(md, "rotation", slider=True)
-        row.prop(md, "random_rotation", text="Random", slider=True)
-
-        layout.separator()
-
-        col = layout.column()
-        col.prop_search(md, "index_layer_name", ob.data, "vertex_colors", text="Index Layer")
-        col.prop_search(md, "value_layer_name", ob.data, "vertex_colors", text="Value Layer")
-
-    def PARTICLE_SYSTEM(self, layout, ob, md):
-        layout.label(text="Settings can be found inside the Particle context")
 
     def SCREW(self, layout, ob, md):
         split = layout.split()
@@ -956,46 +715,19 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         col = split.column()
 
         scene = context.scene
-        engine = scene.render.engine
-        show_adaptive_options = (
-            engine == 'CYCLES' and md == ob.modifiers[-1] and
-            scene.cycles.feature_set == 'EXPERIMENTAL'
-        )
-        if show_adaptive_options:
-            col.label(text="View:")
-            col.prop(md, "levels", text="Levels")
-            col.label(text="Render:")
-            col.prop(ob.cycles, "use_adaptive_subdivision", text="Adaptive")
-            if ob.cycles.use_adaptive_subdivision:
-                col.prop(ob.cycles, "dicing_rate")
-            else:
-                col.prop(md, "render_levels", text="Levels")
-        else:
-            col.label(text="Subdivisions:")
-            col.prop(md, "levels", text="View")
-            col.prop(md, "render_levels", text="Render")
+        col.label(text="Subdivisions:")
+        col.prop(md, "levels", text="View")
+        col.prop(md, "render_levels", text="Render")
 
         col = split.column()
         col.label(text="Options:")
 
         sub = col.column()
-        sub.active = (not show_adaptive_options) or (not ob.cycles.use_adaptive_subdivision)
-        sub.prop(md, "use_subsurf_uv")
+        sub.active = True
 
         col.prop(md, "show_only_control_edges")
         if hasattr(md, "use_opensubdiv"):
             col.prop(md, "use_opensubdiv")
-
-        if show_adaptive_options and ob.cycles.use_adaptive_subdivision:
-            col = layout.column(align=True)
-            col.scale_y = 0.6
-            col.separator()
-            col.label("Final Dicing Rate:")
-            col.separator()
-
-            render = max(scene.cycles.dicing_rate * ob.cycles.dicing_rate, 0.1)
-            preview = max(scene.cycles.preview_dicing_rate * ob.cycles.dicing_rate, 0.1)
-            col.label(f"Render {render:10.2f} px, Preview {preview:10.2f} px")
 
     def SURFACE(self, layout, ob, md):
         layout.label(text="Settings are inside the Physics tab")
@@ -1016,33 +748,6 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         else:
             col.active = md.target is not None
             col.operator("object.surfacedeform_bind", text="Bind")
-
-    def UV_PROJECT(self, layout, ob, md):
-        split = layout.split()
-
-        col = split.column()
-        col.label(text="Image:")
-        col.prop(md, "image", text="")
-
-        col = split.column()
-        col.label(text="UV Map:")
-        col.prop_search(md, "uv_layer", ob.data, "uv_textures", text="")
-
-        split = layout.split()
-        col = split.column()
-        col.prop(md, "use_image_override")
-        col.prop(md, "projector_count", text="Projectors")
-        for proj in md.projectors:
-            col.prop(proj, "object", text="")
-
-        col = split.column()
-        sub = col.column(align=True)
-        sub.prop(md, "aspect_x", text="Aspect X")
-        sub.prop(md, "aspect_y", text="Aspect Y")
-
-        sub = col.column(align=True)
-        sub.prop(md, "scale_x", text="Scale X")
-        sub.prop(md, "scale_y", text="Scale Y")
 
     def WARP(self, layout, ob, md):
         use_falloff = (md.falloff_type != 'NONE')
@@ -1287,34 +992,6 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         layout.separator()
         self.vertex_weight_mask(layout, ob, md)
 
-    def SKIN(self, layout, ob, md):
-        row = layout.row()
-        row.operator("object.skin_armature_create", text="Create Armature")
-        row.operator("mesh.customdata_skin_add")
-
-        layout.separator()
-
-        row = layout.row(align=True)
-        row.prop(md, "branch_smoothing")
-        row.prop(md, "use_smooth_shade")
-
-        split = layout.split()
-
-        col = split.column()
-        col.label(text="Selected Vertices:")
-        sub = col.column(align=True)
-        sub.operator("object.skin_loose_mark_clear", text="Mark Loose").action = 'MARK'
-        sub.operator("object.skin_loose_mark_clear", text="Clear Loose").action = 'CLEAR'
-
-        sub = col.column()
-        sub.operator("object.skin_root_mark", text="Mark Root")
-        sub.operator("object.skin_radii_equalize", text="Equalize Radii")
-
-        col = split.column()
-        col.label(text="Symmetry Axes:")
-        col.prop(md, "use_x_symmetry")
-        col.prop(md, "use_y_symmetry")
-        col.prop(md, "use_z_symmetry")
 
     def TRIANGULATE(self, layout, ob, md):
         row = layout.row()
@@ -1325,48 +1002,6 @@ class DATA_PT_modifiers(ModifierButtonsPanel, Panel):
         col = row.column()
         col.label(text="Ngon Method:")
         col.prop(md, "ngon_method", text="")
-
-    def UV_WARP(self, layout, ob, md):
-        split = layout.split()
-        col = split.column()
-        col.prop(md, "center")
-
-        col = split.column()
-        col.label(text="UV Axis:")
-        col.prop(md, "axis_u", text="")
-        col.prop(md, "axis_v", text="")
-
-        split = layout.split()
-        col = split.column()
-        col.label(text="From:")
-        col.prop(md, "object_from", text="")
-
-        col = split.column()
-        col.label(text="To:")
-        col.prop(md, "object_to", text="")
-
-        split = layout.split()
-        col = split.column()
-        obj = md.object_from
-        if obj and obj.type == 'ARMATURE':
-            col.label(text="Bone:")
-            col.prop_search(md, "bone_from", obj.data, "bones", text="")
-
-        col = split.column()
-        obj = md.object_to
-        if obj and obj.type == 'ARMATURE':
-            col.label(text="Bone:")
-            col.prop_search(md, "bone_to", obj.data, "bones", text="")
-
-        split = layout.split()
-
-        col = split.column()
-        col.label(text="Vertex Group:")
-        col.prop_search(md, "vertex_group", ob, "vertex_groups", text="")
-
-        col = split.column()
-        col.label(text="UV Map:")
-        col.prop_search(md, "uv_layer", ob.data, "uv_textures", text="")
 
     def WIREFRAME(self, layout, ob, md):
         has_vgroup = bool(md.vertex_group)

@@ -135,12 +135,6 @@ static void rna_Main_image_begin(CollectionPropertyIterator *iter, PointerRNA *p
 	rna_iterator_listbase_begin(iter, &bmain->image, NULL);
 }
 
-static void rna_Main_latt_begin(CollectionPropertyIterator *iter, PointerRNA *ptr)
-{
-	Main *bmain = (Main *)ptr->data;
-	rna_iterator_listbase_begin(iter, &bmain->latt, NULL);
-}
-
 static void rna_Main_camera_begin(CollectionPropertyIterator *iter, PointerRNA *ptr)
 {
 	Main *bmain = (Main *)ptr->data;
@@ -241,7 +235,6 @@ void RNA_def_main(BlenderRNA *brna)
 		{"screens", "Screen", "rna_Main_screen_begin", "Screens", "Screen data-blocks", RNA_def_main_screens},
 		{"window_managers", "WindowManager", "rna_Main_wm_begin", "Window Managers", "Window manager data-blocks", RNA_def_main_window_managers},
 		{"images", "Image", "rna_Main_image_begin", "Images", "Image data-blocks", RNA_def_main_images},
-		{"lattices", "Lattice", "rna_Main_latt_begin", "Lattices", "Lattice data-blocks", RNA_def_main_lattices},
 		{"curves", "Curve", "rna_Main_curve_begin", "Curves", "Curve data-blocks", RNA_def_main_curves},
 		{"fonts", "VectorFont", "rna_Main_font_begin", "Vector Fonts", "Vector font data-blocks", RNA_def_main_fonts},
 		{"textures", "Texture", "rna_Main_tex_begin", "Textures", "Texture data-blocks", RNA_def_main_textures},

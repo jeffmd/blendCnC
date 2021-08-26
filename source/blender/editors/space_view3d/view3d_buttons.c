@@ -28,7 +28,6 @@
 #include <float.h>
 
 #include "DNA_curve_types.h"
-#include "DNA_lattice_types.h"
 #include "DNA_mesh_types.h"
 #include "DNA_meshdata_types.h"
 #include "DNA_object_types.h"
@@ -166,19 +165,17 @@ static void v3d_editvertex_buts(uiLayout *layout, View3D *v3d, Object *ob, float
 #define C_WEIGHT     4
 #define C_RADIUS     5
 #define C_TILT       6
-/*Lattice... */
-#define L_WEIGHT     4
 
 	uiBlock *block = (layout) ? uiLayoutAbsoluteBlock(layout) : NULL;
 	TransformProperties *tfp;
 	float median[NBR_TRANSFORM_PROPERTIES], ve_median[NBR_TRANSFORM_PROPERTIES];
-	int tot, totedgedata, totcurvedata, totlattdata, totcurvebweight;
+	int tot, totedgedata, totcurvedata, totcurvebweight;
 	bool has_meshdata = false;
 	bool has_skinradius = false;
 	PointerRNA data_ptr;
 
 	copy_vn_fl(median, NBR_TRANSFORM_PROPERTIES, 0.0f);
-	tot = totedgedata = totcurvedata = totlattdata = totcurvebweight = 0;
+	tot = totedgedata = totcurvedata = totcurvebweight = 0;
 
 	/* make sure we got storage */
 	if (v3d->properties_storage == NULL)
@@ -302,32 +299,6 @@ static void v3d_editvertex_buts(uiLayout *layout, View3D *v3d, Object *ob, float
 		if (totcurvedata == 1)
 			RNA_pointer_create(&cu->id, seltype, selp, &data_ptr);
 	}
-	else if (ob->type == OB_LATTICE) {
-		Lattice *lt = ob->data;
-		BPoint *bp;
-		int a;
-		StructRNA *seltype = NULL;
-		void *selp = NULL;
-
-		a = lt->editlatt->latt->pntsu * lt->editlatt->latt->pntsv * lt->editlatt->latt->pntsw;
-		bp = lt->editlatt->latt->def;
-		while (a--) {
-			if (bp->f1 & SELECT) {
-				add_v3_v3(&median[LOC_X], bp->vec);
-				tot++;
-				median[L_WEIGHT] += bp->weight;
-				if (!totlattdata) { /* I.e. first time... */
-					selp = bp;
-					seltype = &RNA_LatticePoint;
-				}
-				totlattdata++;
-			}
-			bp++;
-		}
-
-		if (totlattdata == 1)
-			RNA_pointer_create(&lt->id, seltype, selp, &data_ptr);
-	}
 
 	if (tot == 0) {
 		uiDefBut(block, UI_BTYPE_LABEL, 0, IFACE_("Nothing selected"), 0, 130, 200, 20, NULL, 0, 0, 0, 0, "");
@@ -360,9 +331,6 @@ static void v3d_editvertex_buts(uiLayout *layout, View3D *v3d, Object *ob, float
 		median[C_RADIUS] /= (float)totcurvedata;
 		median[C_TILT] /= (float)totcurvedata;
 	}
-	else if (totlattdata) {
-		median[L_WEIGHT] /= (float)totlattdata;
-	}
 
 	if (block) { /* buttons */
 		uiBut *but;
@@ -378,7 +346,7 @@ static void v3d_editvertex_buts(uiLayout *layout, View3D *v3d, Object *ob, float
 		if (tot == 1) {
 			if (totcurvedata) /* Curve */
 				c = IFACE_("Control Point:");
-			else /* Mesh or lattice */
+			else /* Mesh */
 				c = IFACE_("Vertex:");
 		}
 		else
@@ -471,16 +439,6 @@ static void v3d_editvertex_buts(uiLayout *layout, View3D *v3d, Object *ob, float
 			                &(tfp->ve_median[C_TILT]), -tilt_limit, tilt_limit, 1, 3,
 			                TIP_("Tilt of curve control points"));
 			UI_but_unit_type_set(but, PROP_UNIT_ROTATION);
-		}
-		/* Lattice... */
-		else if (totlattdata == 1) {
-			uiDefButR(block, UI_BTYPE_NUM, 0, IFACE_("Weight:"), 0, yi -= buth + but_margin, 200, buth,
-			          &data_ptr, "weight_softbody", 0, 0.0, 1.0, 1, 3, NULL);
-		}
-		else if (totlattdata > 1) {
-			uiDefButF(block, UI_BTYPE_NUM, B_OBJECTPANELMEDIAN, IFACE_("Mean Weight:"),
-			          0, yi -= buth + but_margin, 200, buth,
-			          &(tfp->ve_median[L_WEIGHT]), 0.0, 1.0, 1, 3, TIP_("Weight used for Soft Body Goal"));
 		}
 
 		UI_block_align_end(block);
@@ -659,26 +617,6 @@ static void v3d_editvertex_buts(uiLayout *layout, View3D *v3d, Object *ob, float
 				nu = nu->next;
 			}
 		}
-		else if ((ob->type == OB_LATTICE) && (apply_vcos || median[L_WEIGHT])) {
-			Lattice *lt = ob->data;
-			BPoint *bp;
-			int a;
-			const float scale_w = compute_scale_factor(ve_median[L_WEIGHT], median[L_WEIGHT]);
-
-			a = lt->editlatt->latt->pntsu * lt->editlatt->latt->pntsv * lt->editlatt->latt->pntsw;
-			bp = lt->editlatt->latt->def;
-			while (a--) {
-				if (bp->f1 & SELECT) {
-					if (apply_vcos) {
-						apply_raw_diff_v3(bp->vec, tot, &ve_median[LOC_X], &median[LOC_X]);
-					}
-					if (median[L_WEIGHT]) {
-						apply_scale_factor_clamp(&bp->weight, tot, ve_median[L_WEIGHT], scale_w);
-					}
-				}
-				bp++;
-			}
-		}
 
 /*		ED_undo_push(C, "Transform properties"); */
 	}
@@ -688,7 +626,7 @@ static void v3d_editvertex_buts(uiLayout *layout, View3D *v3d, Object *ob, float
 #undef LOC_X
 #undef LOC_Y
 #undef LOC_Z
-/* Meshes (and lattice)... */
+/* Meshes */
 #undef M_BV_WEIGHT
 #undef M_SKIN_X
 #undef M_SKIN_Y
@@ -699,8 +637,6 @@ static void v3d_editvertex_buts(uiLayout *layout, View3D *v3d, Object *ob, float
 #undef C_WEIGHT
 #undef C_RADIUS
 #undef C_TILT
-/* Lattice... */
-#undef L_WEIGHT
 }
 #undef NBR_TRANSFORM_PROPERTIES
 

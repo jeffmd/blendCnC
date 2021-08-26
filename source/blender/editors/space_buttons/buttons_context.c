@@ -163,7 +163,6 @@ static int buttons_context_path_data(ButsContextPath *path, int type)
 	/* if we already have a data, we're done */
 	if (RNA_struct_is_a(ptr->type, &RNA_Mesh) && (type == -1 || type == OB_MESH)) return 1;
 	else if (RNA_struct_is_a(ptr->type, &RNA_Curve) && (type == -1 || ELEM(type, OB_CURVE, OB_SURF, OB_FONT))) return 1;
-	else if (RNA_struct_is_a(ptr->type, &RNA_Lattice) && (type == -1 || type == OB_LATTICE)) return 1;
 	else if (RNA_struct_is_a(ptr->type, &RNA_Camera) && (type == -1 || type == OB_CAMERA)) return 1;
 	else if (RNA_struct_is_a(ptr->type, &RNA_Lamp) && (type == -1 || type == OB_LAMP)) return 1;
 	/* try to get an object in the path, no pinning supported here */
@@ -189,7 +188,7 @@ static int buttons_context_path_modifier(ButsContextPath *path)
 	if (buttons_context_path_object(path)) {
 		ob = path->ptr[path->len - 1].data;
 
-		if (ob && ELEM(ob->type, OB_MESH, OB_CURVE, OB_FONT, OB_SURF, OB_LATTICE))
+		if (ob && ELEM(ob->type, OB_MESH, OB_CURVE, OB_FONT, OB_SURF))
 			return 1;
 	}
 
@@ -477,7 +476,7 @@ void buttons_context_compute(const bContext *C, SpaceButs *sbuts)
 /************************* Context Callback ************************/
 
 const char *buttons_context_dir[] = {
-	"texture_slot", "scene", "world", "object", "mesh", "lattice", "curve",
+	"texture_slot", "scene", "world", "object", "mesh", "curve",
 	"lamp", "camera", "material", "material_slot",
 	"texture", "texture_user", "texture_user_property", "collision", 
 	"line_style", NULL
@@ -516,10 +515,6 @@ int buttons_context(const bContext *C, const char *member, bContextDataResult *r
 	}
 	else if (CTX_data_equals(member, "mesh")) {
 		set_pointer_type(path, result, &RNA_Mesh);
-		return 1;
-	}
-	else if (CTX_data_equals(member, "lattice")) {
-		set_pointer_type(path, result, &RNA_Lattice);
 		return 1;
 	}
 	else if (CTX_data_equals(member, "curve")) {
