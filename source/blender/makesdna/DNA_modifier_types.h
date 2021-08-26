@@ -494,7 +494,6 @@ typedef struct HookModifierData {
 	ModifierData modifier;
 
 	struct Object *object;
-	char subtarget[64];     /* optional name of bone target, MAX_ID_NAME-2 */
 
 	char flag;
 	char falloff_type;      /* use enums from WarpModifier (exact same functionality) */
@@ -1096,9 +1095,7 @@ typedef struct UVWarpModifierData {
 	float center[2];            /* used for rotate/scale */
 
 	struct Object *object_src;  /* source */
-	char bone_src[64];          /* optional name of bone target, MAX_ID_NAME-2 */
 	struct Object *object_dst;  /* target */
-	char bone_dst[64];          /* optional name of bone target, MAX_ID_NAME-2 */
 
 	char vgroup_name[64];       /* optional vertexgroup name, MAX_VGROUP_NAME */
 	char uvlayer_name[64];      /* MAX_CUSTOMDATA_LAYER_NAME */

@@ -916,8 +916,7 @@ float ED_vgroup_vert_weight(Object *ob, bDeformGroup *dg, int vertnum)
 
 void ED_vgroup_select_by_name(Object *ob, const char *name)
 {
-	/* note: ob->actdef==0 signals on painting to create a new one,
-     * if a bone in posemode is selected */
+	/* note: ob->actdef==0 signals on painting to create a new one */
 	ob->actdef = defgroup_name_index(ob, name) + 1;
 }
 
@@ -1260,7 +1259,7 @@ static void moveCloserToDistanceFromPlane(
 	float (*changes)[2] = MEM_mallocN(sizeof(float *) * totweight * 2, "vertHorzChange");
 	float *dists = MEM_mallocN(sizeof(float) * totweight, "distance");
 
-	/* track if up or down moved it closer for each bone */
+	/* track if up or down moved it closer */
 	int *upDown = MEM_callocN(sizeof(int) * totweight, "upDownTracker");
 
 	int *dwIndices = MEM_callocN(sizeof(int) * totweight, "dwIndexTracker");
@@ -1916,98 +1915,6 @@ static void vgroup_smooth_subset(
 	}
 }
 
-static int inv_cmp_mdef_vert_weights(const void *a1, const void *a2)
-{
-	/* qsort sorts in ascending order.  We want descending order to save a memcopy
-	 * so this compare function is inverted from the standard greater than comparison qsort needs.
-	 * A normal compare function is called with two pointer arguments and should return an integer
-	 * less than, equal to, or greater than zero corresponding to whether its first argument is
-	 * considered less than, equal to, or greater than its second argument.
-	 * This does the opposite. */
-	const struct MDeformWeight *dw1 = a1, *dw2 = a2;
-
-	if      (dw1->weight < dw2->weight) return  1;
-	else if (dw1->weight > dw2->weight) return -1;
-	else if (&dw1 < &dw2)               return  1; /* compare address for stable sort algorithm */
-	else                                return -1;
-}
-
-/* Used for limiting the number of influencing bones per vertex when exporting
- * skinned meshes.  if all_deform_weights is True, limit all deform modifiers
- * to max_weights regardless of type, otherwise,
- * only limit the number of influencing bones per vertex. */
-static int vgroup_limit_total_subset(
-        Object *ob,
-        const bool *vgroup_validmap,
-        const int vgroup_tot,
-        const int subset_count,
-        const int max_weights)
-{
-	MDeformVert *dv, **dvert_array = NULL;
-	int i, dvert_tot = 0;
-	const int use_vert_sel = vertex_group_use_vert_sel(ob);
-	int remove_tot = 0;
-
-	ED_vgroup_parray_alloc(ob->data, &dvert_array, &dvert_tot, use_vert_sel);
-
-	if (dvert_array) {
-		int num_to_drop = 0;
-
-		for (i = 0; i < dvert_tot; i++) {
-
-			MDeformWeight *dw_temp;
-			int bone_count = 0, non_bone_count = 0;
-			int j;
-
-			/* in case its not selected */
-			if (!(dv = dvert_array[i])) {
-				continue;
-			}
-
-			num_to_drop = subset_count - max_weights;
-
-			/* first check if we even need to test further */
-			if (num_to_drop > 0) {
-				/* re-pack dw array so that non-bone weights are first, bone-weighted verts at end
-				 * sort the tail, then copy only the truncated array back to dv->dw */
-				dw_temp = MEM_mallocN(sizeof(MDeformWeight) * dv->totweight, __func__);
-				bone_count = 0; non_bone_count = 0;
-				for (j = 0; j < dv->totweight; j++) {
-					if (LIKELY(dv->dw[j].def_nr < vgroup_tot) &&
-					    vgroup_validmap[dv->dw[j].def_nr])
-					{
-						dw_temp[dv->totweight - 1 - bone_count] = dv->dw[j];
-						bone_count += 1;
-					}
-					else {
-						dw_temp[non_bone_count] = dv->dw[j];
-						non_bone_count += 1;
-					}
-				}
-				BLI_assert(bone_count + non_bone_count == dv->totweight);
-				num_to_drop = bone_count - max_weights;
-				if (num_to_drop > 0) {
-					qsort(&dw_temp[non_bone_count], bone_count, sizeof(MDeformWeight), inv_cmp_mdef_vert_weights);
-					dv->totweight -= num_to_drop;
-					/* Do we want to clean/normalize here? */
-					MEM_freeN(dv->dw);
-					dv->dw = MEM_reallocN(dw_temp, sizeof(MDeformWeight) * dv->totweight);
-					remove_tot += num_to_drop;
-				}
-				else {
-					MEM_freeN(dw_temp);
-				}
-			}
-
-		}
-		MEM_freeN(dvert_array);
-
-	}
-
-	return remove_tot;
-}
-
-
 static void vgroup_clean_subset(
         Object *ob, const bool *vgroup_validmap, const int vgroup_tot, const int UNUSED(subset_count),
         const float epsilon, const bool keep_single)
@@ -2329,13 +2236,6 @@ void ED_vgroup_mirror(
 			}
 		}
 	}
-
-	/* disabled, confusing when you have an active pose bone */
-#if 0
-	/* flip active group index */
-	if (flip_vgroups && flip_map[def_nr] >= 0)
-		ob->actdef = flip_map[def_nr] + 1;
-#endif
 
 cleanup:
 	*r_totmirr = totmirr;
@@ -3104,28 +3004,16 @@ static int vertex_group_limit_total_exec(bContext *C, wmOperator *op)
 {
 	Object *ob = ED_object_context(C);
 
-	const int limit = RNA_int_get(op->ptr, "limit");
 	eVGroupSelect subset_type  = RNA_enum_get(op->ptr, "group_select_mode");
 
 	int subset_count, vgroup_tot;
 
 	const bool *vgroup_validmap = BKE_object_defgroup_subset_from_select_type(ob, subset_type, &vgroup_tot, &subset_count);
-	int remove_tot = vgroup_limit_total_subset(ob, vgroup_validmap, vgroup_tot, subset_count, limit);
 	MEM_freeN((void *)vgroup_validmap);
 
-	BKE_reportf(op->reports, remove_tot ? RPT_INFO : RPT_WARNING, "%d vertex weights limited", remove_tot);
-
-	if (remove_tot) {
-		WM_event_add_notifier(C, NC_OBJECT | ND_DRAW, ob);
-		WM_event_add_notifier(C, NC_GEOM | ND_DATA, ob->data);
-
-		return OPERATOR_FINISHED;
-	}
-	else {
-		/* note, would normally return canceled, except we want the redo
-		 * UI to show up for users to change */
-		return OPERATOR_FINISHED;
-	}
+	/* note, would normally return canceled, except we want the redo
+	 * UI to show up for users to change */
+	return OPERATOR_FINISHED;
 }
 
 void OBJECT_OT_vertex_group_limit_total(wmOperatorType *ot)
@@ -3437,8 +3325,7 @@ static int vgroup_sort_name(const void *def_a_ptr, const void *def_b_ptr)
 }
 
 enum {
-	SORT_TYPE_NAME          = 0,
-	SORT_TYPE_BONEHIERARCHY = 1,
+	SORT_TYPE_NAME          = 0
 };
 
 static int vertex_group_sort_exec(bContext *C, wmOperator *op)
@@ -3474,7 +3361,6 @@ void OBJECT_OT_vertex_group_sort(wmOperatorType *ot)
 {
 	static const EnumPropertyItem vgroup_sort_type[] = {
 		{SORT_TYPE_NAME, "NAME", 0, "Name", ""},
-		{SORT_TYPE_BONEHIERARCHY, "BONE_HIERARCHY", 0, "Bone Hierarchy", ""},
 		{0, NULL, 0, NULL, NULL}
 	};
 

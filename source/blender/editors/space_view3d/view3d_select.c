@@ -754,23 +754,6 @@ static Base *object_mouse_select_menu(
 	}
 }
 
-static bool selectbuffer_has_bones(const uint *buffer, const uint hits)
-{
-	unsigned int i;
-	for (i = 0; i < hits; i++) {
-		if (buffer[(4 * i) + 3] & 0xFFFF0000) {
-			return true;
-		}
-	}
-	return false;
-}
-
-/* utility function for mixed_bones_object_selectbuffer */
-static int selectbuffer_ret_hits_15(unsigned int *UNUSED(buffer), const int hits15)
-{
-	return hits15;
-}
-
 static int selectbuffer_ret_hits_9(unsigned int *buffer, const int hits15, const int hits9)
 {
 	const int offs = 4 * hits15;
@@ -785,16 +768,13 @@ static int selectbuffer_ret_hits_5(unsigned int *buffer, const int hits15, const
 	return hits5;
 }
 
-/* we want a select buffer with bones, if there are... */
-/* so check three selection levels and compare */
-static int mixed_bones_object_selectbuffer(
+static int mixed_object_selectbuffer(
         ViewContext *vc, unsigned int *buffer, const int mval[2],
         bool use_cycle, bool enumerate,
         bool *r_do_nearest)
 {
 	rcti rect;
 	int hits15, hits9 = 0, hits5 = 0;
-	bool has_bones15 = false, has_bones9 = false, has_bones5 = false;
 	static int last_mval[2] = {-100, -100};
 	bool do_nearest = false;
 	View3D *v3d = vc->v3d;
@@ -830,12 +810,11 @@ static int mixed_bones_object_selectbuffer(
 	BLI_rcti_init_pt_radius(&rect, mval, 14);
 	hits15 = view3d_opengl_select(vc, buffer, MAXPICKBUF, &rect, select_mode);
 	if (hits15 == 1) {
-		hits = selectbuffer_ret_hits_15(buffer, hits15);
+		hits = hits15;
 		goto finally;
 	}
 	else if (hits15 > 0) {
 		int offs;
-		has_bones15 = selectbuffer_has_bones(buffer, hits15);
 
 		offs = 4 * hits15;
 		BLI_rcti_init_pt_radius(&rect, mval, 9);
@@ -845,8 +824,6 @@ static int mixed_bones_object_selectbuffer(
 			goto finally;
 		}
 		else if (hits9 > 0) {
-			has_bones9 = selectbuffer_has_bones(buffer + offs, hits9);
-
 			offs += 4 * hits9;
 			BLI_rcti_init_pt_radius(&rect, mval, 5);
 			hits5 = view3d_opengl_select(vc, buffer + offs, MAXPICKBUF - offs, &rect, select_mode);
@@ -854,18 +831,11 @@ static int mixed_bones_object_selectbuffer(
 				hits = selectbuffer_ret_hits_5(buffer, hits15, hits9, hits5);
 				goto finally;
 			}
-			else if (hits5 > 0) {
-				has_bones5 = selectbuffer_has_bones(buffer + offs, hits5);
-			}
 		}
-
-		if      (has_bones5)  { hits = selectbuffer_ret_hits_5(buffer,  hits15, hits9, hits5); goto finally; }
-		else if (has_bones9)  { hits = selectbuffer_ret_hits_9(buffer,  hits15, hits9); goto finally; }
-		else if (has_bones15) { hits = selectbuffer_ret_hits_15(buffer, hits15); goto finally; }
 
 		if      (hits5 > 0) { hits = selectbuffer_ret_hits_5(buffer,  hits15, hits9, hits5); goto finally; }
 		else if (hits9 > 0) { hits = selectbuffer_ret_hits_9(buffer,  hits15, hits9); goto finally; }
-		else                { hits = selectbuffer_ret_hits_15(buffer, hits15); goto finally; }
+		else                { hits = hits15; goto finally; }
 	}
 
 finally:
@@ -877,7 +847,7 @@ finally:
 /* returns basact */
 static Base *mouse_select_eval_buffer(
         ViewContext *vc, const uint *buffer, int hits,
-        Base *startbase, bool has_bones, bool do_nearest)
+        Base *startbase, bool do_nearest)
 {
 	Scene *scene = vc->scene;
 	View3D *v3d = vc->v3d;
@@ -889,16 +859,7 @@ static Base *mouse_select_eval_buffer(
 		int selcol = 0, notcol = 0;
 
 
-		if (has_bones) {
-			/* we skip non-bone hits */
-			for (a = 0; a < hits; a++) {
-				if (min > buffer[4 * a + 1] && (buffer[4 * a + 3] & 0xFFFF0000) ) {
-					min = buffer[4 * a + 1];
-					selcol = buffer[4 * a + 3] & 0xFFFF;
-				}
-			}
-		}
-		else {
+		{
 			/* only exclude active object when it is selected... */
 			if (BASACT && (BASACT->flag & SELECT) && hits > 1) notcol = BASACT->selcol;
 
@@ -933,14 +894,7 @@ static Base *mouse_select_eval_buffer(
 
 			if (BASE_SELECTABLE(v3d, base)) {
 				for (a = 0; a < hits; a++) {
-					if (has_bones) {
-						/* skip non-bone objects */
-						if ((buffer[4 * a + 3] & 0xFFFF0000)) {
-							if (base->selcol == (buffer[(4 * a) + 3] & 0xFFFF))
-								basact = base;
-						}
-					}
-					else {
+					{
 						if (base->selcol == (buffer[(4 * a) + 3] & 0xFFFF))
 							basact = base;
 					}
@@ -971,11 +925,10 @@ Base *ED_view3d_give_base_under_cursor(bContext *C, const int mval[2])
 	view3d_operator_needs_opengl(C);
 	ED_view3d_viewcontext_init(C, &vc);
 
-	hits = mixed_bones_object_selectbuffer(&vc, buffer, mval, false, false, &do_nearest);
+	hits = mixed_object_selectbuffer(&vc, buffer, mval, false, false, &do_nearest);
 
 	if (hits > 0) {
-		const bool has_bones = selectbuffer_has_bones(buffer, hits);
-		basact = mouse_select_eval_buffer(&vc, buffer, hits, vc.scene->base.first, has_bones, do_nearest);
+		basact = mouse_select_eval_buffer(&vc, buffer, hits, vc.scene->base.first, do_nearest);
 	}
 
 	return basact;
@@ -1050,23 +1003,15 @@ static bool ed_object_select_pick(
 		unsigned int buffer[MAXPICKBUF];
 		bool do_nearest;
 
-		// TIMEIT_START(select_time);
-
-		/* if objects have posemode set, the bones are in the same selection buffer */
-		hits = mixed_bones_object_selectbuffer(&vc, buffer, mval, true, enumerate, &do_nearest);
-
-		// TIMEIT_END(select_time);
+		hits = mixed_object_selectbuffer(&vc, buffer, mval, true, enumerate, &do_nearest);
 
 		if (hits > 0) {
-			/* note: bundles are handling in the same way as bones */
-			const bool has_bones = selectbuffer_has_bones(buffer, hits);
-
 			/* note; shift+alt goes to group-flush-selecting */
 			if (enumerate) {
 				basact = object_mouse_select_menu(C, &vc, buffer, hits, mval, toggle);
 			}
 			else {
-				basact = mouse_select_eval_buffer(&vc, buffer, hits, startbase, has_bones, do_nearest);
+				basact = mouse_select_eval_buffer(&vc, buffer, hits, startbase, do_nearest);
 			}
 
 		}
@@ -1403,8 +1348,7 @@ static int view3d_select_exec(bContext *C, wmOperator *op)
 	bool toggle = RNA_boolean_get(op->ptr, "toggle");
 	bool center = RNA_boolean_get(op->ptr, "center");
 	bool enumerate = RNA_boolean_get(op->ptr, "enumerate");
-	/* only force object select for editmode to support vertex parenting,
-	 * or paint-select to allow pose bone select with vert/face select */
+	/* only force object select for editmode to support vertex parenting */
 	bool object = (RNA_boolean_get(op->ptr, "object") && obedit);
 
 	bool retval = false;

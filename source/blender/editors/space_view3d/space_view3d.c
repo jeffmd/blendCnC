@@ -1206,11 +1206,6 @@ static void view3d_id_remap(ScrArea *sa, SpaceLink *slink, ID *old_id, ID *new_i
 
 			if ((ID *)v3d->ob_centre == old_id) {
 				v3d->ob_centre = (Object *)new_id;
-				/* Otherwise, bonename may remain valid...
-				 * We could be smart and check this, too? */
-				if (new_id == NULL) {
-					v3d->ob_centre_bone[0] = '\0';
-				}
 			}
 
 			if (ELEM(GS(old_id->name), ID_IM)) {

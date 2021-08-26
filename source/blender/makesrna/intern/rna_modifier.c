@@ -1341,12 +1341,6 @@ static void rna_def_modifier_hook(BlenderRNA *brna)
 	RNA_def_property_pointer_funcs(prop, NULL, "rna_HookModifier_object_set", NULL, NULL);
 	RNA_def_property_update(prop, 0, "rna_Modifier_dependency_update");
 
-	prop = RNA_def_property(srna, "subtarget", PROP_STRING, PROP_NONE);
-	RNA_def_property_string_sdna(prop, NULL, "subtarget");
-	RNA_def_property_ui_text(prop, "Sub-Target",
-	                         "Name of Parent Bone for hook (if applicable), also recalculates and clears offset");
-	RNA_def_property_update(prop, 0, "rna_Modifier_dependency_update");
-
 	prop = RNA_def_property(srna, "use_falloff_uniform", PROP_BOOLEAN, PROP_NONE);
 	RNA_def_property_boolean_sdna(prop, NULL, "flag", MOD_HOOK_UNIFORM_SPACE);
 	RNA_def_property_ui_text(prop, "Uniform Falloff", "Compensate for non-uniform object scale");

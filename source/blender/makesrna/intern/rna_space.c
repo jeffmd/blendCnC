@@ -99,8 +99,7 @@ static const EnumPropertyItem transform_orientation_items[] = {
 	{V3D_MANIP_GLOBAL, "GLOBAL", 0, "Global", "Align the transformation axes to world space"},
 	{V3D_MANIP_LOCAL, "LOCAL", 0, "Local", "Align the transformation axes to the selected objects' local space"},
 	{V3D_MANIP_NORMAL, "NORMAL", 0, "Normal",
-	                   "Align the transformation axes to average normal of selected elements "
-	                   "(bone Y axis for pose mode)"},
+	                   "Align the transformation axes to average normal of selected elements "},
 	{V3D_MANIP_GIMBAL, "GIMBAL", 0, "Gimbal", "Align each axis to the Euler rotation axis as used for input"},
 	{V3D_MANIP_VIEW, "VIEW", 0, "View", "Align the transformation axes to the window"},
 	// {V3D_MANIP_CUSTOM, "CUSTOM", 0, "Custom", "Use a custom transform orientation"},
@@ -1656,11 +1655,6 @@ static void rna_def_space_view3d(BlenderRNA *brna)
 	RNA_def_property_flag(prop, PROP_EDITABLE);
 	RNA_def_property_pointer_sdna(prop, NULL, "ob_centre");
 	RNA_def_property_ui_text(prop, "Lock to Object", "3D View center is locked to this object's position");
-	RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D, NULL);
-
-	prop = RNA_def_property(srna, "lock_bone", PROP_STRING, PROP_NONE);
-	RNA_def_property_string_sdna(prop, NULL, "ob_centre_bone");
-	RNA_def_property_ui_text(prop, "Lock to Bone", "3D View center is locked to this bone's position");
 	RNA_def_property_update(prop, NC_SPACE | ND_SPACE_VIEW3D, NULL);
 
 	prop = RNA_def_property(srna, "lock_cursor", PROP_BOOLEAN, PROP_NONE);

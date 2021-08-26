@@ -53,7 +53,6 @@ typedef struct SceneStats {
 	int totvert, totvertsel;
 	int totedge, totedgesel;
 	int totface, totfacesel;
-	int totbone, totbonesel;
 	int totobj,  totobjsel;
 	int totlamp, totlampsel;
 	int tottri;
@@ -66,7 +65,6 @@ typedef struct SceneStatsFmt {
 	char totvert[MAX_INFO_NUM_LEN], totvertsel[MAX_INFO_NUM_LEN];
 	char totface[MAX_INFO_NUM_LEN], totfacesel[MAX_INFO_NUM_LEN];
 	char totedge[MAX_INFO_NUM_LEN], totedgesel[MAX_INFO_NUM_LEN];
-	char totbone[MAX_INFO_NUM_LEN], totbonesel[MAX_INFO_NUM_LEN];
 	char totobj[MAX_INFO_NUM_LEN], totobjsel[MAX_INFO_NUM_LEN];
 	char totlamp[MAX_INFO_NUM_LEN], totlampsel[MAX_INFO_NUM_LEN];
 	char tottri[MAX_INFO_NUM_LEN];
@@ -258,9 +256,6 @@ static void stats_string(Scene *scene)
 
 	SCENE_STATS_FMT_INT(totface);
 	SCENE_STATS_FMT_INT(totfacesel);
-
-	SCENE_STATS_FMT_INT(totbone);
-	SCENE_STATS_FMT_INT(totbonesel);
 
 	SCENE_STATS_FMT_INT(totobj);
 	SCENE_STATS_FMT_INT(totobjsel);

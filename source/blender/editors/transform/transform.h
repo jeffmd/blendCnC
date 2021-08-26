@@ -525,8 +525,6 @@ typedef struct TransInfo {
 #define TD_MIRROR_EDGE		(1 << 16) 	/* For editmode mirror, clamp to x = 0 */
 #define TD_MOVEHANDLE1		(1 << 17)	/* For fcurve handles, move them along with their keyframes */
 #define TD_MOVEHANDLE2		(1 << 18)
-#define TD_PBONE_LOCAL_MTX_P (1 << 19)	/* exceptional case with pose bone rotating when a parent bone has 'Local Location' option enabled and rotating also transforms it. */
-#define TD_PBONE_LOCAL_MTX_C (1 << 20)	/* same as above but for a child bone */
 
 /* transsnap->status */
 #define SNAP_FORCED		1

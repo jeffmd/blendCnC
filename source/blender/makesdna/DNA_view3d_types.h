@@ -158,8 +158,6 @@ typedef struct View3D {
 
 	struct View3D *localvd; /* allocated backup of its self while in localview */
 
-	char ob_centre_bone[64];		/* optional string for armature bone to define center, MAXBONENAME */
-
 	unsigned int lay;
 	int layact;
 

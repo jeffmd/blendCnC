@@ -463,8 +463,7 @@ static char *rna_MeshStatVis_path(PointerRNA *UNUSED(ptr))
 	return BLI_strdup("tool_settings.statvis");
 }
 
-/* note: without this, when Multi-Paint is activated/deactivated, the colors
- * will not change right away when multiple bones are selected, this function
+/* this function
  * is not for general use and only for the few cases where changing scene
  * settings and NOT for general purpose updates, possibly this should be
  * given its own notifier. */
@@ -535,13 +534,6 @@ static void rna_def_tool_settings(BlenderRNA  *brna)
 	srna = RNA_def_struct(brna, "ToolSettings", NULL);
 	RNA_def_struct_path_func(srna, "rna_ToolSettings_path");
 	RNA_def_struct_ui_text(srna, "Tool Settings", "");
-
-	prop = RNA_def_property(srna, "use_auto_normalize", PROP_BOOLEAN, PROP_NONE);
-	RNA_def_property_boolean_sdna(prop, NULL, "auto_normalize", 1);
-	RNA_def_property_ui_text(prop, "WPaint Auto-Normalize",
-	                         "Ensure all bone-deforming vertex groups add up "
-	                         "to 1.0 while weight painting");
-	RNA_def_property_update(prop, 0, "rna_Scene_update_active_object_data");
 
 	prop = RNA_def_property(srna, "vertex_group_user", PROP_ENUM, PROP_NONE);
 	RNA_def_property_enum_sdna(prop, NULL, "weightuser");
