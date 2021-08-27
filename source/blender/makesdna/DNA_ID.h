@@ -105,8 +105,6 @@ enum {
 /* 2 characters for ID code and 64 for actual name */
 #define MAX_ID_NAME  66
 
-/* There's a nasty circular dependency here.... 'void *' to the rescue! I
- * really wonder why this is needed. */
 typedef struct ID {
 	void *next, *prev;
 	struct ID *newid;

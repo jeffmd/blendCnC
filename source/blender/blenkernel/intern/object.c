@@ -2112,8 +2112,7 @@ bool BKE_object_modifier_update_subframe(
 
 	}
 
-	/* was originally OB_RECALC_ALL - TODO - which flags are really needed??? */
-	ob->recalc |= OB_RECALC_OB | OB_RECALC_DATA | OB_RECALC_TIME;
+	ob->recalc |= OB_RECALC_ALL;
 	if (update_mesh) {
 		/* ignore cache clear during subframe updates
 		 *  to not mess up cache validity */

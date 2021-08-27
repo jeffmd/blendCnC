@@ -163,7 +163,7 @@ bool BKE_object_eval_proxy_copy(Object *object)
 void BKE_object_eval_uber_transform(Object *object)
 {
 	BKE_object_eval_proxy_copy(object);
-	object->recalc &= ~(OB_RECALC_OB | OB_RECALC_TIME);
+	object->recalc &= ~(OB_RECALC_OB);
 	if (object->data == NULL) {
 		object->recalc &= ~OB_RECALC_DATA;
 	}
@@ -175,7 +175,7 @@ void BKE_object_eval_uber_data(Main *bmain,
 {
 	BKE_object_handle_data_update(bmain, scene, ob);
 
-	ob->recalc &= ~(OB_RECALC_DATA | OB_RECALC_TIME);
+	ob->recalc &= ~(OB_RECALC_DATA);
 }
 
 void BKE_object_eval_transform_all(Scene *scene,

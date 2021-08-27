@@ -249,24 +249,6 @@ typedef struct Object {
 	struct PreviewImage *preview;
 } Object;
 
-/* Warning, this is not used anymore because hooks are now modifiers */
-typedef struct ObHook {
-	struct ObHook *next, *prev;
-
-	struct Object *parent;
-	float parentinv[4][4];	/* matrix making current transform unmodified */
-	float mat[4][4];		/* temp matrix while hooking */
-	float cent[3];			/* visualization of hook */
-	float falloff;			/* if not zero, falloff is distance where influence zero */
-
-	char name[64];	/* MAX_NAME */
-
-	int *indexar;
-	int totindex, curindex; /* curindex is cache for fast lookup */
-	short type, active;		/* active is only first hook, for button menu */
-	float force;
-} ObHook;
-
 /* **************** OBJECT ********************* */
 
 /* used many places... should be specialized  */
@@ -282,8 +264,6 @@ enum {
 
 	OB_LAMP       = 10,
 	OB_CAMERA     = 11,
-
-/*	OB_WAVE       = 21, */
 
 };
 
@@ -408,9 +388,6 @@ enum {
 /* base->flag and ob->flag */
 enum {
 	BA_WAS_SEL = (1 << 1),
-	/* NOTE: BA_HAS_RECALC_DATA can be re-used later if freed in readfile.c. */
-	// BA_HAS_RECALC_OB = (1 << 2),  /* DEPRECATED */
-	// BA_HAS_RECALC_DATA =  (1 << 3),  /* DEPRECATED */
 	BA_SNAP_FIX_DEPS_FIASCO = (1 << 2),  /* Yes, re-use deprecated bit, all fine since it's runtime only. */
 };
 
@@ -429,18 +406,14 @@ enum {
 
 
 #define OB_DONE             (1 << 10)  /* unknown state, clear before use */
-/* #define OB_RADIO            (1 << 11) */  /* deprecated */
 #define OB_FROMGROUP        (1 << 12)
 
-/* WARNING - when adding flags check on PSYS_RECALC */
 /* ob->recalc (flag bits!) */
 enum {
 	OB_RECALC_OB        = 1 << 0,
 	OB_RECALC_DATA      = 1 << 1,
-/* time flag is set when time changes need recalc, so baked systems can ignore it */
-	OB_RECALC_TIME      = 1 << 2,
 /* only use for matching any flag, NOT as an argument since more flags may be added. */
-	OB_RECALC_ALL       = OB_RECALC_OB | OB_RECALC_DATA | OB_RECALC_TIME,
+	OB_RECALC_ALL       = OB_RECALC_OB | OB_RECALC_DATA,
 };
 
 

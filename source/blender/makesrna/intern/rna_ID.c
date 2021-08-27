@@ -902,7 +902,6 @@ static void rna_def_ID(BlenderRNA *brna)
 	static const EnumPropertyItem update_flag_items[] = {
 		{OB_RECALC_OB, "OBJECT", 0, "Object", ""},
 		{OB_RECALC_DATA, "DATA", 0, "Data", ""},
-		{OB_RECALC_TIME, "TIME", 0, "Time", ""},
 		{0, NULL, 0, NULL, NULL}
 	};
 

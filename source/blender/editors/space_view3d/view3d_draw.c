@@ -3099,11 +3099,6 @@ static void view3d_main_region_draw_objects(const bContext *C, Scene *scene, Vie
 		ED_region_tag_redraw(ar_header); /* can be NULL */
 	}
 
-#ifdef WITH_INPUT_NDOF
-	if ((U.ndof_flag & NDOF_SHOW_GUIDE) && ((rv3d->viewlock & RV3D_LOCKED) == 0) && (rv3d->persp != RV3D_CAMOB))
-		/* TODO: draw something else (but not this) during fly mode */
-		draw_rotation_guide(rv3d);
-#endif
 }
 
 static bool is_cursor_visible(Scene *scene)
