@@ -1671,6 +1671,40 @@ static void drawspeaker(Scene *UNUSED(scene), View3D *UNUSED(v3d), RegionView3D 
 }
 
 /* ***************** ******************** */
+static void ensure_curve_cache(Main *bmain, Scene *scene, Object *object)
+{
+	bool need_recalc = object->curve_cache == NULL;
+	/* Render thread might have freed the curve cache if the
+	 * object is not visible. If the object is also used for
+	 * particles duplication, then render thread might have
+	 * also created curve_cache with only bevel and path
+	 * filled in.
+	 *
+	 * So check for curve_cache != NULL is not fully correct
+	 * here, we also need to check whether display list is
+	 * empty or not.
+	 *
+	 * The trick below tries to optimize calls to displist
+	 * creation for cases curve is empty. Meaning, if the curve
+	 * is empty (without splines) bevel list would also be empty.
+	 * And the thing is, render thread always leaves bevel list
+	 * in a proper state. So if bevel list is here and display
+	 * list is not we need to make display list.
+	 */
+	if (need_recalc == false) {
+		need_recalc = object->curve_cache->disp.first == NULL &&
+		              object->curve_cache->bev.first != NULL;
+	}
+	if (need_recalc) {
+		switch (object->type) {
+			case OB_CURVE:
+			case OB_SURF:
+			case OB_FONT:
+				BKE_displist_make_curveTypes(scene, object, false);
+				break;
+		}
+	}
+}
 
 /* draw callback */
 
@@ -3793,6 +3827,8 @@ static bool drawDispList(Main *bmain, Scene *scene, View3D *v3d, RegionView3D *r
 		glCullFace(GL_BACK);
 	}
 
+	ensure_curve_cache(bmain, scene, base->object);
+
 	if (drawCurveDerivedMesh(scene, v3d, rv3d, base, dt) == false) {
 		retval = false;
 	}
@@ -4702,6 +4738,8 @@ static void draw_object_selected_outline(
 	if (ELEM(ob->type, OB_FONT, OB_CURVE, OB_SURF)) {
 		bool has_faces = false;
 
+		ensure_curve_cache(bmain, scene, ob);
+
 		DerivedMesh *dm = ob->derivedFinal;
 		if (dm) {
 			DM_update_materials(dm, ob);
@@ -5045,6 +5083,7 @@ void draw_object(Main *bmain, Scene *scene, ARegion *ar, View3D *v3d, Base *base
 				}
 				else if (dt == OB_BOUNDBOX) {
 					if ((render_override && v3d->drawtype >= OB_WIRE) == 0) {
+						ensure_curve_cache(bmain, scene, base->object);
 						draw_bounding_volume(ob, ob->boundtype);
 					}
 				}
@@ -5063,6 +5102,7 @@ void draw_object(Main *bmain, Scene *scene, ARegion *ar, View3D *v3d, Base *base
 				}
 				else if (dt == OB_BOUNDBOX) {
 					if ((render_override && (v3d->drawtype >= OB_WIRE)) == 0) {
+						ensure_curve_cache(bmain, scene, base->object);
 						draw_bounding_volume(ob, ob->boundtype);
 					}
 				}
