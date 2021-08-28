@@ -254,7 +254,9 @@ void applyProject(TransInfo *t)
 
 						/* TODO support constraints for rotation too? see ElementRotation */
 					}
+
 				}
+
 			}
 
 			//XXX constraintTransLim(t, td);

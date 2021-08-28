@@ -54,6 +54,7 @@
 #include "BKE_main.h"
 #include "BKE_context.h"
 #include "BKE_editmesh.h"
+#include "BKE_object.h"
 
 #include "ED_image.h"
 #include "ED_mesh.h"
@@ -270,20 +271,21 @@ static void recalcData_objects(TransInfo *t)
 		}
 	}
 	else {
-		int i;
-
 		if (t->state != TRANS_CANCEL) {
 			applyProject(t);
 		}
 
-		for (i = 0; i < t->total; i++) {
+		for (int i = 0; i < t->total; i++) {
 			TransData *td = t->data + i;
+			Object *ob = td->ob;
 
 			if (td->flag & TD_NOACTION)
 				break;
 
 			if (td->flag & TD_SKIP)
 				continue;
+
+			BKE_object_eval_transform_all(t->scene, ob);
 
 		}
 	}

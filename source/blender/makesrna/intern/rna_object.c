@@ -141,6 +141,11 @@ static void rna_Object_matrix_world_update(Main *bmain, Scene *scene, PointerRNA
 	BKE_object_apply_mat4(ptr->id.data, ((Object *)ptr->id.data)->obmat, false, true);
 }
 
+static void rna_Object_transform_update(Main *bmain, Scene *scene, PointerRNA *ptr)
+{
+	BKE_object_eval_transform_all(ptr->id.data, (scene, (Object *)ptr->id.data));
+}
+
 
 static void rna_Object_matrix_local_get(PointerRNA *ptr, float values[16])
 {
@@ -1249,14 +1254,14 @@ static void rna_def_object(BlenderRNA *brna)
 	RNA_def_property_editable_array_func(prop, "rna_Object_location_editable");
 	RNA_def_property_ui_text(prop, "Location", "Location of the object");
 	RNA_def_property_ui_range(prop, -FLT_MAX, FLT_MAX, 1, RNA_TRANSLATION_PREC_DEFAULT);
-	RNA_def_property_update(prop, NC_OBJECT | ND_TRANSFORM, NULL);
+	RNA_def_property_update(prop, NC_OBJECT | ND_TRANSFORM, "rna_Object_transform_update");
 
 	prop = RNA_def_property(srna, "rotation_quaternion", PROP_FLOAT, PROP_QUATERNION);
 	RNA_def_property_float_sdna(prop, NULL, "quat");
 	RNA_def_property_editable_array_func(prop, "rna_Object_rotation_4d_editable");
 	RNA_def_property_float_array_default(prop, default_quat);
 	RNA_def_property_ui_text(prop, "Quaternion Rotation", "Rotation in Quaternions");
-	RNA_def_property_update(prop, NC_OBJECT | ND_TRANSFORM, NULL);
+	RNA_def_property_update(prop, NC_OBJECT | ND_TRANSFORM, "rna_Object_transform_update");
 
 	/* XXX: for axis-angle, it would have been nice to have 2 separate fields for UI purposes, but
 	 * having a single one is better for Keyframing and other property-management situations...
@@ -1268,13 +1273,13 @@ static void rna_def_object(BlenderRNA *brna)
 	RNA_def_property_editable_array_func(prop, "rna_Object_rotation_4d_editable");
 	RNA_def_property_float_array_default(prop, default_axisAngle);
 	RNA_def_property_ui_text(prop, "Axis-Angle Rotation", "Angle of Rotation for Axis-Angle rotation representation");
-	RNA_def_property_update(prop, NC_OBJECT | ND_TRANSFORM, NULL);
+	RNA_def_property_update(prop, NC_OBJECT | ND_TRANSFORM, "rna_Object_transform_update");
 
 	prop = RNA_def_property(srna, "rotation_euler", PROP_FLOAT, PROP_EULER);
 	RNA_def_property_float_sdna(prop, NULL, "rot");
 	RNA_def_property_editable_array_func(prop, "rna_Object_rotation_euler_editable");
 	RNA_def_property_ui_text(prop, "Euler Rotation", "Rotation in Eulers");
-	RNA_def_property_update(prop, NC_OBJECT | ND_TRANSFORM, NULL);
+	RNA_def_property_update(prop, NC_OBJECT | ND_TRANSFORM, "rna_Object_transform_update");
 
 	prop = RNA_def_property(srna, "rotation_mode", PROP_ENUM, PROP_NONE);
 	RNA_def_property_enum_sdna(prop, NULL, "rotmode");
@@ -1290,7 +1295,7 @@ static void rna_def_object(BlenderRNA *brna)
 	RNA_def_property_ui_range(prop, -FLT_MAX, FLT_MAX, 1, 3);
 	RNA_def_property_float_array_default(prop, default_scale);
 	RNA_def_property_ui_text(prop, "Scale", "Scaling of the object");
-	RNA_def_property_update(prop, NC_OBJECT | ND_TRANSFORM, NULL);
+	RNA_def_property_update(prop, NC_OBJECT | ND_TRANSFORM, "rna_Object_transform_update");
 
 	prop = RNA_def_property(srna, "dimensions", PROP_FLOAT, PROP_XYZ_LENGTH);
 	RNA_def_property_array(prop, 3);
@@ -1299,7 +1304,7 @@ static void rna_def_object(BlenderRNA *brna)
 	RNA_def_property_float_funcs(prop, "rna_Object_dimensions_get", "rna_Object_dimensions_set", NULL);
 	RNA_def_property_ui_range(prop, 0.0f, FLT_MAX, 1, RNA_TRANSLATION_PREC_DEFAULT);
 	RNA_def_property_ui_text(prop, "Dimensions", "Absolute bounding box dimensions of the object");
-	RNA_def_property_update(prop, NC_OBJECT | ND_TRANSFORM, NULL);
+	RNA_def_property_update(prop, NC_OBJECT | ND_TRANSFORM, "rna_Object_transform_update");
 
 
 	/* delta transforms */
