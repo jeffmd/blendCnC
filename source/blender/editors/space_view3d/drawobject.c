@@ -5242,7 +5242,6 @@ void draw_object_select(Main *bmain, Scene *scene, ARegion *ar, View3D *v3d, Bas
 {
 	BLI_assert(dflag & DRAW_PICKING && dflag & DRAW_CONSTCOLOR);
 	draw_object(bmain, scene, ar, v3d, base, dflag);
-
 }
 
 /* ***************** BACKBUF SEL (BBS) ********* */

@@ -368,8 +368,6 @@ typedef struct TransInfo {
 	float		spacemtx[3][3];	/* orientation matrix of the current space	*/
 	char		spacename[64];	/* name of the current space, MAX_NAME		*/
 
-	struct Object *poseobj;		/* if t->flag & T_POSE, this denotes pose object */
-
 	/**
 	 * Rule of thumb for choosing between mode/type:
 	 * - If transform mode uses the data, assign to `mode`

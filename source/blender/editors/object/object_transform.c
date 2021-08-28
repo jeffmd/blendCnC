@@ -599,7 +599,6 @@ static int visual_transform_apply_exec(bContext *C, wmOperator *UNUSED(op))
 		BKE_object_where_is_calc(scene, ob);
 
 		/* update for any children that may get moved */
-
 		changed = true;
 	}
 	CTX_DATA_END;
