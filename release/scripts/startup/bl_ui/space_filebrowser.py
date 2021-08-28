@@ -77,10 +77,8 @@ class FILEBROWSER_HT_header(Header):
                 row.prop(params, "use_filter_blender", text="")
                 row.prop(params, "use_filter_backup", text="")
                 row.prop(params, "use_filter_image", text="")
-                row.prop(params, "use_filter_movie", text="")
                 row.prop(params, "use_filter_script", text="")
                 row.prop(params, "use_filter_font", text="")
-                row.prop(params, "use_filter_sound", text="")
                 row.prop(params, "use_filter_text", text="")
 
             if is_lib_browser:
