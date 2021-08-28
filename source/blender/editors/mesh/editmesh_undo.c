@@ -81,21 +81,11 @@ typedef struct UndoMesh {
 	Mesh me;
 	int selectmode;
 
-	/** \note
-	 * this isn't a prefect solution, if you edit keys and change shapes this works well (fixing [#32442]),
-	 * but editing shape keys, going into object mode, removing or changing their order,
-	 * then go back into editmode and undo will give issues - where the old index will be out of sync
-	 * with the new object index.
-	 *
-	 * There are a few ways this could be made to work but for now its a known limitation with mixing
-	 * object and editmode operations - Campbell */
-	int shapenr;
 
 #ifdef USE_ARRAY_STORE
 	/* NULL arrays are considered empty */
 	struct { /* most data is stored as 'custom' data */
 		BArrayCustomData *vdata, *edata, *ldata, *pdata;
-		BArrayState **keyblocks;
 		BArrayState *mselect;
 	} store;
 #endif  /* USE_ARRAY_STORE */
@@ -301,12 +291,63 @@ static void um_arraystore_compact_ex(
 	BKE_mesh_update_customdata_pointers(me, false);
 }
 
+/**
+ * Move data from allocated arrays to de-duplicated states and clear arrays.
+ */
+static void um_arraystore_compact(UndoMesh *um, const UndoMesh *um_ref)
+{
+	um_arraystore_compact_ex(um, um_ref, true);
+}
+
+static void um_arraystore_compact_with_info(UndoMesh *um, const UndoMesh *um_ref)
+{
+#ifdef DEBUG_PRINT
+	size_t size_expanded_prev, size_compacted_prev;
+	BLI_array_store_at_size_calc_memory_usage(&um_arraystore.bs_stride, &size_expanded_prev, &size_compacted_prev);
+#endif
+
+#ifdef DEBUG_TIME
+	TIMEIT_START(mesh_undo_compact);
+#endif
+
+	um_arraystore_compact(um, um_ref);
+
+#ifdef DEBUG_TIME
+	TIMEIT_END(mesh_undo_compact);
+#endif
+
+#ifdef DEBUG_PRINT
+	{
+		size_t size_expanded, size_compacted;
+		BLI_array_store_at_size_calc_memory_usage(&um_arraystore.bs_stride, &size_expanded, &size_compacted);
+
+		const double percent_total = size_expanded ?
+		        (((double)size_compacted / (double)size_expanded) * 100.0) : -1.0;
+
+		size_t size_expanded_step = size_expanded - size_expanded_prev;
+		size_t size_compacted_step = size_compacted - size_compacted_prev;
+		const double percent_step = size_expanded_step ?
+		        (((double)size_compacted_step / (double)size_expanded_step) * 100.0) : -1.0;
+
+		printf("overall memory use: %.8f%% of expanded size\n", percent_total);
+		printf("step memory use:    %.8f%% of expanded size\n", percent_step);
+	}
+#endif
+}
+
 #ifdef USE_ARRAY_STORE_THREAD
 
 struct UMArrayData {
 	UndoMesh *um;
 	const UndoMesh *um_ref;  /* can be NULL */
 };
+static void um_arraystore_compact_cb(TaskPool *__restrict UNUSED(pool),
+                                     void *taskdata,
+                                     int UNUSED(threadid))
+{
+	struct UMArrayData *um_data = taskdata;
+	um_arraystore_compact_with_info(um_data->um, um_data->um_ref);
+}
 
 #endif  /* USE_ARRAY_STORE_THREAD */
 
@@ -326,6 +367,7 @@ static void um_arraystore_expand(UndoMesh *um)
 	um_arraystore_cd_expand(um->store.edata, &me->edata, me->totedge);
 	um_arraystore_cd_expand(um->store.ldata, &me->ldata, me->totloop);
 	um_arraystore_cd_expand(um->store.pdata, &me->pdata, me->totpoly);
+
 
 	if (um->store.mselect) {
 		const size_t stride = sizeof(*me->mselect);
@@ -382,6 +424,59 @@ static void um_arraystore_free(UndoMesh *um)
 
 /* for callbacks */
 /* undo simply makes copies of a bmesh */
+static void *undomesh_from_editmesh(UndoMesh *um, BMEditMesh *em)
+{
+	BLI_assert(BLI_array_is_zeroed(um, 1));
+#ifdef USE_ARRAY_STORE_THREAD
+	/* changes this waits is low, but must have finished */
+	if (um_arraystore.task_pool) {
+		BLI_task_pool_work_and_wait(um_arraystore.task_pool);
+	}
+#endif
+
+	/* BM_mesh_validate(em->bm); */ /* for troubleshooting */
+
+	BM_mesh_bm_to_me(
+	        NULL, em->bm, &um->me, (&(struct BMeshToMeshParams){
+	            /* Undo code should not be manipulating 'G_MAIN->object' hooks/vertex-parent. */
+	            .calc_object_remap = false,
+	            .cd_mask_extra = CD_MASK_SHAPE_KEYINDEX,
+	        }));
+
+	um->selectmode = em->selectmode;
+
+#ifdef USE_ARRAY_STORE
+	{
+		/* We could be more clever here,
+		 * the previous undo state may be from a separate mesh. */
+		const UndoMesh *um_ref = um_arraystore.local_links.last ?
+		                         ((LinkData *)um_arraystore.local_links.last)->data : NULL;
+
+		/* add oursrlves */
+		BLI_addtail(&um_arraystore.local_links, BLI_genericNodeN(um));
+
+#ifdef USE_ARRAY_STORE_THREAD
+		if (um_arraystore.task_pool == NULL) {
+			TaskScheduler *scheduler = BLI_task_scheduler_get();
+			um_arraystore.task_pool = BLI_task_pool_create_background(scheduler, NULL);
+		}
+
+		struct UMArrayData *um_data = MEM_mallocN(sizeof(*um_data), __func__);
+		um_data->um = um;
+		um_data->um_ref = um_ref;
+
+		BLI_task_pool_push(
+		        um_arraystore.task_pool,
+		        um_arraystore_compact_cb, um_data, true, TASK_PRIORITY_LOW);
+#else
+		um_arraystore_compact_with_info(um, um_ref);
+#endif
+	}
+#endif
+
+	return um;
+}
+
 static void undomesh_to_editmesh(UndoMesh *um, BMEditMesh *em, Mesh *obmesh)
 {
 	BMEditMesh *em_tmp;
@@ -407,8 +502,6 @@ static void undomesh_to_editmesh(UndoMesh *um, BMEditMesh *em, Mesh *obmesh)
 
 	const BMAllocTemplate allocsize = BMALLOC_TEMPLATE_FROM_ME(&um->me);
 
-	em->bm->shapenr = um->shapenr;
-
 	EDBM_mesh_free(em);
 
 	bm = BM_mesh_create(
@@ -417,7 +510,7 @@ static void undomesh_to_editmesh(UndoMesh *um, BMEditMesh *em, Mesh *obmesh)
 
 	BM_mesh_bm_from_me(
 	        bm, &um->me, (&(struct BMeshFromMeshParams){
-	            .calc_face_normal = true, .active_shapekey = um->shapenr,
+	            .calc_face_normal = true,
 	        }));
 
 	em_tmp = BKE_editmesh_create(bm, true);
@@ -558,6 +651,8 @@ static bool mesh_undosys_step_encode(struct bContext *C, UndoStep *us_p)
 {
 	MeshUndoStep *us = (MeshUndoStep *)us_p;
 	us->obedit_ref.ptr = editmesh_object_from_context(C);
+	Mesh *me = us->obedit_ref.ptr->data;
+	undomesh_from_editmesh(&us->data, me->edit_btmesh);
 	mesh_undosys_step_encode_store_ids(us);
 	us->step.data_size = us->data.undo_size;
 	return true;
@@ -575,6 +670,7 @@ static void mesh_undosys_step_decode(struct bContext *C, UndoStep *us_p, int UNU
 	BMEditMesh *em = me->edit_btmesh;
 	undomesh_to_editmesh(&us->data, em, obedit->data);
 	mesh_undosys_step_decode_restore_ids(us);
+	//**** updat object transform (&obedit->id, OB_RECALC_DATA);
 	WM_event_add_notifier(C, NC_GEOM | ND_DATA, NULL);
 }
 
