@@ -2082,32 +2082,6 @@ class VIEW3D_PT_view3d_shading(Panel):
                 col.prop(view, "show_occlude_wire")
 
 
-class VIEW3D_PT_view3d_motion_tracking(Panel):
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_label = "Motion Tracking"
-    bl_options = {'DEFAULT_CLOSED'}
-
-    def draw_header(self, context):
-        view = context.space_data
-
-        self.layout.prop(view, "show_reconstruction", text="")
-
-    def draw(self, context):
-        layout = self.layout
-
-        view = context.space_data
-
-        col = layout.column()
-        col.active = view.show_reconstruction
-        col.prop(view, "show_camera_path", text="Camera Path")
-        col.prop(view, "show_bundle_names", text="3D Marker Names")
-        col.label(text="Track Type and Size:")
-        row = col.row(align=True)
-        row.prop(view, "tracks_draw_type", text="")
-        row.prop(view, "tracks_draw_size", text="")
-
-
 class VIEW3D_PT_view3d_meshdisplay(Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
