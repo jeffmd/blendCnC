@@ -1787,16 +1787,6 @@ static void image_save_as_draw(bContext *UNUSED(C), wmOperator *op)
 static bool image_save_as_poll(bContext *C)
 {
 	if (space_image_buffer_exists_poll(C)) {
-		if (G.is_rendering) {
-			/* no need to NULL check here */
-			SpaceImage *sima = CTX_wm_space_image(C);
-			Image *ima = ED_space_image(sima);
-
-			if (ima->source == IMA_SRC_VIEWER) {
-				CTX_wm_operator_poll_msg_set(C, "can't save image while rendering");
-				return false;
-			}
-		}
 		return true;
 	}
 	return false;

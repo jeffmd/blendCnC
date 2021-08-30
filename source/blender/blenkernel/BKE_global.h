@@ -61,9 +61,6 @@ typedef struct Global {
 
 	short moving;
 
-	/* to indicate render is busy, prevent renderwindow events etc */
-	bool is_rendering;
-
 	/* debug value, can be set from the UI and python, used for testing nonstandard features */
 	short debug_value;
 

@@ -1266,10 +1266,6 @@ void GPU_free_images_old(Main *bmain)
 	if (U.textimeout == 0 || ctime % U.texcollectrate || ctime == lasttime)
 		return;
 
-	/* of course not! */
-	if (G.is_rendering)
-		return;
-
 	lasttime = ctime;
 
 	Image *ima = bmain->image.first;

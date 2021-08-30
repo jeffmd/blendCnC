@@ -295,18 +295,16 @@ void wm_event_do_refresh_wm_and_depsgraph(bContext *C)
 		}
 
 		/* XXX make lock in future, or separated derivedmesh users in scene */
-		if (G.is_rendering == false) {
-			/* depsgraph & animation: update tagged datablocks */
-			Main *bmain = CTX_data_main(C);
+		/* depsgraph & animation: update tagged datablocks */
+		Main *bmain = CTX_data_main(C);
 
-			/* copied to set's in scene_update_tagged_recursive() */
-			win->screen->scene->customdata_mask = win_combine_v3d_datamask;
+		/* copied to set's in scene_update_tagged_recursive() */
+		win->screen->scene->customdata_mask = win_combine_v3d_datamask;
 
-			/* XXX, hack so operators can enforce datamasks [#26482], gl render */
-			win->screen->scene->customdata_mask |= win->screen->scene->customdata_mask_modal;
+		/* XXX, hack so operators can enforce datamasks [#26482], gl render */
+		win->screen->scene->customdata_mask |= win->screen->scene->customdata_mask_modal;
 
-			BKE_scene_update_tagged(bmain, win->screen->scene);
-		}
+		BKE_scene_update_tagged(bmain, win->screen->scene);
 	}
 
 	CTX_wm_window_set(C, NULL);
