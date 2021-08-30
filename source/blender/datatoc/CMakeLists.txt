@@ -32,27 +32,10 @@ add_executable(datatoc ${SRC})
 # -----------------------------------------------------------------------------
 # Build datatoc_icon executable
 
-if(NOT WITH_HEADLESS)
-
 	set(SRC
 		datatoc_icon.c
 	)
 	setup_platform_linker_flags()
-	if(WIN32)
-		include_directories(
-			../blenlib
-			../../../intern/utfconv
-		)
-
-		# for winstuff_dir.c
-		add_definitions(-DUSE_STANDALONE)
-
-		list(APPEND SRC
-			../blenlib/intern/winstuff_dir.c
-			../../../intern/utfconv/utfconv.c
-		)
-
-	endif()
 
 	include_directories(${PNG_INCLUDE_DIRS})
 	link_directories(${PNG_LIBPATH} ${ZLIB_LIBPATH})
@@ -65,4 +48,3 @@ if(NOT WITH_HEADLESS)
 	if(UNIX AND NOT APPLE)
 		target_link_libraries(datatoc_icon m)
 	endif()
-endif()

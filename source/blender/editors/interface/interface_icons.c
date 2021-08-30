@@ -62,14 +62,12 @@
 
 #include "interface_intern.h"
 
-#ifndef WITH_HEADLESS
 #define ICON_GRID_COLS      26
 #define ICON_GRID_ROWS      30
 
 #define ICON_GRID_MARGIN    10
 #define ICON_GRID_W         32
 #define ICON_GRID_H         32
-#endif  /* WITH_HEADLESS */
 
 typedef struct IconImage {
 	int w;
@@ -118,8 +116,6 @@ static struct ListBase iconfilelist = {NULL, NULL};
 static IconTexture icongltex = {0, 0, 0, 0.0f, 0.0f};
 
 /* **************************************************** */
-
-#ifndef WITH_HEADLESS
 
 static DrawInfo *def_internal_icon(ImBuf *bbuf, int icon_id, int xofs, int yofs, int size, int type)
 {
@@ -280,8 +276,6 @@ DEF_VICON_COLORSET_DRAW_NTH(19, 18)
 DEF_VICON_COLORSET_DRAW_NTH(20, 19)
 
 #undef DEF_VICON_COLORSET_DRAW_NTH
-
-#ifndef WITH_HEADLESS
 
 static void icon_verify_datatoc(IconImage *iimg)
 {
@@ -450,7 +444,6 @@ static void init_internal_icons(void)
 	IMB_freeImBuf(b32buf);
 
 }
-#endif  /* WITH_HEADLESS */
 
 static void init_iconfile_list(struct ListBase *list)
 {
@@ -502,8 +495,6 @@ static void free_iconfile_list(struct ListBase *list)
 	}
 }
 
-#endif  /* WITH_HEADLESS */
-
 int UI_iconfile_get_index(const char *filename)
 {
 	IconFile *ifile;
@@ -528,7 +519,6 @@ ListBase *UI_iconfile_list(void)
 
 void UI_icons_free(void)
 {
-#ifndef WITH_HEADLESS
 	if (icongltex.id) {
 		glDeleteTextures(1, &icongltex.id);
 		icongltex.id = 0;
@@ -536,7 +526,6 @@ void UI_icons_free(void)
 
 	free_iconfile_list(&iconfilelist);
 	BKE_icons_free();
-#endif
 }
 
 void UI_icons_free_drawinfo(void *drawinfo)
@@ -621,11 +610,9 @@ int UI_icon_get_height(int icon_id)
 void UI_icons_init(int first_dyn_id)
 {
 	BKE_icons_init(first_dyn_id);
-#ifndef WITH_HEADLESS
 	init_iconfile_list(&iconfilelist);
 	init_internal_icons();
 	init_matcap_icons();
-#endif
 }
 
 /* Render size for preview images and icons
@@ -936,9 +923,7 @@ static void icon_draw_size(
 	else if (di->type == ICON_TYPE_BUFFER) {
 		/* it is a builtin icon */
 		iimg = di->data.buffer.image;
-#ifndef WITH_HEADLESS
 		icon_verify_datatoc(iimg);
-#endif
 		if (!iimg->rect) return;  /* something has gone wrong! */
 
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

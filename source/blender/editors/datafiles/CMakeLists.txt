@@ -525,9 +525,6 @@ data_to_c_simple(../../../../release/datafiles/bfont.ttf SRC)
 data_to_c_simple(../../../../release/datafiles/bmonofont.ttf SRC)
 
 if(WITH_BLENDER)
-	# blender only (not player)
-
-	if(NOT WITH_HEADLESS)
 		# blender UI only
 
 		# images
@@ -576,7 +573,6 @@ if(WITH_BLENDER)
 		data_to_c_simple(../../../../release/datafiles/matcaps/mc23.jpg SRC)
 		data_to_c_simple(../../../../release/datafiles/matcaps/mc24.jpg SRC)
 
-	endif()
 
 	data_to_c_simple(../../../../release/datafiles/startup.blend SRC)
 endif()

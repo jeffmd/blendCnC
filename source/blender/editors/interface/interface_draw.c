@@ -400,10 +400,6 @@ void UI_draw_text_underline(int pos_x, int pos_y, int len, int height)
 
 void ui_draw_but_IMAGE(ARegion *UNUSED(ar), uiBut *but, uiWidgetColors *UNUSED(wcol), const rcti *rect)
 {
-#ifdef WITH_HEADLESS
-	(void)rect;
-	(void)but;
-#else
 	ImBuf *ibuf = (ImBuf *)but->poin;
 
 	if (!ibuf) return;
@@ -412,15 +408,6 @@ void ui_draw_but_IMAGE(ARegion *UNUSED(ar), uiBut *but, uiWidgetColors *UNUSED(w
 	int h = BLI_rcti_size_y(rect);
 
 	/* scissor doesn't seem to be doing the right thing...? */
-#if 0
-	//glColor4f(1.0, 0.f, 0.f, 1.f);
-	//fdrawbox(rect->xmin, rect->ymin, rect->xmax, rect->ymax)
-
-	/* prevent drawing outside widget area */
-	GLint scissor[4];
-	glGetIntegerv(GL_SCISSOR_BOX, scissor);
-	glScissor(ar->winrct.xmin + rect->xmin, ar->winrct.ymin + rect->ymin, w, h);
-#endif
 
 	glEnable(GL_BLEND);
 	glColor4f(0.0, 0.0, 0.0, 0.0);
@@ -436,12 +423,6 @@ void ui_draw_but_IMAGE(ARegion *UNUSED(ar), uiBut *but, uiWidgetColors *UNUSED(w
 
 	glDisable(GL_BLEND);
 
-#if 0
-	// restore scissortest
-	glScissor(scissor[0], scissor[1], scissor[2], scissor[3]);
-#endif
-
-#endif
 }
 
 /**

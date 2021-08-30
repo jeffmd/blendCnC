@@ -79,18 +79,8 @@ if(WITH_INTERNATIONAL)
 	add_definitions(-DWITH_INTERNATIONAL)
 endif()
 
-if(WITH_HEADLESS)
-	add_definitions(-DWITH_HEADLESS)
-endif()
-
 if(WITH_PYTHON)
 	add_definitions(-DWITH_PYTHON)
-endif()
-
-if(WIN32)
-	if(WITH_INPUT_IME)
-		add_definitions(-DWITH_INPUT_IME)
-	endif()
 endif()
 
 add_definitions(${GL_DEFINITIONS})
