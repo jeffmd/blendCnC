@@ -43,8 +43,6 @@ class OUTLINER_HT_header(Header):
 
         if space.display_mode == 'DATABLOCKS':
             row = layout.row(align=True)
-            row.operator("outliner.keyingset_add_selected", icon='ZOOMIN', text="")
-            row.operator("outliner.keyingset_remove_selected", icon='ZOOMOUT', text="")
 
             row = layout.row()
             row.label(text="No Keying Set Active")
@@ -113,9 +111,6 @@ class OUTLINER_MT_edit_datablocks(Menu):
 
     def draw(self, context):
         layout = self.layout
-
-        layout.operator("outliner.keyingset_add_selected")
-        layout.operator("outliner.keyingset_remove_selected")
 
         layout.separator()
 
