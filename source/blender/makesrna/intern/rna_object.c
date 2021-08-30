@@ -143,7 +143,7 @@ static void rna_Object_matrix_world_update(Main *bmain, Scene *scene, PointerRNA
 
 static void rna_Object_transform_update(Main *bmain, Scene *scene, PointerRNA *ptr)
 {
-	BKE_object_eval_transform_all(ptr->id.data, (scene, (Object *)ptr->id.data));
+	BKE_object_eval_transform_all(scene, (Object *)ptr->id.data);
 }
 
 
