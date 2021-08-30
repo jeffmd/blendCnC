@@ -43,7 +43,6 @@
 #include "BLI_threads.h"
 
 #include "BKE_icons.h"
-#include "BKE_global.h" /* only for G.background test */
 
 #include "BLI_sys_types.h" // for intptr_t support
 
@@ -458,7 +457,7 @@ void BKE_icon_changed(const int icon_id)
 
 	Icon *icon = NULL;
 
-	if (!icon_id || G.background) return;
+	if (!icon_id) return;
 
 	icon = BLI_ghash_lookup(gIcons, POINTER_FROM_INT(icon_id));
 
@@ -506,7 +505,7 @@ int BKE_icon_id_ensure(struct ID *id)
 	/* Never handle icons in non-main thread! */
 	BLI_assert(BLI_thread_is_main());
 
-	if (!id || G.background) {
+	if (!id) {
 		return 0;
 	}
 
@@ -537,7 +536,7 @@ int BKE_icon_preview_ensure(ID *id, PreviewImage *preview)
 {
 	Icon *new_icon = NULL;
 
-	if (!preview || G.background)
+	if (!preview)
 		return 0;
 
 	if (id) {

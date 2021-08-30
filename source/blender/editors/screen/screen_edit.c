@@ -897,7 +897,7 @@ static void screen_refresh_headersizes(void)
 void ED_screen_refresh(wmWindowManager *wm, wmWindow *win)
 {
 	/* exception for bg mode, we only need the screen context */
-	if (!G.background) {
+	{
 		const int winsize_x = WM_window_pixels_x(win);
 		const int winsize_y = WM_window_pixels_y(win);
 		ScrArea *sa;

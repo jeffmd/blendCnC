@@ -35,7 +35,6 @@
 #include "BLT_translation.h"
 
 #include "BKE_report.h"
-#include "BKE_global.h" /* G.background only */
 
 const char *BKE_report_type_str(ReportType type)
 {
@@ -100,9 +99,8 @@ void BKE_report(ReportList *reports, ReportType type, const char *_message)
 	int len;
 	const char *message = TIP_(_message);
 
-	/* in background mode always print otherwise there are cases the errors wont be displayed,
-	 * but still add to the report list since this is used for python exception handling */
-	if (G.background || !reports || ((reports->flag & RPT_PRINT) && (type >= reports->printlevel))) {
+	/* add to the report list since this is used for python exception handling */
+	if (!reports || ((reports->flag & RPT_PRINT) && (type >= reports->printlevel))) {
 		printf("%s: %s\n", BKE_report_type_str(type), message);
 		fflush(stdout); /* this ensures the message is printed before a crash */
 	}
@@ -129,7 +127,7 @@ void BKE_reportf(ReportList *reports, ReportType type, const char *_format, ...)
 	va_list args;
 	const char *format = TIP_(_format);
 
-	if (G.background || !reports || ((reports->flag & RPT_PRINT) && (type >= reports->printlevel))) {
+	if (!reports || ((reports->flag & RPT_PRINT) && (type >= reports->printlevel))) {
 		printf("%s: ", BKE_report_type_str(type));
 		va_start(args, _format);
 		vprintf(format, args);

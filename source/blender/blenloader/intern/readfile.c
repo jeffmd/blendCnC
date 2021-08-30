@@ -220,9 +220,7 @@ void blo_reportf_wrap(ReportList *reports, ReportType type, const char *format, 
 
 	BKE_report(reports, type, fixed_buf);
 
-	if (G.background == 0) {
-		printf("%s: %s\n", BKE_report_type_str(type), fixed_buf);
-	}
+	printf("%s: %s\n", BKE_report_type_str(type), fixed_buf);
 }
 
 /* for reporting linking messages */
@@ -4532,30 +4530,6 @@ BlendFileData *blo_read_file_internal(FileData *fd, const char *filepath)
 
 	bfd->type = BLENFILETYPE_BLEND;
 	BLI_strncpy(bfd->main->name, filepath, sizeof(bfd->main->name));
-
-	if (G.background) {
-		/* We only read & store .blend thumbnail in background mode
-		 * (because we cannot re-generate it, no OpenGL available).
-		 */
-		const int *data = read_file_thumbnail(fd);
-
-		if (data) {
-			int width = data[0];
-			int height = data[1];
-
-			/* Protect against buffer overflow vulnerability. */
-			if (BLEN_THUMB_SAFE_MEMSIZE(width, height)) {
-				const size_t sz = BLEN_THUMB_MEMSIZE(width, height);
-				bfd->main->blen_thumb = MEM_mallocN(sz, __func__);
-
-				BLI_assert((sz - sizeof(*bfd->main->blen_thumb)) ==
-				           (BLEN_THUMB_MEMSIZE_FILE(width, height) - (sizeof(*data) * 2)));
-				bfd->main->blen_thumb->width = width;
-				bfd->main->blen_thumb->height = height;
-				memcpy(bfd->main->blen_thumb->rect, &data[2], sz - sizeof(*bfd->main->blen_thumb));
-			}
-		}
-	}
 
 	while (bhead) {
 		switch (bhead->code) {

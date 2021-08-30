@@ -219,7 +219,6 @@ static struct _inittab bpy_internal_modules[] = {
 /* call BPY_context_set first */
 void BPY_python_start(int argc, const char **argv)
 {
-#ifndef WITH_PYTHON_MODULE
 	PyThreadState *py_tstate = NULL;
 	const char *py_path_bundle = BKE_appdir_folder_id(BLENDER_SYSTEM_PYTHON, NULL);
 
@@ -264,37 +263,8 @@ void BPY_python_start(int argc, const char **argv)
 
 	/* Initialize thread support (also acquires lock) */
 	PyEval_InitThreads();
-#else
-	(void)argc;
-	(void)argv;
-
-	/* must run before python initializes */
-	/* broken in py3.3, load explicitly below */
-	// PyImport_ExtendInittab(bpy_internal_modules);
-#endif
 
 	bpy_intern_string_init();
-
-
-#ifdef WITH_PYTHON_MODULE
-	{
-		/* Manually load all modules */
-		struct _inittab *inittab_item;
-		PyObject *sys_modules = PyImport_GetModuleDict();
-
-		for (inittab_item = bpy_internal_modules; inittab_item->name; inittab_item++) {
-			PyObject *mod = inittab_item->initfunc();
-			if (mod) {
-				PyDict_SetItemString(sys_modules, inittab_item->name, mod);
-			}
-			else {
-				PyErr_Print();
-				PyErr_Clear();
-			}
-			// Py_DECREF(mod); /* ideally would decref, but in this case we never want to free */
-		}
-	}
-#endif
 
 	/* bpy.* and lets us import it */
 	BPy_init_modules();
@@ -303,13 +273,11 @@ void BPY_python_start(int argc, const char **argv)
 
 	pyrna_alloc_types();
 
-#ifndef WITH_PYTHON_MODULE
 	/* py module runs atexit when bpy is freed */
 	BPY_atexit_register(); /* this can init any time */
 
 	py_tstate = PyGILState_GetThisThreadState();
 	PyEval_ReleaseThread(py_tstate);
-#endif
 }
 
 void BPY_python_end(void)
@@ -330,15 +298,11 @@ void BPY_python_end(void)
 	/* bpy.app modules that need cleanup */
 	BPY_app_translations_end();
 
-#ifndef WITH_PYTHON_MODULE
 	BPY_atexit_unregister(); /* without this we get recursive calls to WM_exit */
 
 	Py_Finalize();
 
 	(void)gilstate;
-#else
-	PyGILState_Release(gilstate);
-#endif
 
 #ifdef TIME_PY_RUN
 	/* measure time since py started */
@@ -850,118 +814,6 @@ int BPY_context_member_get(bContext *C, const char *member, bContextDataResult *
 
 	return done;
 }
-
-#ifdef WITH_PYTHON_MODULE
-/* TODO, reloading the module isn't functional at the moment. */
-
-static void bpy_module_free(void *mod);
-extern int main_python_enter(int argc, const char **argv);
-extern void main_python_exit(void);
-static struct PyModuleDef bpy_proxy_def = {
-	PyModuleDef_HEAD_INIT,
-	"bpy",  /* m_name */
-	NULL,  /* m_doc */
-	0,  /* m_size */
-	NULL,  /* m_methods */
-	NULL,  /* m_reload */
-	NULL,  /* m_traverse */
-	NULL,  /* m_clear */
-	bpy_module_free,  /* m_free */
-};
-
-typedef struct {
-	PyObject_HEAD
-	/* Type-specific fields go here. */
-	PyObject *mod;
-} dealloc_obj;
-
-/* call once __file__ is set */
-static void bpy_module_delay_init(PyObject *bpy_proxy)
-{
-	const int argc = 1;
-	const char *argv[2];
-
-	/* updating the module dict below will loose the reference to __file__ */
-	PyObject *filename_obj = PyModule_GetFilenameObject(bpy_proxy);
-
-	const char *filename_rel = _PyUnicode_AsString(filename_obj); /* can be relative */
-	char filename_abs[1024];
-
-	BLI_strncpy(filename_abs, filename_rel, sizeof(filename_abs));
-	BLI_path_cwd(filename_abs, sizeof(filename_abs));
-	Py_DECREF(filename_obj);
-
-	argv[0] = filename_abs;
-	argv[1] = NULL;
-
-	// printf("module found %s\n", argv[0]);
-
-	main_python_enter(argc, argv);
-
-	/* initialized in BPy_init_modules() */
-	PyDict_Update(PyModule_GetDict(bpy_proxy), PyModule_GetDict(bpy_package_py));
-}
-
-static void dealloc_obj_dealloc(PyObject *self);
-
-static PyTypeObject dealloc_obj_Type;
-
-/* use our own dealloc so we can free a property if we use one */
-static void dealloc_obj_dealloc(PyObject *self)
-{
-	bpy_module_delay_init(((dealloc_obj *)self)->mod);
-
-	/* Note, for subclassed PyObjects we cant just call PyObject_DEL() directly or it will crash */
-	dealloc_obj_Type.tp_free(self);
-}
-
-PyMODINIT_FUNC
-PyInit_bpy(void);
-
-PyMODINIT_FUNC
-PyInit_bpy(void)
-{
-	PyObject *bpy_proxy = PyModule_Create(&bpy_proxy_def);
-
-	/* Problem:
-	 * 1) this init function is expected to have a private member defined - 'md_def'
-	 *    but this is only set for C defined modules (not py packages)
-	 *    so we cant return 'bpy_package_py' as is.
-	 *
-	 * 2) there is a 'bpy' C module for python to load which is basically all of blender,
-	 *    and there is scripts/bpy/__init__.py,
-	 *    we may end up having to rename this module so there is no naming conflict here eg:
-	 *    'from blender import bpy'
-	 *
-	 * 3) we don't know the filename at this point, workaround by assigning a dummy value
-	 *    which calls back when its freed so the real loading can take place.
-	 */
-
-	/* assign an object which is freed after __file__ is assigned */
-	dealloc_obj *dob;
-
-	/* assign dummy type */
-	dealloc_obj_Type.tp_name = "dealloc_obj";
-	dealloc_obj_Type.tp_basicsize = sizeof(dealloc_obj);
-	dealloc_obj_Type.tp_dealloc = dealloc_obj_dealloc;
-	dealloc_obj_Type.tp_flags = Py_TPFLAGS_DEFAULT;
-
-	if (PyType_Ready(&dealloc_obj_Type) < 0)
-		return NULL;
-
-	dob = (dealloc_obj *) dealloc_obj_Type.tp_alloc(&dealloc_obj_Type, 0);
-	dob->mod = bpy_proxy; /* borrow */
-	PyModule_AddObject(bpy_proxy, "__file__", (PyObject *)dob); /* borrow */
-
-	return bpy_proxy;
-}
-
-static void bpy_module_free(void *UNUSED(mod))
-{
-	main_python_exit();
-}
-
-#endif
 
 /**
  * Avoids duplicating keyword list.

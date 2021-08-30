@@ -26,20 +26,14 @@
 struct bArgs;
 struct bContext;
 
-#ifndef WITH_PYTHON_MODULE
-
 /* creator_args.c */
 void main_args_setup(struct bContext *C, struct bArgs *ba, SYS_SystemHandle *syshandle);
 void main_args_setup_post(struct bContext *C, struct bArgs *ba);
-
 
 /* creator_signals.c */
 void main_signal_setup(void);
 void main_signal_setup_background(void);
 void main_signal_setup_fpe(void);
-
-#endif  /* WITH_PYTHON_MODULE */
-
 
 /* Shared data for argument handlers to store state in */
 struct ApplicationState {
@@ -57,12 +51,10 @@ struct ApplicationState {
 extern struct ApplicationState app_state;  /* creator.c */
 
 /* for the callbacks: */
-#ifndef WITH_PYTHON_MODULE
 #define BLEND_VERSION_FMT         "Blender %d.%02d (sub %d)"
 #define BLEND_VERSION_ARG         BLENDER_VERSION / 100, BLENDER_VERSION % 100, BLENDER_SUBVERSION
 /* pass directly to printf */
 #define BLEND_VERSION_STRING_FMT  BLEND_VERSION_FMT "\n", BLEND_VERSION_ARG
-#endif
 
 #ifdef WITH_BUILDINFO_HEADER
 #  define BUILD_DATE

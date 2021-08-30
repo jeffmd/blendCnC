@@ -260,9 +260,6 @@ static void screenshot_draw(bContext *UNUSED(C), wmOperator *op)
 
 static bool screenshot_poll(bContext *C)
 {
-	if (G.background)
-		return false;
-
 	return WM_operator_winactive(C);
 }
 

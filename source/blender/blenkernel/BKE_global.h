@@ -57,7 +57,6 @@ typedef struct Global {
 	/* has escape been pressed or Ctrl+C pressed in background mode, used for render quit */
 	bool is_break;
 
-	bool background;
 	bool factory_startup;
 
 	short moving;

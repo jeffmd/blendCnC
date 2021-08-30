@@ -288,13 +288,7 @@ void BKE_image_free_buffers_ex(Image *ima, bool do_lock)
 		ima->rr = NULL;
 	}
 
-	if (!G.background) {
-		/* Background mode doesn't use opnegl,
-		 * so we can avoid freeing GPU images and save some
-		 * time by skipping mutex lock.
-		 */
-		GPU_free_image(ima);
-	}
+	GPU_free_image(ima);
 
 	ima->ok = IMA_OK;
 
@@ -1933,7 +1927,7 @@ static void image_initialize_after_load(Image *ima, ImBuf *ibuf)
 {
 	/* Preview is NULL when it has never been used as an icon before.
 	 * Never handle previews/icons outside of main thread. */
-	if (G.background == 0 && ima->preview == NULL && BLI_thread_is_main()) {
+	if (ima->preview == NULL && BLI_thread_is_main()) {
 		BKE_icon_changed(BKE_icon_id_ensure(&ima->id));
 	}
 

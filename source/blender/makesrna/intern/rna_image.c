@@ -342,9 +342,7 @@ static void rna_Image_pixels_set(PointerRNA *ptr, const float *values)
 		}
 
 		ibuf->userflags |= IB_BITMAPDIRTY | IB_DISPLAY_BUFFER_INVALID | IB_MIPMAP_INVALID;
-		if (!G.background) {
-			GPU_free_image(ima);
-		}
+		GPU_free_image(ima);
 		WM_main_add_notifier(NC_IMAGE | ND_DISPLAY, &ima->id);
 	}
 

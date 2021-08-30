@@ -192,8 +192,7 @@ static void wm_window_substitute_old(wmWindowManager *wm, wmWindow *oldwin, wmWi
 	if (win->active)
 		wm->winactive = win;
 
-	if (!G.background) /* file loading in background mode still calls this */
-		GHOST_SetWindowUserData(win->ghostwin, win);    /* pointer back */
+	GHOST_SetWindowUserData(win->ghostwin, win);    /* pointer back */
 
 	oldwin->ghostwin = NULL;
 	oldwin->multisamples = 0;
@@ -424,10 +423,8 @@ static void wm_file_read_post(bContext *C, const bool is_startup_file, const boo
 	bool addons_loaded = false;
 	wmWindowManager *wm = CTX_wm_manager(C);
 
-	if (!G.background) {
-		/* remove windows which failed to be added via WM_check */
-		wm_window_ghostwindows_remove_invalid(C, wm);
-	}
+	/* remove windows which failed to be added via WM_check */
+	wm_window_ghostwindows_remove_invalid(C, wm);
 
 	CTX_wm_window_set(C, wm->windows.first);
 
@@ -468,15 +465,6 @@ static void wm_file_read_post(bContext *C, const bool is_startup_file, const boo
 	BLI_callback_exec(bmain, NULL, BLI_CB_EVT_VERSION_UPDATE);
 	BLI_callback_exec(bmain, NULL, BLI_CB_EVT_LOAD_POST);
 
-	/* Would otherwise be handled by event loop.
-	 *
-	 * Disabled for startup file, since it causes problems when PyDrivers are used in the startup file.
-	 * While its possible state of startup file may be wrong,
-	 * in this case users nearly always load a file to replace the startup file. */
-	if (G.background && (is_startup_file == false)) {
-		BKE_scene_update_tagged(bmain, CTX_data_scene(C));
-	}
-
 	WM_event_add_notifier(C, NC_WM | ND_FILEREAD, NULL);
 
 	/* report any errors.
@@ -485,29 +473,22 @@ static void wm_file_read_post(bContext *C, const bool is_startup_file, const boo
 		wm_file_read_report(C, bmain);
 	}
 
-	if (!G.background) {
-		if (wm->undo_stack == NULL) {
-			wm->undo_stack = BKE_undosys_stack_create();
-		}
-		else {
-			BKE_undosys_stack_clear(wm->undo_stack);
-		}
-		BKE_undosys_stack_init_from_main(wm->undo_stack, bmain);
-		BKE_undosys_stack_init_from_context(wm->undo_stack, C);
+	if (wm->undo_stack == NULL) {
+		wm->undo_stack = BKE_undosys_stack_create();
+	}
+	else {
+		BKE_undosys_stack_clear(wm->undo_stack);
 	}
 
-	if (!G.background) {
-		/* in background mode this makes it hard to load
-		 * a blend file and do anything since the screen
-		 * won't be set to a valid value again */
-		CTX_wm_window_set(C, NULL); /* exits queues */
-	}
+	BKE_undosys_stack_init_from_main(wm->undo_stack, bmain);
+	BKE_undosys_stack_init_from_context(wm->undo_stack, C);
+
+	CTX_wm_window_set(C, NULL); /* exits queues */
 }
 
 bool WM_file_read(bContext *C, const char *filepath, ReportList *reports)
 {
-	/* assume automated tasks with background, don't write recent file list */
-	const bool do_history = (G.background == false) && (CTX_wm_manager(C)->op_undo_depth == 0);
+	const bool do_history = (CTX_wm_manager(C)->op_undo_depth == 0);
 	bool success = false;
 	int retval;
 
@@ -877,9 +858,7 @@ void wm_homefile_read(
 
 	if (use_userdef) {
 		/* When loading factory settings, the reset solid OpenGL lights need to be applied. */
-		if (!G.background) {
-			GPU_default_lights();
-		}
+		GPU_default_lights();
 	}
 
 	/* start with save preference untitled.blend */
@@ -954,7 +933,6 @@ static void wm_history_file_write(void)
 	char name[FILE_MAX];
 	FILE *fp;
 
-	/* will be NULL in background mode */
 	user_config_dir = BKE_appdir_folder_id_create(BLENDER_USER_CONFIG, NULL);
 	if (!user_config_dir)
 		return;
@@ -1035,7 +1013,7 @@ static ImBuf *blend_file_thumb(Main *bmain, Scene *scene, bScreen *screen, Blend
 	}
 
 	/* scene can be NULL if running a script at startup and calling the save operator */
-	if (G.background || scene == NULL)
+	if (scene == NULL)
 		return NULL;
 
 	if ((scene->camera == NULL) && (screen != NULL)) {
@@ -1154,7 +1132,7 @@ static bool wm_file_write(bContext *C, const char *filepath, int fileflags, Repo
 
 	/* blend file thumbnail */
 	/* save before exit_editmode, otherwise derivedmeshes for shared data corrupt #27765) */
-	/* Main now can store a .blend thumbnail, usefull for background mode or thumbnail customization. */
+	/* Main now can store a .blend thumbnail, usefull for thumbnail customization. */
 	main_thumb = thumb = bmain->blen_thumb;
 	if ((U.flag & USER_SAVE_PREVIEWS) && BLI_thread_is_main()) {
 		ibuf_thumb = blend_file_thumb(bmain, CTX_data_scene(C), CTX_wm_screen(C), &thumb);
@@ -1183,7 +1161,7 @@ static bool wm_file_write(bContext *C, const char *filepath, int fileflags, Repo
 	bmain->recovered = 0;
 
 	if (BLO_write_file(CTX_data_main(C), filepath, fileflags, reports, thumb)) {
-		const bool do_history = (G.background == false) && (CTX_wm_manager(C)->op_undo_depth == 0);
+		const bool do_history = (CTX_wm_manager(C)->op_undo_depth == 0);
 
 		if (!(fileflags & G_FILE_SAVE_COPY)) {
 			G.relbase_valid = 1;
@@ -1195,7 +1173,6 @@ static bool wm_file_write(bContext *C, const char *filepath, int fileflags, Repo
 		SET_FLAG_FROM_TEST(G.fileflags, fileflags & G_FILE_COMPRESS, G_FILE_COMPRESS);
 		SET_FLAG_FROM_TEST(G.fileflags, fileflags & G_FILE_AUTOPLAY, G_FILE_AUTOPLAY);
 
-		/* prevent background mode scripts from clobbering history */
 		if (do_history) {
 			wm_history_file_update();
 		}
@@ -1674,7 +1651,6 @@ void WM_OT_read_homefile(wmOperatorType *ot)
 	prop = RNA_def_string(ot->srna, "app_template", "Template", sizeof(U.app_template), "", "");
 	RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
 
-	/* omit poll to run in background mode */
 }
 
 void WM_OT_read_factory_settings(wmOperatorType *ot)
@@ -1694,7 +1670,6 @@ void WM_OT_read_factory_settings(wmOperatorType *ot)
 	prop = RNA_def_boolean(ot->srna, "use_empty", false, "Empty", "");
 	RNA_def_property_flag(prop, PROP_HIDDEN | PROP_SKIP_SAVE);
 
-	/* omit poll to run in background mode */
 }
 
 /** \} */
@@ -1735,9 +1710,6 @@ static int wm_open_mainfile_invoke(bContext *C, wmOperator *op, const wmEvent *U
 	const char *openname = BKE_main_blendfile_path(bmain);
 
 	if (CTX_wm_window(C) == NULL) {
-		/* in rare cases this could happen, when trying to invoke in background
-		 * mode on load for example. Don't use poll for this because exec()
-		 * can still run without a window */
 		BKE_report(op->reports, RPT_ERROR, "Context window not set");
 		return OPERATOR_CANCELLED;
 	}
@@ -1852,7 +1824,6 @@ void WM_OT_open_mainfile(wmOperatorType *ot)
 	ot->exec = wm_open_mainfile_exec;
 	ot->check = wm_open_mainfile_check;
 	ot->ui = wm_open_mainfile_ui;
-	/* omit window poll so this can work in background mode */
 
 	WM_operator_properties_filesel(
 	        ot, FILE_TYPE_FOLDER | FILE_TYPE_BLENDER, FILE_BLENDER, FILE_OPENFILE,
@@ -2158,7 +2129,6 @@ void WM_OT_save_as_mainfile(wmOperatorType *ot)
 	ot->invoke = wm_save_as_mainfile_invoke;
 	ot->exec = wm_save_as_mainfile_exec;
 	ot->check = blend_save_check;
-	/* omit window poll so this can work in background mode */
 
 	WM_operator_properties_filesel(
 	        ot, FILE_TYPE_FOLDER | FILE_TYPE_BLENDER, FILE_BLENDER, FILE_SAVE,
@@ -2226,7 +2196,6 @@ void WM_OT_save_mainfile(wmOperatorType *ot)
 	ot->invoke = wm_save_mainfile_invoke;
 	ot->exec = wm_save_as_mainfile_exec;
 	ot->check = blend_save_check;
-	/* omit window poll so this can work in background mode */
 
 	PropertyRNA *prop;
 	WM_operator_properties_filesel(

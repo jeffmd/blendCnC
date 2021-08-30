@@ -101,7 +101,7 @@ static BCursor *BlenderCursor[BC_NUMCURSORS]; /*Points to static BCursor Structs
 void WM_cursor_set(wmWindow *win, int curs)
 {
 
-	if (win == NULL || G.background) {
+	if (win == NULL) {
 		return;  /* Can't set custom cursor before Window init */
 	}
 
@@ -167,17 +167,15 @@ void WM_cursor_modal_restore(wmWindow *win)
 /* to allow usage all over, we do entire WM */
 void WM_cursor_wait(bool val)
 {
-	if (!G.background) {
-		wmWindowManager *wm = G_MAIN->wm.first;
-		wmWindow *win = wm ? wm->windows.first : NULL;
+	wmWindowManager *wm = G_MAIN->wm.first;
+	wmWindow *win = wm ? wm->windows.first : NULL;
 
-		for (; win; win = win->next) {
-			if (val) {
-				WM_cursor_modal_set(win, BC_WAITCURSOR);
-			}
-			else {
-				WM_cursor_modal_restore(win);
-			}
+	for (; win; win = win->next) {
+		if (val) {
+			WM_cursor_modal_set(win, BC_WAITCURSOR);
+		}
+		else {
+			WM_cursor_modal_restore(win);
 		}
 	}
 }

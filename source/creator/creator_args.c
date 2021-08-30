@@ -18,8 +18,6 @@
  *  \ingroup creator
  */
 
-#ifndef WITH_PYTHON_MODULE
-
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -498,16 +496,6 @@ static int arg_handle_abort_handler_disable(int UNUSED(argc), const char **UNUSE
 	return 0;
 }
 
-static const char arg_handle_background_mode_set_doc[] =
-"\n\tRun in background (often used for UI-less rendering)."
-;
-static int arg_handle_background_mode_set(int UNUSED(argc), const char **UNUSED(argv), void *UNUSED(data))
-{
-	print_version_short();
-	G.background = 1;
-	return 0;
-}
-
 static const char arg_handle_log_level_set_doc[] =
 "<level>\n"
 "\n"
@@ -653,14 +641,6 @@ static int arg_handle_debug_mode_set(int UNUSED(argc), const char **UNUSED(argv)
 	return 0;
 }
 
-#ifdef WITH_FFMPEG
-static const char arg_handle_debug_mode_generic_set_doc_ffmpeg[] =
-"\n\tEnable debug messages from FFmpeg library.";
-#endif
-#ifdef WITH_FREESTYLE
-static const char arg_handle_debug_mode_generic_set_doc_freestyle[] =
-"\n\tEnable debug messages for FreeStyle.";
-#endif
 static const char arg_handle_debug_mode_generic_set_doc_python[] =
 "\n\tEnable debug messages for Python.";
 static const char arg_handle_debug_mode_generic_set_doc_events[] =
@@ -695,37 +675,8 @@ static const char arg_handle_debug_mode_all_doc[] =
 static int arg_handle_debug_mode_all(int UNUSED(argc), const char **UNUSED(argv), void *UNUSED(data))
 {
 	G.debug |= G_DEBUG_ALL;
-#ifdef WITH_LIBMV
-	libmv_startDebugLogging();
-#endif
-#ifdef WITH_CYCLES_LOGGING
-	CCL_start_debug_logging();
-#endif
 	return 0;
 }
-
-#ifdef WITH_LIBMV
-static const char arg_handle_debug_mode_libmv_doc[] =
-"\n\tEnable debug messages from libmv library."
-;
-static int arg_handle_debug_mode_libmv(int UNUSED(argc), const char **UNUSED(argv), void *UNUSED(data))
-{
-	libmv_startDebugLogging();
-
-	return 0;
-}
-#endif
-
-#ifdef WITH_CYCLES_LOGGING
-static const char arg_handle_debug_mode_cycles_doc[] =
-"\n\tEnable debug messages from Cycles."
-;
-static int arg_handle_debug_mode_cycles(int UNUSED(argc), const char **UNUSED(argv), void *UNUSED(data))
-{
-	CCL_start_debug_logging();
-	return 0;
-}
-#endif
 
 static const char arg_handle_debug_mode_memory_set_doc[] =
 "\n\tEnable fully guarded memory allocation and debugging."
@@ -907,13 +858,7 @@ static const char arg_handle_register_extension_doc_silent[] =
 ;
 static int arg_handle_register_extension(int UNUSED(argc), const char **UNUSED(argv), void *data)
 {
-#ifdef WIN32
-	if (data)
-		G.background = 1;
-	RegisterBlendExtension();
-#else
 	(void)data; /* unused */
-#endif
 	return 0;
 }
 
@@ -986,13 +931,7 @@ static int arg_handle_verbosity_set(int argc, const char **argv, void *UNUSED(da
 			printf("\nError: %s '%s %s'.\n", err_msg, arg_id, argv[1]);
 		}
 
-#ifdef WITH_LIBMV
-		libmv_setLoggingVerbosity(level);
-#elif defined(WITH_CYCLES_LOGGING)
-		CCL_logging_verbosity_set(level);
-#else
 		(void)level;
-#endif
 
 		return 1;
 	}
@@ -1255,23 +1194,8 @@ static int arg_handle_load_file(int UNUSED(argc), const char **argv, void *data)
 	BKE_reports_clear(&reports);
 
 	if (success) {
-		if (G.background) {
-			/* ensuer we use 'C->data.scene' for background render */
-			CTX_wm_window_set(C, NULL);
-		}
 	}
 	else {
-		/* failed to load file, stop processing arguments if running in background mode */
-		if (G.background) {
-			/* Set is_break if running in the background mode so
-			 * blender will return non-zero exit code which then
-			 * could be used in automated script to control how
-			 * good or bad things are.
-			 */
-			G.is_break = true;
-			return -1;
-		}
-
 		if (BLO_has_bfile_extension(filename)) {
 			/* Just pretend a file was loaded, so the user can press Save and it'll
 			 * save at the filename from the CLI. */
@@ -1316,8 +1240,6 @@ void main_args_setup(bContext *C, bArgs *ba, SYS_SystemHandle *syshandle)
 
 	BLI_argsAdd(ba, 1, NULL, "--disable-crash-handler", CB(arg_handle_crash_handler_disable), NULL);
 	BLI_argsAdd(ba, 1, NULL, "--disable-abort-handler", CB(arg_handle_abort_handler_disable), NULL);
-
-	BLI_argsAdd(ba, 1, "-b", "--background", CB(arg_handle_background_mode_set), NULL);
 
 	BLI_argsAdd(ba, 1, NULL, "--log", CB(arg_handle_log_set), ba);
 	BLI_argsAdd(ba, 1, NULL, "--log-level", CB(arg_handle_log_level_set), ba);
@@ -1407,5 +1329,3 @@ void main_args_setup_post(bContext *C, bArgs *ba)
 }
 
 /** \} */
-
-#endif /* WITH_PYTHON_MODULE */

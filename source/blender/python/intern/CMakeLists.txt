@@ -109,10 +109,6 @@ if(WITH_BUILDINFO)
 	add_definitions(-DBUILD_DATE)
 endif()
 
-if(WITH_PYTHON_MODULE)
-	add_definitions(-DWITH_PYTHON_MODULE)
-endif()
-
 if(WITH_PYTHON_SAFETY)
 	add_definitions(-DWITH_PYTHON_SAFETY)
 endif()

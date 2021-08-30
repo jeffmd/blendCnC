@@ -198,7 +198,7 @@ mark_as_advanced(WITH_PYTHON_SECURITY)  # some distributions see this as a secur
 
 option(WITH_PYTHON_SAFETY "Enable internal API error checking to track invalid data to prevent crash on access (at the expense of some efficiency, only enable for development)." OFF)
 mark_as_advanced(WITH_PYTHON_SAFETY)
-option(WITH_PYTHON_MODULE "Enable building as a python module which runs without a user interface, like running regular blender in background mode (experimental, only enable for development), installs to PYTHON_SITE_PACKAGES (or CMAKE_INSTALL_PREFIX if WITH_INSTALL_PORTABLE is enabled)." OFF)
+
 if(APPLE)
 	option(WITH_PYTHON_FRAMEWORK "Enable building using the Python available in the framework (OSX only)" OFF)
 endif()
@@ -544,19 +544,6 @@ if(NOT WITH_BLENDER AND NOT WITH_PLAYER AND NOT WITH_CYCLES_STANDALONE)
 		"At least one of WITH_BLENDER or WITH_PLAYER or "
 		"WITH_CYCLES_STANDALONE must be enabled, nothing to do!"
 	)
-endif()
-
-if(WITH_PYTHON_MODULE AND WITH_PYTHON_INSTALL)
-	message(FATAL_ERROR "WITH_PYTHON_MODULE requires WITH_PYTHON_INSTALL to be OFF")
-endif()
-
-# may as well build python module without a UI
-if(WITH_PYTHON_MODULE)
-	set(WITH_HEADLESS ON)
-endif()
-
-if(NOT WITH_PYTHON)
-	set(WITH_CYCLES OFF)
 endif()
 
 # enable boost for cycles, audaspace or i18n
@@ -1078,13 +1065,6 @@ else()
 endif()
 
 #-----------------------------------------------------------------------------
-# Configure Python.
-
-if(WITH_PYTHON_MODULE)
-	add_definitions(-DPy_ENABLE_SHARED)
-endif()
-
-#-----------------------------------------------------------------------------
 # Configure GLog/GFlags
 
 if(WITH_LIBMV OR WITH_GTESTS OR (WITH_CYCLES AND WITH_CYCLES_LOGGING))
@@ -1537,7 +1517,6 @@ if(FIRST_RUN)
 	info_cfg_text("Python:")
 	info_cfg_option(WITH_PYTHON_INSTALL)
 	info_cfg_option(WITH_PYTHON_INSTALL_NUMPY)
-	info_cfg_option(WITH_PYTHON_MODULE)
 	info_cfg_option(WITH_PYTHON_SAFETY)
 	if(APPLE)
 		info_cfg_option(WITH_PYTHON_FRAMEWORK)

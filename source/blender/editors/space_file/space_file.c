@@ -774,9 +774,7 @@ void ED_file_init(void)
 {
 	ED_file_read_bookmarks();
 
-	if (G.background == false) {
-		filelist_init_icons();
-	}
+	filelist_init_icons();
 
 	IMB_thumb_makedirs();
 }
@@ -785,9 +783,7 @@ void ED_file_exit(void)
 {
 	fsmenu_free();
 
-	if (G.background == false) {
-		filelist_free_icons();
-	}
+	filelist_free_icons();
 }
 
 void ED_file_read_bookmarks(void)

@@ -122,8 +122,6 @@ set(SRC
 	intern/uvproject.c
 	intern/voronoi_2d.c
 	intern/voxel.c
-	intern/winstuff.c
-	intern/winstuff_dir.c
 
 	BLI_alloca.h
 	BLI_args.h
@@ -225,12 +223,6 @@ set(SRC
 
 if(WITH_MEM_VALGRIND)
 	add_definitions(-DWITH_MEM_VALGRIND)
-endif()
-
-if(WIN32)
-	list(APPEND INC
-		../../../intern/utfconv
-	)
 endif()
 
 # no need to compile object files for inline headers.

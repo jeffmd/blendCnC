@@ -18,24 +18,9 @@
  *  \ingroup creator
  */
 
-#ifndef WITH_PYTHON_MODULE
-
 #if defined(__linux__) && defined(__GNUC__)
 #  define _GNU_SOURCE
 #  include <fenv.h>
-#endif
-
-#if (defined(__APPLE__) && (defined(__i386__) || defined(__x86_64__)))
-#  define OSX_SSE_FPE
-#  include <xmmintrin.h>
-#endif
-
-#ifdef WIN32
-#  if defined(_MSC_VER) && defined(_M_X64)
-#    include <math.h> /* needed for _set_FMA3_enable */
-#  endif
-#  include <windows.h>
-#  include <float.h>
 #endif
 
 #include <stdlib.h>
@@ -44,9 +29,6 @@
 
 #include "BLI_sys_types.h"
 
-#ifdef WIN32
-#  include "BLI_winstuff.h"
-#endif
 #include "BLI_utildefines.h"
 #include "BLI_string.h"
 #include "BLI_path_util.h"
@@ -60,13 +42,7 @@
 #include "BKE_main.h"
 #include "BKE_report.h"
 
-
-/* for passing information between creator and gameengine */
-#ifdef WITH_GAMEENGINE
-#  include "BL_System.h"
-#else /* dummy */
 #  define SYS_SystemHandle int
-#endif
 
 #include <signal.h>
 
@@ -189,104 +165,6 @@ static void sig_handle_crash(int signum)
 #endif
 }
 
-#ifdef WIN32
-LONG WINAPI windows_exception_handler(EXCEPTION_POINTERS *ExceptionInfo)
-{
-	switch (ExceptionInfo->ExceptionRecord->ExceptionCode) {
-		case EXCEPTION_ACCESS_VIOLATION:
-			fputs("Error   : EXCEPTION_ACCESS_VIOLATION\n", stderr);
-			break;
-		case EXCEPTION_ARRAY_BOUNDS_EXCEEDED:
-			fputs("Error   : EXCEPTION_ARRAY_BOUNDS_EXCEEDED\n", stderr);
-			break;
-		case EXCEPTION_BREAKPOINT:
-			fputs("Error   : EXCEPTION_BREAKPOINT\n", stderr);
-			break;
-		case EXCEPTION_DATATYPE_MISALIGNMENT:
-			fputs("Error   : EXCEPTION_DATATYPE_MISALIGNMENT\n", stderr);
-			break;
-		case EXCEPTION_FLT_DENORMAL_OPERAND:
-			fputs("Error   : EXCEPTION_FLT_DENORMAL_OPERAND\n", stderr);
-			break;
-		case EXCEPTION_FLT_DIVIDE_BY_ZERO:
-			fputs("Error   : EXCEPTION_FLT_DIVIDE_BY_ZERO\n", stderr);
-			break;
-		case EXCEPTION_FLT_INEXACT_RESULT:
-			fputs("Error   : EXCEPTION_FLT_INEXACT_RESULT\n", stderr);
-			break;
-		case EXCEPTION_FLT_INVALID_OPERATION:
-			fputs("Error   : EXCEPTION_FLT_INVALID_OPERATION\n", stderr);
-			break;
-		case EXCEPTION_FLT_OVERFLOW:
-			fputs("Error   : EXCEPTION_FLT_OVERFLOW\n", stderr);
-			break;
-		case EXCEPTION_FLT_STACK_CHECK:
-			fputs("Error   : EXCEPTION_FLT_STACK_CHECK\n", stderr);
-			break;
-		case EXCEPTION_FLT_UNDERFLOW:
-			fputs("Error   : EXCEPTION_FLT_UNDERFLOW\n", stderr);
-			break;
-		case EXCEPTION_ILLEGAL_INSTRUCTION:
-			fputs("Error   : EXCEPTION_ILLEGAL_INSTRUCTION\n", stderr);
-			break;
-		case EXCEPTION_IN_PAGE_ERROR:
-			fputs("Error   : EXCEPTION_IN_PAGE_ERROR\n", stderr);
-			break;
-		case EXCEPTION_INT_DIVIDE_BY_ZERO:
-			fputs("Error   : EXCEPTION_INT_DIVIDE_BY_ZERO\n", stderr);
-			break;
-		case EXCEPTION_INT_OVERFLOW:
-			fputs("Error   : EXCEPTION_INT_OVERFLOW\n", stderr);
-			break;
-		case EXCEPTION_INVALID_DISPOSITION:
-			fputs("Error   : EXCEPTION_INVALID_DISPOSITION\n", stderr);
-			break;
-		case EXCEPTION_NONCONTINUABLE_EXCEPTION:
-			fputs("Error   : EXCEPTION_NONCONTINUABLE_EXCEPTION\n", stderr);
-			break;
-		case EXCEPTION_PRIV_INSTRUCTION:
-			fputs("Error   : EXCEPTION_PRIV_INSTRUCTION\n", stderr);
-			break;
-		case EXCEPTION_SINGLE_STEP:
-			fputs("Error   : EXCEPTION_SINGLE_STEP\n", stderr);
-			break;
-		case EXCEPTION_STACK_OVERFLOW:
-			fputs("Error   : EXCEPTION_STACK_OVERFLOW\n", stderr);
-			break;
-		default:
-			fputs("Error   : Unrecognized Exception\n", stderr);
-			break;
-	}
-
-	fflush(stderr);
-
-	/* If this is a stack overflow then we can't walk the stack, so just show
-	 * where the error happened */
-	if (EXCEPTION_STACK_OVERFLOW != ExceptionInfo->ExceptionRecord->ExceptionCode) {
-		HMODULE mod;
-		CHAR modulename[MAX_PATH];
-		LPVOID address = ExceptionInfo->ExceptionRecord->ExceptionAddress;
-
-		fprintf(stderr, "Address : 0x%p\n", address);
-		if (GetModuleHandleEx(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS, address, &mod)) {
-			if (GetModuleFileName(mod, modulename, MAX_PATH)) {
-				fprintf(stderr, "Module  : %s\n", modulename);
-			}
-		}
-
-		fflush(stderr);
-
-#ifdef NDEBUG
-		TerminateProcess(GetCurrentProcess(), SIGSEGV);
-#else
-		sig_handle_crash(SIGSEGV);
-#endif
-	}
-
-	return EXCEPTION_EXECUTE_HANDLER;
-}
-#endif
-
 static void sig_handle_abort(int UNUSED(signum))
 {
 	/* Delete content of temp dir! */
@@ -297,12 +175,8 @@ static void sig_handle_abort(int UNUSED(signum))
 void main_signal_setup(void)
 {
 	if (app_state.signal.use_crash_handler) {
-#ifdef WIN32
-		SetUnhandledExceptionFilter(windows_exception_handler);
-#else
 		/* after parsing args */
 		signal(SIGSEGV, sig_handle_crash);
-#endif
 	}
 
 	if (app_state.signal.use_abort_handler) {
@@ -331,19 +205,5 @@ void main_signal_setup_fpe(void)
 # if defined(__linux__) && defined(__GNUC__)
 	feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 # endif /* defined(__linux__) && defined(__GNUC__) */
-# if defined(OSX_SSE_FPE)
-	/* OSX uses SSE for floating point by default, so here
-	 * use SSE instructions to throw floating point exceptions */
-	_MM_SET_EXCEPTION_MASK(_MM_MASK_MASK & ~
-	                       (_MM_MASK_OVERFLOW | _MM_MASK_INVALID | _MM_MASK_DIV_ZERO));
-# endif /* OSX_SSE_FPE */
-# if defined(_WIN32) && defined(_MSC_VER)
-	/* enables all fp exceptions */
-	_controlfp_s(NULL, 0, _MCW_EM);
-	/* hide the ones we don't care about */
-	_controlfp_s(NULL, _EM_DENORMAL | _EM_UNDERFLOW | _EM_INEXACT, _MCW_EM);
-# endif /* _WIN32 && _MSC_VER */
 #endif
 }
-
-#endif  /* WITH_PYTHON_MODULE */

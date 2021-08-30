@@ -44,7 +44,6 @@
 #include "BKE_main.h"
 #include "BKE_screen.h"
 #include "BKE_report.h"
-#include "BKE_global.h"
 
 #include "WM_api.h"
 #include "WM_types.h"
@@ -263,16 +262,14 @@ void WM_check(bContext *C)
 		return;
 	}
 
-	if (!G.background) {
-		/* case: fileread */
-		if ((wm->initialized & WM_INIT_WINDOW) == 0) {
-			WM_keymap_init(C);
-			WM_autosave_init(wm);
-		}
-
-		/* case: no open windows at all, for old file reads */
-		wm_window_ghostwindows_ensure(wm);
+	/* case: fileread */
+	if ((wm->initialized & WM_INIT_WINDOW) == 0) {
+		WM_keymap_init(C);
+		WM_autosave_init(wm);
 	}
+
+	/* case: no open windows at all, for old file reads */
+	wm_window_ghostwindows_ensure(wm);
 
 	/* case: fileread */
 	/* note: this runs in bg mode to set the screen context cb */

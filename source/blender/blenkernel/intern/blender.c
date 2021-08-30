@@ -293,10 +293,8 @@ void BKE_blender_callback_test_break_set(void (*func)(void))
 
 int BKE_blender_test_break(void)
 {
-	if (!G.background) {
-		if (blender_test_break_cb)
-			blender_test_break_cb();
-	}
+	if (blender_test_break_cb)
+		blender_test_break_cb();
 
 	return (G.is_break == true);
 }

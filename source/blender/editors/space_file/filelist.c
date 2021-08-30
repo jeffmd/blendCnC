@@ -782,13 +782,8 @@ void filelist_init_icons(void)
 	ImBuf *bbuf;
 	ImBuf *ibuf;
 
-	BLI_assert(G.background == false);
-
-#ifdef WITH_HEADLESS
-	bbuf = NULL;
-#else
 	bbuf = IMB_ibImageFromMemory((unsigned char *)datatoc_prvicons_png, datatoc_prvicons_png_size, IB_rect, NULL, "<splash>");
-#endif
+
 	if (bbuf) {
 		for (y = 0; y < SPECIAL_IMG_ROWS; y++) {
 			for (x = 0; x < SPECIAL_IMG_COLS; x++) {
@@ -810,8 +805,6 @@ void filelist_free_icons(void)
 {
 	int i;
 
-	BLI_assert(G.background == false);
-
 	for (i = 0; i < SPECIAL_IMG_MAX; ++i) {
 		IMB_freeImBuf(gSpecialFileImages[i]);
 		gSpecialFileImages[i] = NULL;
@@ -826,8 +819,6 @@ void filelist_imgsize(struct FileList *filelist, short w, short h)
 
 static FileDirEntry *filelist_geticon_get_file(struct FileList *filelist, const int index)
 {
-	BLI_assert(G.background == false);
-
 	return filelist_file(filelist, index);
 }
 

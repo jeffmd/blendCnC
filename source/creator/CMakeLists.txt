@@ -180,46 +180,8 @@ endif()
 add_cc_flags_custom_test(blendcnc)
 
 # message(STATUS "Configuring blendcnc")
-if(WITH_PYTHON_MODULE)
-	add_definitions(-DWITH_PYTHON_MODULE)
-
-	# creates ./bin/bpy.so which can be imported as a python module.
-	#
-	# note that 'SHARED' works on Linux and Windows,
-	# but not OSX which _must_ be 'MODULE'
-	add_library(blendcnc MODULE ${SRC})
-	set_target_properties(
-		blendcnc
-		PROPERTIES
-			PREFIX ""
-			OUTPUT_NAME bpy
-			LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
-			RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin  # only needed on windows
-	)
-
-	if(APPLE)
-		set_target_properties(
-			blendcnc
-			PROPERTIES
-				MACOSX_BUNDLE TRUE
-				LINK_FLAGS_RELEASE "${PLATFORM_LINKFLAGS}"
-				LINK_FLAGS_DEBUG "${PLATFORM_LINKFLAGS_DEBUG}"
-		)
-	endif()
-
-	if(WIN32)
-		# python modules use this
-		set_target_properties(
-			blendcnc
-			PROPERTIES
-			SUFFIX ".pyd"
-		)
-	endif()
-
-else()
 	add_executable(blendcnc ${EXETYPE} ${SRC})
 	WINDOWS_SIGN_TARGET(blendcnc)
-endif()
 
 if(WITH_BUILDINFO)
 	# explicitly say that the executable depends on the buildinfo
@@ -266,29 +228,17 @@ endif()
 # Platform Specific Var: TARGETDIR_VER
 
 if(UNIX AND NOT APPLE)
-	if(WITH_PYTHON_MODULE)
-		if(WITH_INSTALL_PORTABLE)
-			set(TARGETDIR_VER ${BLENDER_VERSION})
-		else()
-			set(TARGETDIR_VER ${PYTHON_SITE_PACKAGES}/${BLENDER_VERSION})
-		endif()
+	if(WITH_INSTALL_PORTABLE)
+		set(TARGETDIR_VER ${BLENDER_VERSION})
 	else()
-		if(WITH_INSTALL_PORTABLE)
-			set(TARGETDIR_VER ${BLENDER_VERSION})
-		else()
-			set(TARGETDIR_VER share/blender/${BLENDER_VERSION})
-		endif()
+		set(TARGETDIR_VER share/blender/${BLENDER_VERSION})
 	endif()
 
 elseif(WIN32)
 	set(TARGETDIR_VER ${BLENDER_VERSION})
 
 elseif(APPLE)
-	if(WITH_PYTHON_MODULE)
-		set(TARGETDIR_VER ${BLENDER_VERSION})
-	else()
-		set(TARGETDIR_VER blender.app/Contents/Resources/${BLENDER_VERSION})
-	endif()
+	set(TARGETDIR_VER blender.app/Contents/Resources/${BLENDER_VERSION})
 	# Skip relinking on cpack / install
 	set_target_properties(blendcnc PROPERTIES BUILD_WITH_INSTALL_RPATH true)
 endif()
@@ -409,32 +359,17 @@ endif()
 
 if(UNIX AND NOT APPLE)
 
-	if(NOT WITH_PYTHON_MODULE)
-		if(WITH_DOC_MANPAGE)
-			add_custom_target(
-				blender_man_page ALL
-				COMMAND ${CMAKE_SOURCE_DIR}/doc/manpage/blender.1.py
-				        ${EXECUTABLE_OUTPUT_PATH}/blender
-				        ${CMAKE_CURRENT_BINARY_DIR}/blender.1)
-			add_dependencies(blender_man_page blender)
-		endif()
+	if(WITH_DOC_MANPAGE)
+		add_custom_target(
+			blender_man_page ALL
+			COMMAND ${CMAKE_SOURCE_DIR}/doc/manpage/blender.1.py
+			        ${EXECUTABLE_OUTPUT_PATH}/blender
+			        ${CMAKE_CURRENT_BINARY_DIR}/blender.1)
+		add_dependencies(blender_man_page blender)
 	endif()
 
 	# there are a few differences between portable and system install
-	if(WITH_PYTHON_MODULE)
-		if(WITH_INSTALL_PORTABLE)
-			install(
-				TARGETS blendcnc
-				DESTINATION "."
-			)
-		else()
-			install(
-				TARGETS blendcnc
-				LIBRARY DESTINATION ${PYTHON_SITE_PACKAGES}
-			)
-		endif()
-		# none of the other files are needed currently
-	elseif(WITH_INSTALL_PORTABLE)
+	if(WITH_INSTALL_PORTABLE)
 		install(
 			TARGETS blendcnc
 			DESTINATION "."
@@ -842,7 +777,7 @@ elseif(APPLE)
 	endif()
 
 	# python
-	if(WITH_PYTHON AND NOT WITH_PYTHON_MODULE AND NOT WITH_PYTHON_FRAMEWORK)
+	if(WITH_PYTHON AND NOT WITH_PYTHON_FRAMEWORK)
 		# Copy the python libs into the install directory
 		install_dir(
 			${PYTHON_LIBPATH}
@@ -957,7 +892,7 @@ setup_liblinks(blendcnc)
 # -----------------------------------------------------------------------------
 # Setup launcher
 
-if(WIN32 AND NOT WITH_PYTHON_MODULE)
+if(WIN32)
 	install(
 		TARGETS blendcnc
 		COMPONENT Blender

@@ -76,12 +76,6 @@
 
 #include "creator_intern.h"  /* own include */
 
-/*	Local Function prototypes */
-#ifdef WITH_PYTHON_MODULE
-int  main_python_enter(int argc, const char **argv);
-void main_python_exit(void);
-#endif
-
 /* written to by 'creator_args.c' */
 struct ApplicationState app_state = {
 	.signal = {
@@ -156,18 +150,6 @@ static void callback_clg_fatal(void *fp)
 /** \name Main Function
  * \{ */
 
-#ifdef WITH_PYTHON_MODULE
-/* allow python module to call main */
-#  define main main_python_enter
-static void *evil_C = NULL;
-
-#  ifdef __APPLE__
-     /* environ is not available in mac shared libraries */
-#    include <crt_externs.h>
-char **environ = NULL;
-#  endif
-#endif
-
 /**
  * Blender's main function responsibilities are:
  * - setup subsystems.
@@ -177,60 +159,19 @@ char **environ = NULL;
  */
 int main(
         int argc,
-#ifdef WIN32
-        const char **UNUSED(argv_c)
-#else
         const char **argv
-#endif
         )
 {
 	bContext *C;
 	SYS_SystemHandle syshandle;
 
-#ifndef WITH_PYTHON_MODULE
 	bArgs *ba;
-#endif
-
-#ifdef WIN32
-	char **argv;
-	int argv_num;
-#endif
 
 	/* --- end declarations --- */
 
 	/* ensure we free data on early-exit */
 	struct CreatorAtExitData app_init_data = {NULL};
 	BKE_blender_atexit_register(callback_main_atexit, &app_init_data);
-
-#ifdef WIN32
-	/* We delay loading of openmp so we can set the policy here. */
-# if defined(_MSC_VER)
-	_putenv_s("OMP_WAIT_POLICY", "PASSIVE");
-# endif
-
-	/* FMA3 support in the 2013 CRT is broken on Vista and Windows 7 RTM
-	 * (fixed in SP1). Just disable it. */
-#  if defined(_MSC_VER) && defined(_M_X64)
-	_set_FMA3_enable(0);
-#  endif
-
-	/* Win32 Unicode Args */
-	/* NOTE: cannot use guardedalloc malloc here, as it's not yet initialized
-	 *       (it depends on the args passed in, which is what we're getting here!)
-	 */
-	{
-		wchar_t **argv_16 = CommandLineToArgvW(GetCommandLineW(), &argc);
-		argv = malloc(argc * sizeof(char *));
-		for (argv_num = 0; argv_num < argc; argv_num++) {
-			argv[argv_num] = alloc_utf_8_from_16(argv_16[argv_num], 0);
-		}
-		LocalFree(argv_16);
-
-		/* free on early-exit */
-		app_init_data.argv = argv;
-		app_init_data.argv_num = argv_num;
-	}
-#endif  /* WIN32 */
 
 	/* NOTE: Special exception for guarded allocator type switch:
 	 *       we need to perform switch from lock-free to fully
@@ -274,35 +215,11 @@ int main(
 
 	C = CTX_create();
 
-#ifdef WITH_PYTHON_MODULE
-#ifdef __APPLE__
-	environ = *_NSGetEnviron();
-#endif
-
-#undef main
-	evil_C = C;
-#endif
-
 #ifdef WITH_BINRELOC
 	br_init(NULL);
 #endif
 
 	main_callback_setup();
-
-#if defined(__APPLE__) && !defined(WITH_PYTHON_MODULE)
-	/* patch to ignore argument finder gives us (pid?) */
-	if (argc == 2 && STREQLEN(argv[1], "-psn_", 5)) {
-		extern int GHOST_HACK_getFirstFile(char buf[]);
-		static char firstfilebuf[512];
-
-		argc = 1;
-
-		if (GHOST_HACK_getFirstFile(firstfilebuf)) {
-			argc = 2;
-			argv[1] = firstfilebuf;
-		}
-	}
-#endif
 
 #ifdef __FreeBSD__
 	fpsetmask(0);
@@ -328,7 +245,6 @@ int main(
 	syshandle = 0;
 
 	/* first test for background */
-#ifndef WITH_PYTHON_MODULE
 	ba = BLI_argsInit(argc, (const char **)argv); /* skip binary path */
 
 	/* ensure we free on early exit */
@@ -340,51 +256,24 @@ int main(
 
 	main_signal_setup();
 
-#else
-	G.factory_startup = true;  /* using preferences or user startup makes no sense for py-as-module */
-	(void)syshandle;
-#endif
-
 	/* after level 1 args, this is so playanim skips RNA init */
 	RNA_init();
 
 	/* end second init */
-
-
-#if defined(WITH_PYTHON_MODULE) || defined(WITH_HEADLESS)
-	G.background = true; /* python module mode ALWAYS runs in background mode (for now) */
-#else
-	if (G.background) {
-		main_signal_setup_background();
-	}
-#endif
 
 	/* background render uses this font too */
 	BKE_vfont_builtin_register(datatoc_bfont_pfb, datatoc_bfont_pfb_size);
 
 	init_def_material();
 
-	if (G.background == 0) {
-#ifndef WITH_PYTHON_MODULE
-		BLI_argsParse(ba, 2, NULL, NULL);
-		BLI_argsParse(ba, 3, NULL, NULL);
-#endif
-		WM_init(C, argc, (const char **)argv);
+	BLI_argsParse(ba, 2, NULL, NULL);
+	BLI_argsParse(ba, 3, NULL, NULL);
+	WM_init(C, argc, (const char **)argv);
 
-		/* this is properly initialized with user defs, but this is default */
-		/* call after loading the startup.blend so we can read U.tempdir */
-		BKE_tempdir_init(U.tempdir);
-	}
-	else {
-#ifndef WITH_PYTHON_MODULE
-		BLI_argsParse(ba, 3, NULL, NULL);
-#endif
+	/* this is properly initialized with user defs, but this is default */
+	/* call after loading the startup.blend so we can read U.tempdir */
+	BKE_tempdir_init(U.tempdir);
 
-		WM_init(C, argc, (const char **)argv);
-
-		/* don't use user preferences temp dir */
-		BKE_tempdir_init(NULL);
-	}
 #ifdef WITH_PYTHON
 	/**
 	 * NOTE: the U.pythondir string is NULL until WM_init() is executed,
@@ -402,61 +291,28 @@ int main(
 	WM_keymap_init(C);
 
 	/* OK we are ready for it */
-#ifndef WITH_PYTHON_MODULE
 	main_args_setup_post(C, ba);
 
-	if (G.background == 0) {
-		if (!G.file_loaded)
-			if (U.uiflag2 & USER_KEEP_SESSION)
-				WM_recover_last_session(C, NULL);
-	}
-
-#endif
+	if (!G.file_loaded)
+		if (U.uiflag2 & USER_KEEP_SESSION)
+			WM_recover_last_session(C, NULL);
 
 	/* Explicitly free data allocated for argument parsing:
 	 * - 'ba'
-	 * - 'argv' on WIN32.
 	 */
 	callback_main_atexit(&app_init_data);
 	BKE_blender_atexit_unregister(callback_main_atexit, &app_init_data);
 
-	/* paranoid, avoid accidental re-use */
-#ifndef WITH_PYTHON_MODULE
 	ba = NULL;
 	(void)ba;
-#endif
 
-#ifdef WIN32
-	argv = NULL;
-	(void)argv;
-#endif
-
-#ifdef WITH_PYTHON_MODULE
-	return 0; /* keep blender in background mode running */
-#endif
-
-	if (G.background) {
-		/* Using window-manager API in background mode is a bit odd, but works fine. */
-		WM_exit(C);
-	}
-	else {
-
-		if (!G.file_loaded) {
-			WM_init_splash(C);
-		}
+	if (!G.file_loaded) {
+		WM_init_splash(C);
 	}
 
 	WM_main(C);
 
 	return 0;
 } /* end of int main(argc, argv) */
-
-#ifdef WITH_PYTHON_MODULE
-void main_python_exit(void)
-{
-	WM_exit_ext((bContext *)evil_C, true);
-	evil_C = NULL;
-}
-#endif
 
 /** \} */

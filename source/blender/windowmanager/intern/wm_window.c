@@ -427,7 +427,7 @@ void wm_quit_with_optional_confirmation_prompt(bContext *C, wmWindow *win)
 	 * here (this function gets called outside of normal event handling loop). */
 	CTX_wm_window_set(C, win);
 
-	if ((U.uiflag & USER_QUIT_PROMPT) && !wm->file_saved && !G.background) {
+	if ((U.uiflag & USER_QUIT_PROMPT) && !wm->file_saved) {
 		wm_confirm_quit(C);
 	}
 	else {
@@ -654,8 +654,6 @@ void wm_window_ghostwindows_ensure(wmWindowManager *wm)
 	wmKeyMap *keymap;
 	wmWindow *win;
 
-	BLI_assert(G.background == false);
-
 	/* no commandline prefsize? then we set this.
 	 * Note that these values will be used only
 	 * when there is no startup.blend yet.
@@ -735,8 +733,6 @@ void wm_window_ghostwindows_ensure(wmWindowManager *wm)
 void wm_window_ghostwindows_remove_invalid(bContext *C, wmWindowManager *wm)
 {
 	wmWindow *win, *win_next;
-
-	BLI_assert(G.background == false);
 
 	for (win = wm->windows.first; win; win = win_next) {
 		win_next = win->next;
@@ -916,9 +912,6 @@ int wm_window_fullscreen_toggle_exec(bContext *C, wmOperator *UNUSED(op))
 {
 	wmWindow *window = CTX_wm_window(C);
 	GHOST_TWindowState state;
-
-	if (G.background)
-		return OPERATOR_CANCELLED;
 
 	state = GHOST_GetWindowState(window->ghostwin);
 	if (state != GHOST_kWindowStateFullScreen)
@@ -1644,11 +1637,6 @@ static char *wm_clipboard_text_get_ex(bool selection, int *r_len,
 {
 	char *p, *p2, *buf, *newbuf;
 
-	if (G.background) {
-		*r_len = 0;
-		return NULL;
-	}
-
 	buf = (char *)GHOST_getClipboard(selection);
 	if (!buf) {
 		*r_len = 0;
@@ -1706,38 +1694,7 @@ char *WM_clipboard_text_get_firstline(bool selection, int *r_len)
 
 void WM_clipboard_text_set(const char *buf, bool selection)
 {
-	if (!G.background) {
-#ifdef _WIN32
-		/* do conversion from \n to \r\n on Windows */
-		const char *p;
-		char *p2, *newbuf;
-		int newlen = 0;
-
-		for (p = buf; *p; p++) {
-			if (*p == '\n')
-				newlen += 2;
-			else
-				newlen++;
-		}
-
-		newbuf = MEM_callocN(newlen + 1, "WM_clipboard_text_set");
-
-		for (p = buf, p2 = newbuf; *p; p++, p2++) {
-			if (*p == '\n') {
-				*(p2++) = '\r'; *p2 = '\n';
-			}
-			else {
-				*p2 = *p;
-			}
-		}
-		*p2 = '\0';
-
-		GHOST_putClipboard((GHOST_TInt8 *)newbuf, selection);
-		MEM_freeN(newbuf);
-#else
-		GHOST_putClipboard((GHOST_TInt8 *)buf, selection);
-#endif
-	}
+	GHOST_putClipboard((GHOST_TInt8 *)buf, selection);
 }
 
 /* ******************* progress bar **************** */

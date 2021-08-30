@@ -419,11 +419,9 @@ if(CMAKE_DL_LIBS)
 endif()
 
 if(CMAKE_SYSTEM_NAME MATCHES "Linux")
-	if(NOT WITH_PYTHON_MODULE)
-		# binreloc is linux only
-		set(BINRELOC_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/extern/binreloc/include)
-		set(WITH_BINRELOC ON)
-	endif()
+	# binreloc is linux only
+	set(BINRELOC_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/extern/binreloc/include)
+	set(WITH_BINRELOC ON)
 endif()
 
 # lfs on glibc, all compilers should use

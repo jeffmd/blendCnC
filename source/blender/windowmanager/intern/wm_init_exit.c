@@ -125,10 +125,9 @@ bool wm_start_with_console = false; /* used in creator.c */
 void WM_init(bContext *C, int argc, const char **argv)
 {
 
-	if (!G.background) {
-		wm_ghost_init(C);   /* note: it assigns C to ghost! */
-		wm_init_cursor_data();
-	}
+	wm_ghost_init(C);   /* note: it assigns C to ghost! */
+	wm_init_cursor_data();
+
 	GHOST_CreateSystemPaths();
 
 	BKE_addon_pref_type_init();
@@ -167,24 +166,13 @@ void WM_init(bContext *C, int argc, const char **argv)
 	/* Call again to set from userpreferences... */
 	BLT_lang_set(NULL);
 
-	if (!G.background) {
+	GPU_init();
 
-		GPU_init();
+	GPU_set_linear_mipmap(true);
+	GPU_set_anisotropic(G_MAIN, U.anisotropic_filter);
+	GPU_set_gpu_mipmapping(G_MAIN, U.use_gpu_mipmap);
 
-		GPU_set_linear_mipmap(true);
-		GPU_set_anisotropic(G_MAIN, U.anisotropic_filter);
-		GPU_set_gpu_mipmapping(G_MAIN, U.use_gpu_mipmap);
-
-		UI_init();
-	}
-	else {
-		/* Note: Currently only inits icons, which we now want in background mode too
-		 * (scripts could use those in background processing...).
-		 * In case we do more later, we may need to pass a 'background' flag.
-		 * Called from 'UI_init' above */
-		BKE_icons_init(1);
-	}
-
+	UI_init();
 
 	ED_spacemacros_init();
 
@@ -206,7 +194,7 @@ void WM_init(bContext *C, int argc, const char **argv)
 	(void)argv; /* unused */
 #endif
 
-	if (!G.background && !wm_start_with_console)
+	if (!wm_start_with_console)
 		GHOST_toggleConsole(3);
 
 	clear_matcopybuf();
@@ -239,9 +227,7 @@ void WM_init(bContext *C, int argc, const char **argv)
 
 		wm_file_read_report(C, bmain);
 
-		if (!G.background) {
-			CTX_wm_window_set(C, NULL);
-		}
+		CTX_wm_window_set(C, NULL);
 	}
 }
 
@@ -330,7 +316,7 @@ void WM_exit_ext(bContext *C, const bool do_python)
 	if (C && wm) {
 		wmWindow *win;
 
-		if (!G.background) {
+		{
 			struct MemFile *undo_memfile = wm->undo_stack ? ED_undosys_stack_memfile_get_active(wm->undo_stack) : NULL;
 			if ((U.uiflag2 & USER_KEEP_SESSION) || (undo_memfile != NULL)) {
 				/* save the undo state as quit.blend */
@@ -413,13 +399,10 @@ void WM_exit_ext(bContext *C, const bool do_python)
 	(void)do_python;
 #endif
 
-	if (!G.background) {
+	GPU_global_buffer_pool_free();
+	GPU_free_unused_buffers(G_MAIN);
 
-		GPU_global_buffer_pool_free();
-		GPU_free_unused_buffers(G_MAIN);
-
-		GPU_exit();
-	}
+	GPU_exit();
 
 	ED_file_exit(); /* for fsmenu */
 

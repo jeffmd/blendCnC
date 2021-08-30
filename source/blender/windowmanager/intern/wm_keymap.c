@@ -1428,9 +1428,6 @@ void WM_keyconfig_update(wmWindowManager *wm)
 	wmKeyMapDiffItem *kmdi;
 	bool compat_update = false;
 
-	if (G.background)
-		return;
-
 	if (wm_keymap_update_flag == 0)
 		return;
 
