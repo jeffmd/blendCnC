@@ -139,7 +139,7 @@ typedef struct SpaceButs {
 #define BUTS_MAT            2
 #define BUTS_TEX            3
 #define BUTS_WORLD          5
-#define BUTS_RENDER         6
+#define BUTS_CNC            6
 #define BUTS_EDIT           7
 #define BUTS_FPAINT         9
 #define BUTS_RADIO          10
@@ -149,7 +149,7 @@ typedef struct SpaceButs {
 
 /* SpaceButs.mainb new */
 typedef enum eSpaceButtons_Context {
-	BCONTEXT_RENDER = 0,
+	BCONTEXT_CNC = 0,
 	BCONTEXT_SCENE = 1,
 	BCONTEXT_WORLD = 2,
 	BCONTEXT_OBJECT = 3,

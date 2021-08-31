@@ -344,6 +344,9 @@ static int buttons_context_path(const bContext *C, ButsContextPath *path, int ma
 	 * tracing back recursively */
 	switch (mainb) {
 		case BCONTEXT_SCENE:
+		case BCONTEXT_CNC:
+			found = buttons_context_path_scene(path);
+			break;
 		case BCONTEXT_WORLD:
 			found = buttons_context_path_world(path);
 			break;
@@ -395,7 +398,7 @@ static int buttons_shading_new_context(const bContext *C, int flag)
 	else if (flag & (1 << BCONTEXT_WORLD))
 		return BCONTEXT_WORLD;
 
-	return BCONTEXT_WORLD;
+	return BCONTEXT_CNC;
 }
 
 void buttons_context_compute(const bContext *C, SpaceButs *sbuts)
@@ -479,7 +482,7 @@ const char *buttons_context_dir[] = {
 	"texture_slot", "scene", "world", "object", "mesh", "curve",
 	"lamp", "camera", "material", "material_slot",
 	"texture", "texture_user", "texture_user_property", "collision", 
-	"line_style", NULL
+	NULL
 };
 
 int buttons_context(const bContext *C, const char *member, bContextDataResult *result)
@@ -686,7 +689,7 @@ void buttons_context_draw(const bContext *C, uiLayout *layout)
 			name = RNA_struct_name_get_alloc(ptr, namebuf, sizeof(namebuf), NULL);
 
 			if (name) {
-				if (!ELEM(sbuts->mainb, BCONTEXT_SCENE) && ptr->type == &RNA_Scene)
+				if (!ELEM(sbuts->mainb, BCONTEXT_CNC, BCONTEXT_SCENE) && ptr->type == &RNA_Scene)
 					uiItemLDrag(row, ptr, "", icon);  /* save some space */
 				else
 					uiItemLDrag(row, ptr, name, icon);

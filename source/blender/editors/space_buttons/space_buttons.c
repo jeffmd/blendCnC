@@ -138,6 +138,8 @@ static void buttons_main_region_draw(const bContext *C, ARegion *ar)
 
 	if (sbuts->mainb == BCONTEXT_SCENE)
 		ED_region_panels(C, ar, "scene", sbuts->mainb, vertical);
+	else if (sbuts->mainb == BCONTEXT_CNC)
+		ED_region_panels(C, ar, "cnc", sbuts->mainb, vertical);
 	else if (sbuts->mainb == BCONTEXT_WORLD)
 		ED_region_panels(C, ar, "world", sbuts->mainb, vertical);
 	else if (sbuts->mainb == BCONTEXT_OBJECT)
@@ -207,6 +209,8 @@ static void buttons_area_listener(bScreen *UNUSED(sc), ScrArea *sa, wmNotifier *
 	switch (wmn->category) {
 		case NC_SCENE:
 			switch (wmn->data) {
+				case ND_CNC_OPTIONS:
+					buttons_area_redraw(sa, BCONTEXT_CNC);
 				case ND_WORLD:
 					buttons_area_redraw(sa, BCONTEXT_WORLD);
 					sbuts->preview = 1;

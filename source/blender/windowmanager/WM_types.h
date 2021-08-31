@@ -252,6 +252,7 @@ typedef struct wmNotifier {
 
 	/* NC_SCENE Scene */
 #define ND_SCENEBROWSE		(1<<16)
+#define	ND_CNC_OPTIONS	(4<<16)
 #define ND_OB_ACTIVE		(7<<16)
 #define ND_OB_SELECT		(8<<16)
 #define ND_OB_VISIBLE		(9<<16)

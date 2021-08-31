@@ -116,9 +116,10 @@ const EnumPropertyItem rna_enum_viewport_shade_items[] = {
 };
 
 
-/* Actually populated dynamically trough a function, but helps for context-less access (e.g. doc, i18n...). */
+/* Actually populated dynamically through a function, but helps for context-less access (e.g. doc, i18n...). */
 static const EnumPropertyItem buttons_context_items[] = {
 	{BCONTEXT_SCENE, "SCENE", ICON_SCENE_DATA, "Scene", "Scene"},
+	{BCONTEXT_CNC, "CNC", ICON_SCENE, "CNC", "CNC"},
 	{BCONTEXT_WORLD, "WORLD", ICON_WORLD, "World", "World"},
 	{BCONTEXT_OBJECT, "OBJECT", ICON_OBJECT_DATA, "Object", "Object"},
 	{BCONTEXT_MODIFIER, "MODIFIER", ICON_MODIFIER, "Modifiers", "Object modifiers"},
@@ -799,6 +800,10 @@ static const EnumPropertyItem *rna_SpaceProperties_context_itemf(bContext *UNUSE
 	SpaceButs *sbuts = (SpaceButs *)(ptr->data);
 	EnumPropertyItem *item = NULL;
 	int totitem = 0;
+
+	if (sbuts->pathflag & (1 << BCONTEXT_CNC)) {
+		RNA_enum_items_add_value(&item, &totitem, buttons_context_items, BCONTEXT_CNC);
+	}
 
 	if (sbuts->pathflag & (1 << BCONTEXT_SCENE)) {
 		RNA_enum_items_add_value(&item, &totitem, buttons_context_items, BCONTEXT_SCENE);
