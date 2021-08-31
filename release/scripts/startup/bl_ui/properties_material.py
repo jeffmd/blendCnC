@@ -42,12 +42,6 @@ def simple_material(mat):
         return True
     return False
 
-class MATERIAL_MT_sss_presets(Menu):
-    bl_label = "SSS Presets"
-    preset_subdir = "sss"
-    preset_operator = "script.execute_preset"
-    draw = Menu.draw_preset
-
 class MATERIAL_MT_specials(Menu):
     bl_label = "Material Specials"
 
@@ -81,7 +75,6 @@ class MaterialButtonsPanel:
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "material"
-    # COMPAT_ENGINES must be defined in each subclass, external engines can add themselves here
 
     @classmethod
     def poll(cls, context):
@@ -91,7 +84,6 @@ class MaterialButtonsPanel:
 class MATERIAL_PT_context_material(MaterialButtonsPanel, Panel):
     bl_label = ""
     bl_options = {'HIDE_HEADER'}
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     @classmethod
     def poll(cls, context):
@@ -157,7 +149,6 @@ class MATERIAL_PT_context_material(MaterialButtonsPanel, Panel):
 
 class MATERIAL_PT_preview(MaterialButtonsPanel, Panel):
     bl_label = "Preview"
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         self.layout.template_preview(context.material)
@@ -166,7 +157,6 @@ class MATERIAL_PT_preview(MaterialButtonsPanel, Panel):
 class MATERIAL_PT_pipeline(MaterialButtonsPanel, Panel):
     bl_label = "Render Pipeline Options"
     bl_options = {'DEFAULT_CLOSED'}
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
 
     @classmethod
     def poll(cls, context):
@@ -218,7 +208,6 @@ class MATERIAL_PT_pipeline(MaterialButtonsPanel, Panel):
 
 class MATERIAL_PT_diffuse(MaterialButtonsPanel, Panel):
     bl_label = "Diffuse"
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     @classmethod
     def poll(cls, context):
@@ -274,7 +263,6 @@ class MATERIAL_PT_diffuse(MaterialButtonsPanel, Panel):
 
 class MATERIAL_PT_specular(MaterialButtonsPanel, Panel):
     bl_label = "Specular"
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     @classmethod
     def poll(cls, context):
@@ -326,7 +314,6 @@ class MATERIAL_PT_specular(MaterialButtonsPanel, Panel):
 
 class MATERIAL_PT_shading(MaterialButtonsPanel, Panel):
     bl_label = "Shading"
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     @classmethod
     def poll(cls, context):
@@ -359,7 +346,6 @@ class MATERIAL_PT_shading(MaterialButtonsPanel, Panel):
 
 class MATERIAL_PT_transp(MaterialButtonsPanel, Panel):
     bl_label = "Transparency"
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     @classmethod
     def poll(cls, context):
@@ -424,7 +410,6 @@ class MATERIAL_PT_transp(MaterialButtonsPanel, Panel):
 class MATERIAL_PT_mirror(MaterialButtonsPanel, Panel):
     bl_label = "Mirror"
     bl_options = {'DEFAULT_CLOSED'}
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     @classmethod
     def poll(cls, context):
@@ -478,171 +463,8 @@ class MATERIAL_PT_mirror(MaterialButtonsPanel, Panel):
         sub.prop(raym, "gloss_anisotropic", text="Anisotropic")
 
 
-class MATERIAL_PT_sss(MaterialButtonsPanel, Panel):
-    bl_label = "Subsurface Scattering"
-    bl_options = {'DEFAULT_CLOSED'}
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
-
-    @classmethod
-    def poll(cls, context):
-        mat = context.material
-        return check_material(mat) and (mat.type in {'SURFACE', 'WIRE'})
-
-    def draw_header(self, context):
-        mat = active_node_mat(context.material)
-        sss = mat.subsurface_scattering
-
-        self.layout.active = (not mat.use_shadeless)
-        self.layout.prop(sss, "use", text="")
-
-    def draw(self, context):
-        layout = self.layout
-
-        mat = active_node_mat(context.material)
-        sss = mat.subsurface_scattering
-
-        layout.active = (sss.use) and (not mat.use_shadeless)
-
-        row = layout.row().split()
-        sub = row.row(align=True).split(align=True, percentage=0.75)
-        sub.menu("MATERIAL_MT_sss_presets", text=bpy.types.MATERIAL_MT_sss_presets.bl_label)
-        sub.operator("material.sss_preset_add", text="", icon='ZOOMIN')
-        sub.operator("material.sss_preset_add", text="", icon='ZOOMOUT').remove_active = True
-
-        split = layout.split()
-
-        col = split.column()
-        col.prop(sss, "ior")
-        col.prop(sss, "scale")
-        col.prop(sss, "color", text="")
-        col.prop(sss, "radius", text="RGB Radius", expand=True)
-
-        col = split.column()
-        sub = col.column(align=True)
-        sub.label(text="Blend:")
-        sub.prop(sss, "color_factor", text="Color")
-        sub.prop(sss, "texture_factor", text="Texture")
-        sub.label(text="Scattering Weight:")
-        sub.prop(sss, "front")
-        sub.prop(sss, "back")
-        col.separator()
-        col.prop(sss, "error_threshold", text="Error")
-
-
-class MATERIAL_PT_halo(MaterialButtonsPanel, Panel):
-    bl_label = "Halo"
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
-
-    @classmethod
-    def poll(cls, context):
-        mat = context.material
-        return mat and (mat.type == 'HALO')
-
-    def draw(self, context):
-        layout = self.layout
-
-        mat = context.material  # don't use node material
-        halo = mat.halo
-
-        def number_but(layout, toggle, number, name, color):
-            row = layout.row(align=True)
-            row.prop(halo, toggle, text="")
-            sub = row.column(align=True)
-            sub.active = getattr(halo, toggle)
-            sub.prop(halo, number, text=name, translate=False)
-            if not color == "":
-                sub.prop(mat, color, text="")
-
-        split = layout.split()
-
-        col = split.column()
-        col.prop(mat, "alpha")
-        col.prop(mat, "diffuse_color", text="")
-        col.prop(halo, "seed")
-
-        col = split.column()
-        col.prop(halo, "size")
-        col.prop(halo, "hardness")
-        col.prop(halo, "add")
-
-        layout.label(text="Options:")
-
-        split = layout.split()
-        col = split.column()
-        col.prop(halo, "use_texture")
-        col.prop(halo, "use_vertex_normal")
-        col.prop(halo, "use_extreme_alpha")
-        col.prop(halo, "use_shaded")
-        col.prop(halo, "use_soft")
-
-        col = split.column()
-        number_but(col, "use_ring", "ring_count", iface_("Rings"), "mirror_color")
-        number_but(col, "use_lines", "line_count", iface_("Lines"), "specular_color")
-        number_but(col, "use_star", "star_tip_count", iface_("Star Tips"), "")
-
-
-class MATERIAL_PT_flare(MaterialButtonsPanel, Panel):
-    bl_label = "Flare"
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
-
-    @classmethod
-    def poll(cls, context):
-        mat = context.material
-        return mat and (mat.type == 'HALO')
-
-    def draw_header(self, context):
-        halo = context.material.halo
-
-        self.layout.prop(halo, "use_flare_mode", text="")
-
-    def draw(self, context):
-        layout = self.layout
-
-        mat = context.material  # don't use node material
-        halo = mat.halo
-
-        layout.active = halo.use_flare_mode
-
-        split = layout.split()
-
-        col = split.column()
-        col.prop(halo, "flare_size", text="Size")
-        col.prop(halo, "flare_boost", text="Boost")
-        col.prop(halo, "flare_seed", text="Seed")
-
-        col = split.column()
-        col.prop(halo, "flare_subflare_count", text="Subflares")
-        col.prop(halo, "flare_subflare_size", text="Subsize")
-
-
-class MATERIAL_PT_game_settings(MaterialButtonsPanel, Panel):
-    bl_label = "Game Settings"
-    COMPAT_ENGINES = {'BLENDER_GAME'}
-
-    @classmethod
-    def poll(cls, context):
-        return context.material
-
-    def draw(self, context):
-        layout = self.layout
-        game = context.material.game_settings  # don't use node material
-
-        row = layout.row()
-        row.prop(game, "use_backface_culling")
-        row.prop(game, "invisible")
-        row.prop(game, "text")
-
-        row = layout.row()
-        row.label(text="Alpha Blend:")
-        row.label(text="Face Orientation:")
-        row = layout.row()
-        row.prop(game, "alpha_blend", text="")
-        row.prop(game, "face_orientation", text="")
-
-
 class MATERIAL_PT_physics(MaterialButtonsPanel, Panel):
     bl_label = "Physics"
-    COMPAT_ENGINES = {'BLENDER_GAME'}
 
     def draw_header(self, context):
         game = context.material.game_settings
@@ -675,55 +497,8 @@ class MATERIAL_PT_physics(MaterialButtonsPanel, Panel):
         row.prop(phys, "use_fh_normal")
 
 
-class MATERIAL_PT_strand(MaterialButtonsPanel, Panel):
-    bl_label = "Strand"
-    bl_options = {'DEFAULT_CLOSED'}
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
-
-    @classmethod
-    def poll(cls, context):
-        mat = context.material
-        return mat and (mat.type in {'SURFACE', 'WIRE', 'HALO'})
-
-    def draw(self, context):
-        layout = self.layout
-
-        mat = context.material  # don't use node material
-        tan = mat.strand
-
-        split = layout.split()
-
-        col = split.column()
-        sub = col.column(align=True)
-        sub.label(text="Size:")
-        sub.prop(tan, "root_size", text="Root")
-        sub.prop(tan, "tip_size", text="Tip")
-        sub.prop(tan, "size_min", text="Minimum")
-        sub.prop(tan, "use_blender_units")
-        sub = col.column()
-        sub.active = (not mat.use_shadeless)
-        sub.prop(tan, "use_tangent_shading")
-        col.prop(tan, "shape")
-
-        col = split.column()
-        col.label(text="Shading:")
-        col.prop(tan, "width_fade")
-        ob = context.object
-        if ob and ob.type == 'MESH':
-            col.prop_search(tan, "uv_layer", ob.data, "uv_textures", text="")
-        else:
-            col.prop(tan, "uv_layer", text="")
-        col.separator()
-        sub = col.column()
-        sub.active = (not mat.use_shadeless)
-        sub.label("Surface diffuse:")
-        sub = col.column()
-        sub.prop(tan, "blend_distance", text="Distance")
-
-
 class MATERIAL_PT_options(MaterialButtonsPanel, Panel):
     bl_label = "Options"
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     @classmethod
     def poll(cls, context):
@@ -770,60 +545,9 @@ class MATERIAL_PT_options(MaterialButtonsPanel, Panel):
         if simple_material(base_mat):
             col.prop(mat, "pass_index")
 
-
-class MATERIAL_PT_shadow(MaterialButtonsPanel, Panel):
-    bl_label = "Shadow"
-    bl_options = {'DEFAULT_CLOSED'}
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
-
-    @classmethod
-    def poll(cls, context):
-        mat = context.material
-        return check_material(mat) and (mat.type in {'SURFACE', 'WIRE'})
-
-    def draw(self, context):
-        layout = self.layout
-
-        base_mat = context.material
-        mat = active_node_mat(base_mat)
-
-        split = layout.split()
-
-        col = split.column()
-        col.prop(mat, "use_shadows", text="Receive")
-        col.prop(mat, "use_transparent_shadows", text="Receive Transparent")
-        col.prop(mat, "use_only_shadow", text="Shadows Only")
-        sub = col.column()
-        sub.active = mat.use_only_shadow
-        sub.prop(mat, "shadow_only_type", text="")
-
-        if not simple_material(base_mat):
-            col = split.column()
-
-        col.prop(mat, "use_ray_shadow_bias", text="Auto Ray Bias")
-        sub = col.column()
-        sub.active = (not mat.use_ray_shadow_bias)
-        sub.prop(mat, "shadow_ray_bias", text="Ray Bias")
-
-        if simple_material(base_mat):
-            col = split.column()
-
-            col.prop(mat, "use_cast_shadows", text="Cast")
-            col.prop(mat, "use_cast_shadows_only", text="Cast Only")
-            col.prop(mat, "use_cast_buffer_shadows")
-        sub = col.column()
-        sub.active = mat.use_cast_buffer_shadows
-        if simple_material(base_mat):
-            sub.prop(mat, "shadow_cast_alpha", text="Casting Alpha")
-        sub.prop(mat, "shadow_buffer_bias", text="Buffer Bias")
-        if simple_material(base_mat):
-            col.prop(mat, "use_cast_approximate")
-
-
 class MATERIAL_PT_transp_game(MaterialButtonsPanel, Panel):
     bl_label = "Transparency"
     bl_options = {'DEFAULT_CLOSED'}
-    COMPAT_ENGINES = {'BLENDER_GAME'}
 
     @classmethod
     def poll(cls, context):
@@ -855,166 +579,18 @@ class VolumeButtonsPanel:
     bl_space_type = 'PROPERTIES'
     bl_region_type = 'WINDOW'
     bl_context = "material"
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     @classmethod
     def poll(cls, context):
         mat = context.material
         return mat and (mat.type == 'VOLUME')
 
-
-class MATERIAL_PT_volume_density(VolumeButtonsPanel, Panel):
-    bl_label = "Density"
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
-
-    def draw(self, context):
-        layout = self.layout
-
-        vol = context.material.volume  # don't use node material
-
-        row = layout.row()
-        row.prop(vol, "density")
-        row.prop(vol, "density_scale")
-
-
-class MATERIAL_PT_volume_shading(VolumeButtonsPanel, Panel):
-    bl_label = "Shading"
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
-
-    def draw(self, context):
-        layout = self.layout
-
-        vol = context.material.volume  # don't use node material
-
-        split = layout.split()
-
-        col = split.column()
-        col.prop(vol, "scattering")
-        col.prop(vol, "asymmetry")
-        col.prop(vol, "transmission_color")
-
-        col = split.column()
-        sub = col.column(align=True)
-        sub.prop(vol, "emission")
-        sub.prop(vol, "emission_color", text="")
-        sub = col.column(align=True)
-        sub.prop(vol, "reflection")
-        sub.prop(vol, "reflection_color", text="")
-
-
-class MATERIAL_PT_volume_lighting(VolumeButtonsPanel, Panel):
-    bl_label = "Lighting"
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
-
-    def draw(self, context):
-        layout = self.layout
-
-        vol = context.material.volume  # don't use node material
-
-        split = layout.split()
-
-        col = split.column()
-        col.prop(vol, "light_method", text="")
-
-        col = split.column()
-
-        if vol.light_method == 'SHADED':
-            col.prop(vol, "use_external_shadows")
-            col.prop(vol, "use_light_cache")
-            sub = col.column()
-            sub.active = vol.use_light_cache
-            sub.prop(vol, "cache_resolution")
-        elif vol.light_method in {'MULTIPLE_SCATTERING', 'SHADED_PLUS_MULTIPLE_SCATTERING'}:
-            sub = col.column()
-            sub.enabled = True
-            sub.active = False
-            sub.label("Light Cache Enabled")
-            col.prop(vol, "cache_resolution")
-
-            sub = col.column(align=True)
-            sub.prop(vol, "ms_diffusion")
-            sub.prop(vol, "ms_spread")
-            sub.prop(vol, "ms_intensity")
-
-
-class MATERIAL_PT_volume_transp(VolumeButtonsPanel, Panel):
-    bl_label = "Transparency"
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
-
-    @classmethod
-    def poll(cls, context):
-        mat = context.material
-        return mat and simple_material(mat) and (mat.type == 'VOLUME')
-
-    def draw(self, context):
-        layout = self.layout
-
-        mat = context.material  # don't use node material
-
-        layout.row().prop(mat, "transparency_method", expand=True)
-
-
-class MATERIAL_PT_volume_integration(VolumeButtonsPanel, Panel):
-    bl_label = "Integration"
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
-
-    def draw(self, context):
-        layout = self.layout
-
-        vol = context.material.volume  # don't use node material
-
-        split = layout.split()
-
-        col = split.column()
-        col.label(text="Step Calculation:")
-        col.prop(vol, "step_method", text="")
-        col = col.column(align=True)
-        col.prop(vol, "step_size")
-
-        col = split.column()
-        col.label()
-        col.prop(vol, "depth_threshold")
-
-
-class MATERIAL_PT_volume_options(VolumeButtonsPanel, Panel):
-    bl_label = "Options"
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
-    bl_options = {'DEFAULT_CLOSED'}
-
-    @classmethod
-    def poll(cls, context):
-        mat = context.material
-        return check_material(mat) and (mat.type == 'VOLUME')
-
-    def draw(self, context):
-        layout = self.layout
-
-        mat = active_node_mat(context.material)
-
-        split = layout.split()
-
-        col = split.column()
-        if simple_material(context.material):
-            col.prop(mat, "use_raytrace")
-            col.prop(mat, "use_full_oversampling")
-        col.prop(mat, "use_mist")
-
-        col = split.column()
-        col.label(text="Light Group:")
-        col.prop(mat, "light_group", text="")
-        row = col.row()
-        row.active = bool(mat.light_group)
-        row.prop(mat, "use_light_group_exclusive", text="Exclusive")
-
-
 class MATERIAL_PT_custom_props(MaterialButtonsPanel, PropertyPanel, Panel):
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
     _context_path = "material"
     _property_type = bpy.types.Material
 
 
 classes = (
-    MATERIAL_MT_sss_presets,
     MATERIAL_MT_specials,
     MATERIAL_UL_matslots,
     MATERIAL_PT_context_material,
@@ -1025,21 +601,8 @@ classes = (
     MATERIAL_PT_shading,
     MATERIAL_PT_transp,
     MATERIAL_PT_mirror,
-    MATERIAL_PT_sss,
-    MATERIAL_PT_halo,
-    MATERIAL_PT_flare,
-    MATERIAL_PT_game_settings,
     MATERIAL_PT_physics,
-    MATERIAL_PT_strand,
     MATERIAL_PT_options,
-    MATERIAL_PT_shadow,
-    MATERIAL_PT_transp_game,
-    MATERIAL_PT_volume_density,
-    MATERIAL_PT_volume_shading,
-    MATERIAL_PT_volume_lighting,
-    MATERIAL_PT_volume_transp,
-    MATERIAL_PT_volume_integration,
-    MATERIAL_PT_volume_options,
     MATERIAL_PT_custom_props,
 )
 
