@@ -331,6 +331,10 @@ class VIEW3D_MT_view(Menu):
 
         layout.separator()
 
+        layout.operator("view3d.layers", text="Show All Layers").nr = 0
+
+        layout.separator()
+
         layout.operator("screen.area_dupli")
         layout.operator("screen.region_quadview")
         layout.operator("screen.screen_full_area")
