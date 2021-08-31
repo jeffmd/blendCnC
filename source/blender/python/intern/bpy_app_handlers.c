@@ -40,15 +40,6 @@ void bpy_app_generic_callback(struct Main *main, struct ID *id, void *arg);
 static PyTypeObject BlenderAppCbType;
 
 static PyStructSequence_Field app_cb_info_fields[] = {
-	{(char *)"frame_change_pre",  (char *)"on frame change for playback and rendering (before)"},
-	{(char *)"frame_change_post", (char *)"on frame change for playback and rendering (after)"},
-	{(char *)"render_pre",        (char *)"on render (before)"},
-	{(char *)"render_post",       (char *)"on render (after)"},
-	{(char *)"render_write",      (char *)"on writing a render frame (directly after the frame is written)"},
-	{(char *)"render_stats",      (char *)"on printing render statistics"},
-	{(char *)"render_init",       (char *)"on initialization of a render job"},
-	{(char *)"render_complete",   (char *)"on completion of render job"},
-	{(char *)"render_cancel",     (char *)"on canceling a render job"},
 	{(char *)"load_pre",          (char *)"on loading a new blend file (before)"},
 	{(char *)"load_post",         (char *)"on loading a new blend file (after)"},
 	{(char *)"save_pre",          (char *)"on saving a blend file (before)"},
