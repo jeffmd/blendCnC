@@ -34,8 +34,7 @@ class PHYSICS_PT_rigid_body_constraint(PHYSICS_PT_rigidbody_constraint_panel, Pa
     @classmethod
     def poll(cls, context):
         ob = context.object
-        rd = context.scene.render
-        return (ob and ob.rigid_body_constraint and rd.engine in cls.COMPAT_ENGINES)
+        return (ob and ob.rigid_body_constraint)
 
     def draw(self, context):
         layout = self.layout
@@ -43,10 +42,7 @@ class PHYSICS_PT_rigid_body_constraint(PHYSICS_PT_rigidbody_constraint_panel, Pa
         ob = context.object
         rbc = ob.rigid_body_constraint
 
-        layout.prop(rbc, "type")
-
         row = layout.row()
-        row.prop(rbc, "enabled")
         row.prop(rbc, "disable_collisions")
 
         layout.prop(rbc, "object1")

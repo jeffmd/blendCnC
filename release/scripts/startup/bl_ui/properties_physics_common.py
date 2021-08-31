@@ -30,8 +30,7 @@ class PhysicButtonsPanel:
 
     @classmethod
     def poll(cls, context):
-        rd = context.scene.render
-        return (context.object) and rd.engine in cls.COMPAT_ENGINES
+        return (context.object)
 
 
 def physics_add(self, layout, md, name, type, typeicon, toggles):
@@ -57,7 +56,6 @@ def physics_add_special(self, layout, data, name, addop, removeop, typeicon):
 class PHYSICS_PT_add(PhysicButtonsPanel, Panel):
     bl_label = ""
     bl_options = {'HIDE_HEADER'}
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
 
     def draw(self, context):
         obj = context.object
@@ -67,25 +65,13 @@ class PHYSICS_PT_add(PhysicButtonsPanel, Panel):
         split = layout.split()
         col = split.column()
 
-        if obj.field.type == 'NONE':
-            col.operator("object.forcefield_toggle", text="Force Field", icon='FORCE_FORCE')
-        else:
-            col.operator("object.forcefield_toggle", text="Force Field", icon='X')
 
         if obj.type == 'MESH':
             physics_add(self, col, context.collision, "Collision", 'COLLISION', 'MOD_PHYSICS', False)
-            physics_add(self, col, context.cloth, "Cloth", 'CLOTH', 'MOD_CLOTH', True)
-            physics_add(self, col, context.dynamic_paint, "Dynamic Paint", 'DYNAMIC_PAINT', 'MOD_DYNAMICPAINT', True)
 
         col = split.column()
 
-        if obj.type in {'MESH', 'LATTICE', 'CURVE', 'SURFACE', 'FONT'}:
-            physics_add(self, col, context.soft_body, "Soft Body", 'SOFT_BODY', 'MOD_SOFT', True)
-
         if obj.type == 'MESH':
-            physics_add(self, col, context.fluid, "Fluid", 'FLUID_SIMULATION', 'MOD_FLUIDSIM', True)
-            physics_add(self, col, context.smoke, "Smoke", 'SMOKE', 'MOD_SMOKE', True)
-
             physics_add_special(self, col, obj.rigid_body, "Rigid Body",
                                 "rigidbody.object_add",
                                 "rigidbody.object_remove",
