@@ -33,6 +33,7 @@ _modules = [
     "properties_data_lamp",
     "properties_data_mesh",
     "properties_data_modifier",
+    "properties_cnc",
     "properties_material",
     "properties_object",
     "properties_physics_common",
