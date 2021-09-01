@@ -235,8 +235,6 @@ if(WITH_X11)
 endif()
 
 # Misc...
-option(WITH_HEADLESS      "Build without graphical support (renderfarm, server mode only)" OFF)
-mark_as_advanced(WITH_HEADLESS)
 
 option(WITH_AUDASPACE    "Build with blenders audio library (only disable if you know what you're doing!)" OFF)
 option(WITH_SYSTEM_AUDASPACE "Build with external audaspace library installed on the system (only enable if you know what you're doing!)" OFF)
@@ -557,16 +555,6 @@ endif()
 # don't store paths to libs for portable distribution
 if(WITH_INSTALL_PORTABLE)
 	set(CMAKE_SKIP_BUILD_RPATH TRUE)
-endif()
-
-if(WITH_GHOST_SDL OR WITH_HEADLESS)
-	set(WITH_X11           OFF)
-	set(WITH_X11_XINPUT    OFF)
-	set(WITH_X11_XF86VMODE OFF)
-	set(WITH_X11_XFIXES    OFF)
-	set(WITH_X11_ALPHA     OFF)
-	set(WITH_GHOST_XDND    OFF)
-	set(WITH_INPUT_IME     OFF)
 endif()
 
 if(WITH_CPU_SSE)

@@ -55,12 +55,7 @@ void bl_locale_set(const char *locale)
 			_locale = gen(locale);
 		}
 		else {
-#if defined(__APPLE__) && !defined(WITH_HEADLESS) && !defined(WITH_GHOST_SDL)
-			std::string locale_osx = osx_user_locale() + std::string(".UTF-8");
-			_locale = gen(locale_osx.c_str());
-#else
 			_locale = gen("");
-#endif
 		}
 		std::locale::global(_locale);
 		// Note: boost always uses "C" LC_NUMERIC by default!

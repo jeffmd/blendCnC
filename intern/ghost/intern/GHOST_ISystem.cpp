@@ -32,18 +32,6 @@
 
 #ifdef WITH_X11
 #  include "GHOST_SystemX11.h"
-#else
-#  ifdef WITH_HEADLESS
-#    include "GHOST_SystemNULL.h"
-#  elif defined(WITH_GHOST_SDL)
-#    include "GHOST_SystemSDL.h"
-#  elif defined(WIN32)
-#    include "GHOST_SystemWin32.h"
-#  else
-#    ifdef __APPLE__
-#      include "GHOST_SystemCocoa.h"
-#    endif
-#  endif
 #endif
 
 GHOST_ISystem *GHOST_ISystem::m_system = NULL;
@@ -55,18 +43,6 @@ GHOST_TSuccess GHOST_ISystem::createSystem()
 	if (!m_system) {
 #ifdef WITH_X11
 		m_system = new GHOST_SystemX11();
-#else
-#  ifdef WITH_HEADLESS
-		m_system = new GHOST_SystemNULL();
-#  elif defined(WITH_GHOST_SDL)
-		m_system = new GHOST_SystemSDL();
-#  elif defined(WIN32)
-		m_system = new GHOST_SystemWin32();
-#  else
-#    ifdef __APPLE__
-		m_system = new GHOST_SystemCocoa();
-#    endif
-#  endif
 #endif
 		success = m_system != NULL ? GHOST_kSuccess : GHOST_kFailure;
 	}

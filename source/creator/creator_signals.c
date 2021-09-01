@@ -63,7 +63,6 @@ static void sig_handle_fpe(int UNUSED(sig))
 #endif
 
 /* handling ctrl-c event in console */
-#if !defined(WITH_HEADLESS)
 static void sig_handle_blender_esc(int sig)
 {
 	static int count = 0;
@@ -79,7 +78,6 @@ static void sig_handle_blender_esc(int sig)
 		count++;
 	}
 }
-#endif
 
 static void sig_handle_crash_backtrace(FILE *fp)
 {
@@ -189,9 +187,7 @@ void main_signal_setup_background(void)
 	/* for all platforms, even windos has it! */
 	BLI_assert(G.background);
 
-#if !defined(WITH_HEADLESS)
 	signal(SIGINT, sig_handle_blender_esc);  /* ctrl c out bg render */
-#endif
 }
 
 

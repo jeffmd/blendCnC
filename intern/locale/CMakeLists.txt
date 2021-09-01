@@ -32,24 +32,9 @@ set(INC_SYS
 
 set(SRC
 	boost_locale_wrapper.cpp
-
 	boost_locale_wrapper.h
 )
 
-if(APPLE)
-	# Cocoa code to read the locale on OSX
-	list(APPEND SRC
-		osx_user_locale.mm
-	)
-endif()
-
-if(WITH_HEADLESS)
-	add_definitions(-DWITH_HEADLESS)
-endif()
-
-if(WITH_GHOST_SDL)
-	add_definitions(-DWITH_GHOST_SDL)
-endif()
 
 if(WITH_INTERNATIONAL)
 	list(APPEND INC_SYS

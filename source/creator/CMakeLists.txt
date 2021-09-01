@@ -56,10 +56,6 @@ if(WITH_PYTHON)
 	endif()
 endif()
 
-if(WITH_HEADLESS)
-	add_definitions(-DWITH_HEADLESS)
-endif()
-
 if(WITH_BINRELOC)
 	add_definitions(-DWITH_BINRELOC)
 	blender_include_dirs(${BINRELOC_INCLUDE_DIRS})
