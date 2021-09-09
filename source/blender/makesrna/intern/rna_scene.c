@@ -390,6 +390,13 @@ static void rna_Scene_set_set(PointerRNA *ptr, PointerRNA value)
 	scene->set = set;
 }
 
+static void rna_Scene_layer_set(PointerRNA *ptr, const bool *values)
+{
+	Scene *scene = (Scene *)ptr->data;
+
+	scene->lay = ED_view3d_scene_layer_set(scene->lay, values, &scene->layact);
+}
+
 static int rna_Scene_active_layer_get(PointerRNA *ptr)
 {
 	Scene *scene = (Scene *)ptr->data;
@@ -402,6 +409,11 @@ static void rna_Scene_view3d_update(Main *bmain, Scene *UNUSED(scene_unused), Po
 	Scene *scene = (Scene *)ptr->data;
 
 	BKE_screen_view3d_main_sync(&bmain->screen, scene);
+}
+
+static void rna_Scene_layer_update(Main *bmain, Scene *scene, PointerRNA *ptr)
+{
+	rna_Scene_view3d_update(bmain, scene, ptr);
 }
 
 static void rna_Scene_glsl_update(Main *UNUSED(bmain), Scene *UNUSED(scene), PointerRNA *ptr)
@@ -987,6 +999,15 @@ void RNA_def_scene(BlenderRNA *brna)
 	RNA_def_property_ui_text(prop, "Objects", "");
 	RNA_def_property_collection_funcs(prop, NULL, NULL, NULL, "rna_Scene_objects_get", NULL, NULL, NULL, NULL);
 	rna_def_scene_objects(brna, prop);
+
+	/* Layers */
+	prop = RNA_def_property(srna, "layers", PROP_BOOLEAN, PROP_LAYER_MEMBER);
+	RNA_def_property_clear_flag(prop, PROP_ANIMATABLE);
+	RNA_def_property_boolean_sdna(prop, NULL, "lay", 1);
+	RNA_def_property_array(prop, 20);
+	RNA_def_property_boolean_funcs(prop, NULL, "rna_Scene_layer_set");
+	RNA_def_property_ui_text(prop, "Layers", "Visible layers - Shift-Click/Drag to select multiple layers");
+	RNA_def_property_update(prop, NC_SCENE | ND_LAYER, "rna_Scene_layer_update");
 
 	/* active layer */
 	prop = RNA_def_property(srna, "active_layer", PROP_INT, PROP_NONE);
