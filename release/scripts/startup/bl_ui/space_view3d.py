@@ -62,9 +62,7 @@ class VIEW3D_HT_header(Header):
                     row.prop(tool_settings, "proportional_edit_falloff", icon_only=True)
 
         # Snap
-        show_snap = False
-        if obj is None:
-            show_snap = True
+        show_snap = True
 
         if show_snap:
             snap_element = tool_settings.snap_element
