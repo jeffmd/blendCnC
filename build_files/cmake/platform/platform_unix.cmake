@@ -105,99 +105,11 @@ if(WITH_IMAGE_TIFF)
 	endif()
 endif()
 
-# Audio IO
-if(WITH_SYSTEM_AUDASPACE)
-	find_package_wrapper(Audaspace)
-	if(NOT AUDASPACE_FOUND OR NOT AUDASPACE_C_FOUND)
-		message(FATAL_ERROR "Audaspace external library not found!")
-	endif()
-endif()
-
-if(WITH_OPENAL)
-	find_package_wrapper(OpenAL)
-	if(NOT OPENAL_FOUND)
-		set(WITH_OPENAL OFF)
-	endif()
-endif()
-
-if(WITH_SDL)
-	if(WITH_SDL_DYNLOAD)
-		set(SDL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/extern/sdlew/include/SDL2")
-		set(SDL_LIBRARY)
-	else()
-		find_package_wrapper(SDL2)
-		if(SDL2_FOUND)
-			# Use same names for both versions of SDL until we move to 2.x.
-			set(SDL_INCLUDE_DIR "${SDL2_INCLUDE_DIR}")
-			set(SDL_LIBRARY "${SDL2_LIBRARY}")
-			set(SDL_FOUND "${SDL2_FOUND}")
-		else()
-			find_package_wrapper(SDL)
-		endif()
-		mark_as_advanced(
-			SDL_INCLUDE_DIR
-			SDL_LIBRARY
-		)
-		# unset(SDLMAIN_LIBRARY CACHE)
-		if(NOT SDL_FOUND)
-			set(WITH_SDL OFF)
-		endif()
-	endif()
-endif()
-
-if(WITH_JACK)
-	find_package_wrapper(Jack)
-	if(NOT JACK_FOUND)
-		set(WITH_JACK OFF)
-	endif()
-endif()
-
-# Codecs
-if(WITH_CODEC_SNDFILE)
-	find_package_wrapper(SndFile)
-	if(NOT SNDFILE_FOUND)
-		set(WITH_CODEC_SNDFILE OFF)
-	endif()
-endif()
-
-if(WITH_CODEC_FFMPEG)
-	if(EXISTS ${LIBDIR})
-		# For precompiled lib directory, all ffmpeg dependencies are in the same folder
-		file(GLOB ffmpeg_libs ${LIBDIR}/ffmpeg/lib/*.a ${LIBDIR}/sndfile/lib/*.a)
-		set(FFMPEG ${LIBDIR}/ffmpeg CACHE PATH "FFMPEG Directory")
-		set(FFMPEG_LIBRARIES ${ffmpeg_libs} ${ffmpeg_libs} CACHE STRING "FFMPEG Libraries")
-	else()
-		set(FFMPEG /usr CACHE PATH "FFMPEG Directory")
-		set(FFMPEG_LIBRARIES avformat avcodec avutil avdevice swscale CACHE STRING "FFMPEG Libraries")
-	endif()
-
-	mark_as_advanced(FFMPEG)
-
-	# lame, but until we have proper find module for ffmpeg
-	set(FFMPEG_INCLUDE_DIRS ${FFMPEG}/include)
-	if(EXISTS "${FFMPEG}/include/ffmpeg/")
-		list(APPEND FFMPEG_INCLUDE_DIRS "${FFMPEG}/include/ffmpeg")
-	endif()
-	# end lameness
-
-	mark_as_advanced(FFMPEG_LIBRARIES)
-	set(FFMPEG_LIBPATH ${FFMPEG}/lib)
-endif()
 
 if(WITH_FFTW3)
 	find_package_wrapper(Fftw3)
 	if(NOT FFTW3_FOUND)
 		set(WITH_FFTW3 OFF)
-	endif()
-endif()
-
-if(WITH_OPENCOLLADA)
-	find_package_wrapper(OpenCOLLADA)
-	if(OPENCOLLADA_FOUND)
-		find_package_wrapper(XML2)
-		find_package_wrapper(PCRE)
-	else()
-		set(WITH_OPENCOLLADA OFF)
 	endif()
 endif()
 
@@ -208,66 +120,6 @@ if(WITH_MEM_JEMALLOC)
 	endif()
 endif()
 
-if(WITH_INPUT_NDOF)
-	find_package_wrapper(Spacenav)
-	if(SPACENAV_FOUND)
-		# use generic names within blenders buildsystem.
-		set(NDOF_INCLUDE_DIRS ${SPACENAV_INCLUDE_DIRS})
-		set(NDOF_LIBRARIES ${SPACENAV_LIBRARIES})
-	else()
-		set(WITH_INPUT_NDOF OFF)
-	endif()
-endif()
-
-if(WITH_CYCLES_OSL)
-	set(CYCLES_OSL ${LIBDIR}/osl CACHE PATH "Path to OpenShadingLanguage installation")
-	if(NOT OSL_ROOT)
-		set(OSL_ROOT ${CYCLES_OSL})
-	endif()
-	find_package_wrapper(OpenShadingLanguage)
-	if(OSL_FOUND)
-		if(${OSL_LIBRARY_VERSION_MAJOR} EQUAL "1" AND ${OSL_LIBRARY_VERSION_MINOR} LESS "6")
-			# Note: --whole-archive is needed to force loading of all symbols in liboslexec,
-			# otherwise LLVM is missing the osl_allocate_closure_component function
-			set(OSL_LIBRARIES
-				${OSL_OSLCOMP_LIBRARY}
-				-Wl,--whole-archive ${OSL_OSLEXEC_LIBRARY}
-				-Wl,--no-whole-archive ${OSL_OSLQUERY_LIBRARY}
-			)
-		endif()
-	else()
-		message(STATUS "OSL not found, disabling it from Cycles")
-		set(WITH_CYCLES_OSL OFF)
-	endif()
-endif()
-
-if(WITH_OPENVDB)
-	find_package_wrapper(OpenVDB)
-	find_package_wrapper(TBB)
-	find_package_wrapper(Blosc)
-	if(NOT OPENVDB_FOUND OR NOT TBB_FOUND)
-		set(WITH_OPENVDB OFF)
-		set(WITH_OPENVDB_BLOSC OFF)
-		message(STATUS "OpenVDB not found, disabling it")
-	elseif(NOT BLOSC_FOUND)
-		set(WITH_OPENVDB_BLOSC OFF)
-		message(STATUS "Blosc not found, disabling it")
-	endif()
-endif()
-
-if(WITH_ALEMBIC)
-	find_package_wrapper(Alembic)
-
-	if(WITH_ALEMBIC_HDF5)
-		set(HDF5_ROOT_DIR ${LIBDIR}/hdf5)
-		find_package_wrapper(HDF5)
-	endif()
-
-	if(NOT ALEMBIC_FOUND OR (WITH_ALEMBIC_HDF5 AND NOT HDF5_FOUND))
-		set(WITH_ALEMBIC OFF)
-		set(WITH_ALEMBIC_HDF5 OFF)
-	endif()
-endif()
 
 if(WITH_BOOST)
 	# uses in build instructions to override include and library variables
@@ -359,10 +211,6 @@ if(WITH_OPENCOLORIO)
 	endif()
 endif()
 
-if(WITH_CYCLES_EMBREE)
-	find_package(Embree 3.2.4 REQUIRED)
-endif()
-
 if(WITH_LLVM)
 	if(EXISTS ${LIBDIR})
 		set(LLVM_STATIC ON)
@@ -383,23 +231,11 @@ if(WITH_LLVM)
 	endif()
 endif()
 
-if(WITH_LLVM OR WITH_SDL_DYNLOAD)
+if(WITH_LLVM)
 	# Fix for conflict with Mesa llvmpipe
 	set(PLATFORM_LINKFLAGS
 		"${PLATFORM_LINKFLAGS} -Wl,--version-script='${CMAKE_SOURCE_DIR}/source/creator/blender.map'"
 	)
-endif()
-
-if(WITH_OPENSUBDIV)
-	find_package_wrapper(OpenSubdiv)
-
-	set(OPENSUBDIV_LIBRARIES ${OPENSUBDIV_LIBRARIES})
-	set(OPENSUBDIV_LIBPATH)  # TODO, remove and reference the absolute path everywhere
-
-	if(NOT OPENSUBDIV_FOUND)
-		set(WITH_OPENSUBDIV OFF)
-		message(STATUS "OpenSubdiv not found")
-	endif()
 endif()
 
 # OpenSuse needs lutil, ArchLinux not, for now keep, can avoid by using --as-needed

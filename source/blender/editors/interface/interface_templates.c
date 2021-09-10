@@ -3349,21 +3349,6 @@ void uiTemplateRunningJobs(uiLayout *layout, bContext *C)
 				icon = ICON_SCENE;
 				break;
 			}
-			else if (WM_jobs_test(wm, scene, WM_JOB_TYPE_COMPOSITE)) {
-				handle_event = B_STOPCOMPO;
-				icon = ICON_RENDERLAYERS;
-				break;
-			}
-			else if (WM_jobs_test(wm, scene, WM_JOB_TYPE_DPAINT_BAKE)) {
-				handle_event = B_STOPOTHER;
-				icon = ICON_MOD_DYNAMICPAINT;
-				break;
-			}
-			else if (WM_jobs_test(wm, scene, WM_JOB_TYPE_POINTCACHE)) {
-				handle_event = B_STOPOTHER;
-				icon = ICON_PHYSICS;
-				break;
-			}
 			else if (WM_jobs_test(wm, scene, WM_JOB_TYPE_ANY)) {
 				handle_event = B_STOPOTHER;
 				icon = ICON_NONE;

@@ -33,7 +33,6 @@ endif()
 
 # Default to only build Blender, not the player
 set(WITH_BLENDER             ON  CACHE BOOL "" FORCE)
-set(WITH_PLAYER              OFF CACHE BOOL "" FORCE)
 
 # ######## Linux-specific build options ########
 # Options which are specific to Linux-only platforms
@@ -41,8 +40,6 @@ set(WITH_DOC_MANPAGE         OFF CACHE BOOL "" FORCE)
 
 # ######## Official release-specific build options ########
 # Options which are specific to Linux release builds only
-set(WITH_JACK_DYNLOAD        ON  CACHE BOOL "" FORCE)
-set(WITH_SDL_DYNLOAD         ON  CACHE BOOL "" FORCE)
 set(WITH_SYSTEM_GLEW         OFF CACHE BOOL "" FORCE)
 
 set(WITH_OPENMP_STATIC       ON  CACHE BOOL "" FORCE)
@@ -65,37 +62,6 @@ set(LLVM_STATIC              ON  CACHE BOOL "" FORCE)
 set(BOOST_ROOT               "/opt/lib/boost" CACHE STRING "" FORCE)
 set(Boost_USE_STATIC_LIBS    ON CACHE BOOL "" FORCE)
 
-# FFmpeg libraries
-set(FFMPEG                   "/opt/lib/ffmpeg" CACHE STRING "" FORCE)
-set(FFMPEG_LIBRARIES
-	avdevice avformat avcodec avutil avfilter swscale swresample
-	/usr/lib${MULTILIB}/libxvidcore.a
-	/usr/lib${MULTILIB}/libx264.a
-	/usr/lib${MULTILIB}/libmp3lame.a
-	/usr/lib${MULTILIB}/libvpx.a
-	/usr/lib${MULTILIB}/libvorbis.a
-	/usr/lib${MULTILIB}/libogg.a
-	/usr/lib${MULTILIB}/libvorbisenc.a
-	/usr/lib${MULTILIB}/libtheora.a
-	/usr/lib${MULTILIB}/libschroedinger-1.0.a
-	/usr/lib${MULTILIB}/liborc-0.4.a
-	CACHE STRING "" FORCE
-)
-
-# SndFile libraries
-set(SNDFILE_LIBRARY          "/usr/lib${MULTILIB}/libsndfile.a;/usr/lib${MULTILIB}/libFLAC.a" CACHE STRING "" FORCE)
-
-# OpenAL libraries
-set(OPENAL_ROOT_DIR           "/opt/lib/openal" CACHE STRING "" FORCE)
-set(OPENAL_INCLUDE_DIR        "${OPENAL_ROOT_DIR}/include/AL" CACHE STRING "" FORCE)
-set(OPENAL_LIBRARY
-	${OPENAL_ROOT_DIR}/lib/libopenal.a
-	${OPENAL_ROOT_DIR}/lib/libcommon.a
-	CACHE STRING "" FORCE
-)
-
-# OpenCollada libraries
-set(OPENCOLLADA_UTF_LIBRARY   ""                              CACHE STRING "" FORCE)
 set(PCRE_INCLUDE_DIR          "/usr/include"                  CACHE STRING "" FORCE)
 set(PCRE_LIBRARY              "/usr/lib${MULTILIB}/libpcre.a" CACHE STRING "" FORCE)
 set(XML2_INCLUDE_DIR          "/usr/include"                  CACHE STRING "" FORCE)
@@ -124,11 +90,6 @@ if(GLIBC EQUAL "2.19")
 	)
 endif()
 
-# OpenSubdiv libraries
-set(OPENSUBDIV_ROOT_DIR "/opt/lib/opensubdiv" CACHE STRING "" FORCE)
-set(OPENSUBDIV_OSDCPU_LIBRARY "${OPENSUBDIV_ROOT_DIR}/lib/libosdCPU.a" CACHE STRING "" FORCE)
-set(OPENSUBDIV_OSDGPU_LIBRARY "${OPENSUBDIV_ROOT_DIR}/lib/libosdGPU.a" CACHE STRING "" FORCE)
-
 # OpenEXR libraries
 set(OPENEXR_ROOT_DIR          "/opt/lib/openexr"                    CACHE STRING "" FORCE)
 set(OPENEXR_HALF_LIBRARY      "/opt/lib/openexr/lib/libHalf.a"      CACHE STRING "" FORCE)
@@ -149,12 +110,6 @@ set(JPEG_LIBRARY        "/usr/lib${MULTILIB}/libjpeg.a"  CACHE STRING "" FORCE)
 set(PNG_LIBRARY         "/usr/lib${MULTILIB}/libpng.a"   CACHE STRING "" FORCE)
 set(TIFF_LIBRARY        "/usr/lib${MULTILIB}/libtiff.a"  CACHE STRING "" FORCE)
 set(ZLIB_LIBRARY        "/usr/lib${MULTILIB}/libz.a"     CACHE STRING "" FORCE)
-
-# OpenVDB
-set(OPENVDB_LIBRARY
-	/opt/lib/openvdb/lib/libopenvdb.a
-	CACHE BOOL "" FORCE
-)
 
 set(BLOSC_LIBRARY
 	/opt/lib/blosc/lib/libblosc.a

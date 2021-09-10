@@ -215,16 +215,11 @@ mark_as_advanced(CPACK_OVERRIDE_PACKAGENAME)
 mark_as_advanced(BUILDINFO_OVERRIDE_DATE)
 mark_as_advanced(BUILDINFO_OVERRIDE_TIME)
 
-option(WITH_IK_ITASC      "Enable ITASC IK solver (only disable for development & for incompatible C++ compilers)" OFF)
-option(WITH_IK_SOLVER     "Enable Legacy IK solver (only disable for development)" OFF)
 option(WITH_FFTW3         "Enable FFTW3 support (Used for smoke, ocean sim, and audio effects)" OFF)
 option(WITH_BULLET        "Enable Bullet (Physics Engine)" ON)
 option(WITH_SYSTEM_BULLET "Use the systems bullet library (currently unsupported due to missing features in upstream!)" )
 mark_as_advanced(WITH_SYSTEM_BULLET)
 option(WITH_OPENCOLORIO   "Enable OpenColorIO color management" ${_init_OPENCOLORIO})
-
-# Compositor
-option(WITH_COMPOSITOR         "Enable the tile based nodal compositor" OFF)
 
 # GHOST Windowing Library Options
 option(WITH_GHOST_DEBUG   "Enable debugging output for the GHOST library" OFF)
@@ -236,14 +231,6 @@ endif()
 
 # Misc...
 
-option(WITH_AUDASPACE    "Build with blenders audio library (only disable if you know what you're doing!)" OFF)
-option(WITH_SYSTEM_AUDASPACE "Build with external audaspace library installed on the system (only enable if you know what you're doing!)" OFF)
-mark_as_advanced(WITH_AUDASPACE)
-mark_as_advanced(WITH_SYSTEM_AUDASPACE)
-
-if(NOT WITH_AUDASPACE)
-	set(WITH_SYSTEM_AUDASPACE OFF)
-endif()
 
 option(WITH_OPENMP        "Enable OpenMP (has to be supported by the compiler)" ON)
 if(UNIX AND NOT APPLE)
@@ -274,9 +261,7 @@ endif()
 
 
 # Modifiers
-option(WITH_MOD_FLUID           "Enable Elbeem Modifier (Fluid Simulation)" OFF)
 option(WITH_MOD_REMESH          "Enable Remesh Modifier" OFF)
-option(WITH_MOD_OCEANSIM        "Enable Ocean Modifier" OFF)
 
 # Image format support
 option(WITH_OPENIMAGEIO         "Enable OpenImageIO Support (http://www.openimageio.org)" ON)
@@ -324,8 +309,6 @@ mark_as_advanced(WITH_SYSTEM_GLOG)
 if(WIN32)
 	option(WITH_INPUT_IME "Enable Input Method Editor (IME) for complex Asian character input" ON)
 endif()
-option(WITH_INPUT_NDOF "Enable NDOF input devices (SpaceNavigator and friends)" ${_init_INPUT_NDOF})
-option(WITH_RAYOPTIMIZATION	"Enable use of SIMD (SSE) optimizations for the raytracer" ON)
 if(UNIX AND NOT APPLE)
 	option(WITH_INSTALL_PORTABLE "Install redistributeable runtime, otherwise install into CMAKE_INSTALL_PREFIX" ON)
 	option(WITH_STATIC_LIBS "Try to link with static libraries, as much as possible, to make blender more portable across distributions" OFF)
@@ -544,7 +527,7 @@ if(NOT WITH_BLENDER AND NOT WITH_PLAYER AND NOT WITH_CYCLES_STANDALONE)
 	)
 endif()
 
-# enable boost for cycles, audaspace or i18n
+# enable boost for cycles, or i18n
 # otherwise if the user disabled
 # auto enable openimageio linking dependencies
 if(WITH_OPENIMAGEIO)
@@ -726,10 +709,6 @@ endif()
 
 #-----------------------------------------------------------------------------
 # Common.
-
-if(NOT WITH_FFTW3 AND WITH_MOD_OCEANSIM)
-	message(FATAL_ERROR "WITH_MOD_OCEANSIM requires WITH_FFTW3 to be ON")
-endif()
 
 if(WITH_INTERNATIONAL)
 	if(NOT WITH_BOOST)
@@ -1471,13 +1450,11 @@ if(FIRST_RUN)
 	info_cfg_option(WITH_BULLET)
 	info_cfg_option(WITH_FFTW3)
 	info_cfg_option(WITH_INTERNATIONAL)
-	info_cfg_option(WITH_INPUT_NDOF)
 	info_cfg_option(WITH_OPENCOLORIO)
 
 	info_cfg_text("Compiler Options:")
 	info_cfg_option(WITH_BUILDINFO)
 	info_cfg_option(WITH_OPENMP)
-	info_cfg_option(WITH_RAYOPTIMIZATION)
 
 	info_cfg_text("System Options:")
 	info_cfg_option(WITH_INSTALL_PORTABLE)
@@ -1512,8 +1489,6 @@ if(FIRST_RUN)
 
 	info_cfg_text("Modifiers:")
 	info_cfg_option(WITH_MOD_REMESH)
-	info_cfg_option(WITH_MOD_FLUID)
-	info_cfg_option(WITH_MOD_OCEANSIM)
 
 	info_cfg_text("OpenGL:")
 	info_cfg_option(WITH_GLEW_ES)
