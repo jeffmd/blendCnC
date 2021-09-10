@@ -107,6 +107,8 @@ class VIEW3D_MT_editor_menus(Menu):
         layout.menu("VIEW3D_MT_view")
 
         # Select Menu
+        layout.menu("VIEW3D_MT_select_%s" % mode_string.lower())
+
         if mode_string == 'OBJECT':
             layout.menu("INFO_MT_add", text="Add")
         elif mode_string == 'EDIT_MESH':
