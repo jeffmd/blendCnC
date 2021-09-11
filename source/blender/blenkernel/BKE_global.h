@@ -132,28 +132,8 @@ enum {
 #define G_FILE_COMPRESS          (1 << 1)
 #define G_FILE_AUTOPLAY          (1 << 2)
 
-#ifdef DNA_DEPRECATED_ALLOW
-#define G_FILE_ENABLE_ALL_FRAMES (1 << 3)               /* deprecated */
-#define G_FILE_SHOW_DEBUG_PROPS  (1 << 4)               /* deprecated */
-#define G_FILE_SHOW_FRAMERATE    (1 << 5)               /* deprecated */
-/* #define G_FILE_SHOW_PROFILE   (1 << 6) */            /* deprecated */
-/* #define G_FILE_LOCK           (1 << 7) */            /* deprecated */
-/* #define G_FILE_SIGN           (1 << 8) */            /* deprecated */
-#endif  /* DNA_DEPRECATED_ALLOW */
-
 #define G_FILE_USERPREFS         (1 << 9)
 #define G_FILE_NO_UI             (1 << 10)
-#ifdef DNA_DEPRECATED_ALLOW
-/* #define G_FILE_DISPLAY_LISTS  (1 << 13) */           /* deprecated */
-#define G_FILE_SHOW_PHYSICS      (1 << 14)              /* deprecated */
-/* #define G_FILE_GLSL_NO_LIGHTS     (1 << 16) */       /* deprecated */
-#define G_FILE_GLSL_NO_SHADERS   (1 << 17)              /* deprecated */
-#define G_FILE_GLSL_NO_SHADOWS   (1 << 18)              /* deprecated */
-#define G_FILE_GLSL_NO_RAMPS     (1 << 19)              /* deprecated */
-#define G_FILE_GLSL_NO_NODES     (1 << 20)              /* deprecated */
-#define G_FILE_GLSL_NO_EXTRA_TEX (1 << 21)              /* deprecated */
-#define G_FILE_IGNORE_DEPRECATION_WARNINGS  (1 << 22)   /* deprecated */
-#endif  /* DNA_DEPRECATED_ALLOW */
 
 /* On read, use #FileGlobal.filename instead of the real location on-disk,
  * needed for recovering temp files so relative paths resolve */

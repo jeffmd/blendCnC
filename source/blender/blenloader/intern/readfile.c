@@ -36,16 +36,7 @@
 #include <ctype.h> /* for isdigit */
 
 #include "BLI_utildefines.h"
-#ifndef WIN32
-#  include <unistd.h> // for read close
-#else
-#  include <io.h> // for open close read
-#  include "winsock2.h"
-#  include "BLI_winstuff.h"
-#endif
-
-/* allow readfile to use deprecated functionality */
-#define DNA_DEPRECATED_ALLOW
+#include <unistd.h> // for read close
 
 #include "DNA_camera_types.h"
 #include "DNA_cachefile_types.h"
@@ -2080,8 +2071,6 @@ static void lib_link_lamp(FileData *fd, Main *main)
 				}
 			}
 
-			la->ipo = newlibadr_us(fd, la->id.lib, la->ipo); // XXX deprecated - old animation system
-
 			la->id.tag &= ~LIB_TAG_NEED_LINK;
 		}
 	}
@@ -2655,7 +2644,6 @@ static void direct_link_mesh(FileData *fd, Mesh *mesh)
 	mesh->mface = newdataadr(fd, mesh->mface);
 	mesh->mloop = newdataadr(fd, mesh->mloop);
 	mesh->mpoly = newdataadr(fd, mesh->mpoly);
-	mesh->tface = newdataadr(fd, mesh->tface);
 	mesh->mtface = newdataadr(fd, mesh->mtface);
 	mesh->mcol = newdataadr(fd, mesh->mcol);
 	mesh->dvert = newdataadr(fd, mesh->dvert);
@@ -2688,14 +2676,6 @@ static void direct_link_mesh(FileData *fd, Mesh *mesh)
 		BKE_mesh_cd_validate(mesh);
 	}
 
-	if ((fd->flags & FD_FLAGS_SWITCH_ENDIAN) && mesh->tface) {
-		TFace *tf = mesh->tface;
-		int i;
-
-		for (i = 0; i < mesh->totface; i++, tf++) {
-			BLI_endian_switch_uint32_array(tf->col, 4);
-		}
-	}
 }
 
 /* ************ READ OBJECT ***************** */
@@ -3298,21 +3278,10 @@ static void lib_link_screen(FileData *fd, Main *main)
 						case SPACE_VIEW3D:
 						{
 							View3D *v3d = (View3D *)sl;
-							BGpic *bgpic = NULL;
 
 							v3d->camera = newlibadr(fd, sc->id.lib, v3d->camera);
 							v3d->ob_centre = newlibadr(fd, sc->id.lib, v3d->ob_centre);
 
-							/* should be do_versions but not easy adding into the listbase */
-							if (v3d->bgpic) {
-								v3d->bgpic = newlibadr(fd, sc->id.lib, v3d->bgpic);
-								BLI_addtail(&v3d->bgpicbase, bgpic);
-								v3d->bgpic = NULL;
-							}
-
-							for (bgpic = v3d->bgpicbase.first; bgpic; bgpic = bgpic->next) {
-								bgpic->ima = newlibadr_us(fd, sc->id.lib, bgpic->ima);
-							}
 							if (v3d->localvd) {
 								v3d->localvd->camera = newlibadr(fd, sc->id.lib, v3d->localvd->camera);
 							}
@@ -3690,14 +3659,8 @@ void blo_do_versions_view3d_split_250(View3D *v3d, ListBase *regions)
 
 	for (ar = regions->first; ar; ar = ar->next) {
 		if (ar->regiontype == RGN_TYPE_WINDOW && ar->regiondata == NULL) {
-			RegionView3D *rv3d;
+			ar->regiondata = MEM_callocN(sizeof(RegionView3D), "region v3d patch");
 
-			rv3d = ar->regiondata = MEM_callocN(sizeof(RegionView3D), "region v3d patch");
-			rv3d->persp = (char)v3d->persp;
-			rv3d->view = (char)v3d->view;
-			rv3d->dist = v3d->dist;
-			copy_v3_v3(rv3d->ofs, v3d->ofs);
-			copy_qt_qt(rv3d->viewquat, v3d->viewquat);
 		}
 	}
 
@@ -3788,21 +3751,10 @@ static bool direct_link_screen(FileData *fd, bScreen *sc)
 
 			if (sl->spacetype == SPACE_VIEW3D) {
 				View3D *v3d = (View3D *)sl;
-				BGpic *bgpic;
 
 				v3d->flag |= V3D_INVALID_BACKBUF;
 
 				link_list(fd, &v3d->bgpicbase);
-
-				/* should be do_versions except this doesnt fit well there */
-				if (v3d->bgpic) {
-					bgpic = newdataadr(fd, v3d->bgpic);
-					BLI_addtail(&v3d->bgpicbase, bgpic);
-					v3d->bgpic = NULL;
-				}
-
-				for (bgpic = v3d->bgpicbase.first; bgpic; bgpic = bgpic->next)
-					bgpic->iuser.ok = 1;
 
 				v3d->localvd = newdataadr(fd, v3d->localvd);
 				BLI_listbase_clear(&v3d->afterdraw_transp);
@@ -4465,12 +4417,6 @@ static BHead *read_userdef(BlendFileData *bfd, FileData *fd, BHead *bhead)
 	/* read all data into fd->datamap */
 	bhead = read_data_into_oldnewmap(fd, bhead, "user def");
 
-	if (user->keymaps.first) {
-		/* backwards compatibility */
-		user->user_keymaps = user->keymaps;
-		user->keymaps.first = user->keymaps.last = NULL;
-	}
-
 	link_list(fd, &user->themes);
 	link_list(fd, &user->user_keymaps);
 	link_list(fd, &user->addons);
@@ -4895,8 +4841,6 @@ static void expand_lamp(FileData *fd, Main *mainvar, Lamp *la)
 		}
 	}
 
-	expand_doit(fd, mainvar, la->ipo); // XXX deprecated - old animation system
-
 }
 
 static void expand_world(FileData *fd, Main *mainvar, World *wrld)
@@ -4933,7 +4877,6 @@ static void expand_curve(FileData *fd, Main *mainvar, Curve *cu)
 static void expand_mesh(FileData *fd, Main *mainvar, Mesh *me)
 {
 	CustomDataLayer *layer;
-	TFace *tf;
 	int a, i;
 
 	for (a = 0; a < me->totcol; a++) {
@@ -4941,14 +4884,6 @@ static void expand_mesh(FileData *fd, Main *mainvar, Mesh *me)
 	}
 
 	expand_doit(fd, mainvar, me->texcomesh);
-
-	if (me->tface) {
-		tf = me->tface;
-		for (i = 0; i < me->totface; i++, tf++) {
-			if (tf->tpage)
-				expand_doit(fd, mainvar, tf->tpage);
-		}
-	}
 
 	if (me->mface && !me->mpoly) {
 		MTFace *mtf;

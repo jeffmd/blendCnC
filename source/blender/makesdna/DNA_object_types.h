@@ -127,7 +127,6 @@ typedef struct Object {
 	/* rot en drot have to be together! (transform('r' en 's')) */
 	float loc[3], dloc[3], orig[3];
 	float size[3];              /* scale in fact */
-	float dsize[3] DNA_DEPRECATED ; /* DEPRECATED, 2.60 and older only */
 	float dscale[3];            /* ack!, changing */
 	float rot[3], drot[3];		/* euler rotation */
 	float quat[4], dquat[4];	/* quaternion rotation */
@@ -150,7 +149,6 @@ typedef struct Object {
 	unsigned int lay;	/* copy of Base's layer in the scene */
 
 	short flag;			/* copy of Base */
-	short colbits DNA_DEPRECATED;		/* deprecated, use 'matbits' */
 
 	short transflag, protectflag;	/* transformation settings and transform locks  */
 	short scaflag;				/* ui state for game logic */
@@ -159,7 +157,7 @@ typedef struct Object {
 
 	/* did last modifier stack generation need mapping support? */
 	char lastNeedMapping;  /* bool */
-	char pad[3];
+	char pad[1];
 
 	/* during realtime */
 
@@ -292,9 +290,6 @@ enum {
 enum {
 	PARTYPE       = (1 << 4) - 1,
 	PAROBJECT     = 0,
-#ifdef DNA_DEPRECATED
-	PARCURVE      = 1,  /* Deprecated. */
-#endif
 	PARVERT1      = 5,
 	PARVERT3      = 6,
 
@@ -456,7 +451,6 @@ enum {
 /* ob->shapeflag */
 enum {
 	OB_SHAPE_LOCK       = 1 << 0,
-	// OB_SHAPE_TEMPLOCK   = 1 << 1,  /* deprecated */
 	OB_SHAPE_EDIT_MODE  = 1 << 2,
 };
 

@@ -109,8 +109,6 @@ typedef struct SpaceButs {
 	char _pad0[6];
 	/* End 'SpaceLink' header. */
 
-	View2D v2d DNA_DEPRECATED;                      /* deprecated, copied to region */
-
 	short mainb, mainbo, mainbuser; /* context tabs */
 	short re_align, align;          /* align for panels */
 	short preview;                  /* preview is signal to refresh */
@@ -126,26 +124,6 @@ typedef struct SpaceButs {
 } SpaceButs;
 
 /* button defines (deprecated) */
-#ifdef DNA_DEPRECATED_ALLOW
-/* warning: the values of these defines are used in SpaceButs.tabs[8] */
-/* SpaceButs.mainb new */
-#define CONTEXT_SCENE   0
-#define CONTEXT_OBJECT  1
-#define CONTEXT_SHADING 3
-#define CONTEXT_EDITING 4
-
-/* SpaceButs.mainb old (deprecated) */
-#define BUTS_LAMP           1
-#define BUTS_MAT            2
-#define BUTS_TEX            3
-#define BUTS_WORLD          5
-#define BUTS_CNC            6
-#define BUTS_EDIT           7
-#define BUTS_FPAINT         9
-#define BUTS_RADIO          10
-#define BUTS_SCRIPT         11
-#define BUTS_CONSTRAINT     13
-#endif /* DNA_DEPRECATED_ALLOW */
 
 /* SpaceButs.mainb new */
 typedef enum eSpaceButtons_Context {
@@ -203,8 +181,6 @@ typedef struct SpaceOops {
 	char _pad0[6];
 	/* End 'SpaceLink' header. */
 
-	View2D v2d DNA_DEPRECATED;  /* deprecated, copied to region */
-
 	ListBase tree;
 
 	/* treestore is an ordered list of TreeStoreElem's from outliner tree;
@@ -247,11 +223,8 @@ typedef enum eSpaceOutliner_Mode {
 	SO_SAME_TYPE = 5,
 	SO_GROUPS = 6,
 	SO_LIBRARIES = 7,
-	/* SO_VERSE_SESSION = 8, */  /* deprecated! */
-	/* SO_VERSE_MS = 9, */       /* deprecated! */
 	SO_DATABLOCKS = 11,
 	SO_USERDEF = 12,
-	/* SO_KEYMAP = 13, */        /* deprecated! */
 	SO_ID_ORPHANS = 14,
 } eSpaceOutliner_Mode;
 
@@ -443,7 +416,6 @@ typedef enum eFileSel_Params_Flag {
 	FILE_HIDE_DOT       = (1 << 3),
 	FILE_AUTOSELECT     = (1 << 4),
 	FILE_ACTIVELAY      = (1 << 5),
-/*  FILE_ATCURSOR       = (1 << 6), */ /* deprecated */
 	FILE_DIRSEL_ONLY    = (1 << 7),
 	FILE_FILTER         = (1 << 8),
 	FILE_BOOKMARKS      = (1 << 9),
@@ -675,15 +647,10 @@ typedef enum eSpaceImage_Sticky {
 
 /* SpaceImage.flag */
 typedef enum eSpaceImage_Flag {
-/*	SI_BE_SQUARE          = (1 << 0), */  /* deprecated */
 	SI_EDITTILE           = (1 << 1),     /* XXX - not used but should be? */
 	SI_CLIP_UV            = (1 << 2),
-/*	SI_DRAWTOOL           = (1 << 3), */  /* deprecated */
 	SI_NO_DRAWFACES       = (1 << 4),
 	SI_DRAWSHADOW         = (1 << 5),
-/*	SI_SELACTFACE         = (1 << 6), */  /* deprecated */
-/*	SI_DEPRECATED2        = (1 << 7), */  /* deprecated */
-/*	SI_DEPRECATED3        = (1 << 8), */  /* deprecated */
 	SI_COORDFLOATS        = (1 << 9),
 	SI_PIXELSNAP          = (1 << 10),
 	SI_LIVE_UNWRAP        = (1 << 11),
@@ -694,9 +661,6 @@ typedef enum eSpaceImage_Flag {
 	/* next two for render window display */
 	SI_PREVSPACE          = (1 << 15),
 	SI_FULLWINDOW         = (1 << 16),
-
-/*	SI_DEPRECATED4        = (1 << 17), */  /* deprecated */
-/*	SI_DEPRECATED5        = (1 << 18), */  /* deprecated */
 
 	/* this means that the image is drawn until it reaches the view edge,
 	 * in the image view, it's unrelated to the 'tile' mode for texface
@@ -915,9 +879,6 @@ typedef enum eSpace_Type {
 	SPACE_IMAGE    = 6,
 	SPACE_INFO     = 7,
 	SPACE_TEXT     = 9,
-#ifdef DNA_DEPRECATED
-	SPACE_IMASEL   = 10, /* deprecated */
-#endif
 	/* TODO: fully deprecate */
 	SPACE_SCRIPT   = 14, /* Deprecated */
 	SPACE_CONSOLE  = 18,

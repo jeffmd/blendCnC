@@ -80,19 +80,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-#ifdef WIN32
-#  include <zlib.h>  /* odd include order-issue */
-#  include "winsock2.h"
-#  include <io.h>
-#  include "BLI_winstuff.h"
-#else
-#  include <unistd.h>  /* FreeBSD, for write() and close(). */
-#endif
+#include <unistd.h>  /* FreeBSD, for write() and close(). */
 
 #include "BLI_utildefines.h"
-
-/* allow writefile to use deprecated functionality (for forward compatibility code) */
-#define DNA_DEPRECATED_ALLOW
 
 #include "DNA_cachefile_types.h"
 #include "DNA_camera_types.h"
@@ -1457,7 +1447,6 @@ static void write_soops(WriteData *wd, SpaceOops *so)
 			void *data_addr = (void *)POINTER_OFFSET(ts, sizeof(void *));
 
 			ts_flat.usedelem = elems;
-			ts_flat.totelem = elems;
 			ts_flat.data = data_addr;
 
 			writestruct(wd, DATA, SpaceOops, 1, so);

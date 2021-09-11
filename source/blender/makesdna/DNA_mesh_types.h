@@ -61,7 +61,6 @@ typedef struct Mesh {
 	 * real faces are now stored in nface.*/
 	struct MFace *mface;	/* array of mesh object mode faces for tessellation */
 	struct MTFace *mtface;	/* store tessellation face UV's and texture here */
-	struct TFace *tface	DNA_DEPRECATED; /* deprecated, use mtface */
 	struct MVert *mvert;	/* array of verts */
 	struct MEdge *medge;	/* array of edges */
 	struct MDeformVert *dvert;	/* deformgroup vertices */
@@ -105,24 +104,13 @@ typedef struct Mesh {
 	/* customdata flag, for bevel-weight and crease, which are now optional */
 	char cd_flag, pad;
 
-	char subdiv  DNA_DEPRECATED, subdivr  DNA_DEPRECATED;
-	char subsurftype  DNA_DEPRECATED; /* only kept for backwards compat, not used anymore */
 	char editflag;
-
+	char pad3;
 	short totcol;
+	short pad4;
 
 } Mesh;
 
-/* deprecated by MTFace, only here for file reading */
-#ifdef DNA_DEPRECATED
-typedef struct TFace {
-	void *tpage;	/* the faces image for the active UVLayer */
-	float uv[4][2];
-	unsigned int col[4];
-	char flag, transp;
-	short mode, tile, unwrap;
-} TFace;
-#endif
 
 /* **************** MESH ********************* */
 
@@ -152,8 +140,6 @@ enum {
 
 /* me->flag */
 enum {
-/*	ME_ISDONE                  = 1 << 0, */
-/*	ME_DEPRECATED              = 1 << 1, */
 	ME_TWOSIDED                = 1 << 2,
 	ME_UVEFFECT                = 1 << 3,
 	ME_VCOLEFFECT              = 1 << 4,
@@ -179,7 +165,6 @@ enum {
 	ME_DRAW_VNORMALS       = 1 << 3,
 
 	ME_DRAWEIGHT           = 1 << 4,
-	/* ME_HIDDENEDGES      = 1 << 5, */  /* DEPRECATED */
 
 	ME_DRAWCREASES         = 1 << 6,
 	ME_DRAWSEAMS           = 1 << 7,

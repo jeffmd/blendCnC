@@ -89,7 +89,6 @@ typedef struct Lamp {
 	short sky_colorspace;
 	char pad4[2];
 
-	struct Ipo *ipo  DNA_DEPRECATED;  /* old animation system, deprecated for 2.5 */
 	struct MTex *mtex[18];			/* MAX_MTEX */
 	short pr_texture, use_nodes;
 	char pad6[4];

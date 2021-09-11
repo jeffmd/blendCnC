@@ -83,10 +83,6 @@ typedef struct World {
 
 	float misi, miststa, mistdist, misthi;
 
-	float starr  DNA_DEPRECATED, starg  DNA_DEPRECATED, starb  DNA_DEPRECATED, stark  DNA_DEPRECATED; /* Deprecated */
-	float starsize DNA_DEPRECATED, starmindist DNA_DEPRECATED;
-	float stardist DNA_DEPRECATED, starcolnoise DNA_DEPRECATED;
-
 	/* unused now: DOF */
 	short dofsta, dofend, dofmin, dofmax;
 
@@ -127,8 +123,6 @@ typedef struct World {
 
 /* mode */
 #define WO_MIST                (1 << 0)
-//#define WO_STARS               (1 << 1) /* deprecated */
-/*#define WO_DOF                 (1 << 2) */
 #define WO_ACTIVITY_CULLING    (1 << 3)
 #define WO_ENV_LIGHT          (1 << 4)
 #define WO_DBVT_CULLING       (1 << 5)
@@ -138,10 +132,6 @@ typedef struct World {
 /* aomix */
 enum {
 	WO_AOADD    = 0,
-#ifdef DNA_DEPRECATED
-	WO_AOSUB    = 1,  /* deprecated */
-	WO_AOADDSUB = 2,  /* deprecated */
-#endif
 	WO_AOMUL    = 3,
 };
 
@@ -175,7 +165,6 @@ enum {
 #define WOMAP_HORIZ     (1 << 1)
 #define WOMAP_ZENUP     (1 << 2)
 #define WOMAP_ZENDOWN   (1 << 3)
-// #define WOMAP_MIST   (1 << 4) /* Deprecated */
 
 /* flag */
 #define WO_DS_EXPAND	(1<<0)

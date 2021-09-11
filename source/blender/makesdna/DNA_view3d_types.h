@@ -137,8 +137,6 @@ typedef struct View3D {
 	char _pad0[6];
 	/* End 'SpaceLink' header. */
 
-	float viewquat[4]  DNA_DEPRECATED;
-	float dist         DNA_DEPRECATED;
 
 	float bundle_size;			/* size of bundles in reconstructed data */
 	char bundle_drawtype;		/* display style for bundle */
@@ -147,14 +145,10 @@ typedef struct View3D {
 	unsigned int lay_prev; /* for active layer toggle */
 	unsigned int lay_used; /* used while drawing */
 
-	short persp  DNA_DEPRECATED;
-	short view   DNA_DEPRECATED;
-
 	struct Object *camera, *ob_centre;
 	rctf render_border;
 
 	struct ListBase bgpicbase;
-	struct BGpic *bgpic  DNA_DEPRECATED; /* deprecated, use bgpicbase, only kept for do_versions(...) */
 
 	struct View3D *localvd; /* allocated backup of its self while in localview */
 
@@ -172,7 +166,6 @@ typedef struct View3D {
 
 	float lens, grid;
 	float near, far;
-	float ofs[3]  DNA_DEPRECATED;			/* XXX deprecated */
 	float cursor[3];
 
 	short matcap_icon;			/* icon id */
@@ -197,7 +190,6 @@ typedef struct View3D {
 	char multiview_eye;				/* multiview current eye - for internal use */
 
 	/* built-in shader effects (eGPUFXFlags) */
-	char pad3[4];
 
 	/* note, 'fx_settings.dof' is currently _not_ allocated,
 	 * instead set (temporarily) from camera */
@@ -206,9 +198,6 @@ typedef struct View3D {
 	void *properties_storage;		/* Nkey panel stores stuff here (runtime only!) */
 	/* Allocated per view, not library data (used by matcap). */
 	struct Material *defmaterial;
-
-	/* XXX deprecated? */
-	struct bGPdata *gpd  DNA_DEPRECATED;		/* Grease-Pencil Data (annotation layers) */
 
 	/* Previous viewport draw type.
 	 * Runtime-only, set in the rendered viewport toggle operator.

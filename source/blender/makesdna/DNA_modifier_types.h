@@ -224,8 +224,8 @@ enum {
 typedef struct MirrorModifierData {
 	ModifierData modifier;
 
-	short axis  DNA_DEPRECATED; /* deprecated, use flag instead */
 	short flag;
+	short pad;
 	float tolerance;
 	float uv_offset[2];
 	float uv_offset_copy[2];
@@ -726,9 +726,6 @@ enum {
 	MOD_SOLIDIFY_EVEN           = (1 << 1),
 	MOD_SOLIDIFY_NORMAL_CALC    = (1 << 2),
 	MOD_SOLIDIFY_VGROUP_INV     = (1 << 3),
-#ifdef DNA_DEPRECATED
-	MOD_SOLIDIFY_RIM_MATERIAL   = (1 << 4),  /* deprecated, used in do_versions */
-#endif
 	MOD_SOLIDIFY_FLIP           = (1 << 5),
 	MOD_SOLIDIFY_NOSHELL        = (1 << 6),
 };
@@ -997,12 +994,6 @@ typedef struct TriangulateModifierData {
 	int ngon_method;
 	int pad;
 } TriangulateModifierData;
-
-#ifdef DNA_DEPRECATED
-enum {
-	MOD_TRIANGULATE_BEAUTY = (1 << 0), /* deprecated */
-};
-#endif
 
 /* Triangulate methods - NGons */
 enum {
