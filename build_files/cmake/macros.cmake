@@ -459,7 +459,6 @@ function(SETUP_BLENDER_SORTED_LIBS)
 		bf_editor_interface
 		bf_editor_object
 		bf_editor_mesh
-		bf_editor_lattice
 		bf_editor_physics
 		bf_editor_screen
 		bf_editor_datafiles

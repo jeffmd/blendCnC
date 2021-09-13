@@ -273,31 +273,12 @@ option(WITH_IMAGE_CINEON        "Enable CINEON and DPX Image Support" OFF)
 option(WITH_IMAGE_HDR           "Enable HDR Image Support" ON)
 option(WITH_IMAGE_FRAMESERVER   "Enable image FrameServer Support for rendering" OFF)
 
-# Audio/Video format support
-option(WITH_CODEC_FFMPEG        "Enable FFMPeg Support (http://ffmpeg.org)" OFF)
-option(WITH_CODEC_SNDFILE       "Enable libsndfile Support (http://www.mega-nerd.com/libsndfile)" OFF)
-
-# Sound output
-option(WITH_SDL           "Enable SDL for sound and joystick support" OFF)
-option(WITH_OPENAL        "Enable OpenAL Support (http://www.openal.org)" OFF)
-if(UNIX AND NOT APPLE)
-	option(WITH_JACK_DYNLOAD  "Enable runtime dynamic JACK libraries loading" OFF)
-endif()
-if(UNIX AND NOT APPLE)
-	option(WITH_SDL_DYNLOAD  "Enable runtime dynamic SDL libraries loading" OFF)
-endif()
-
 # Compression
 option(WITH_LZO           "Enable fast LZO compression (used for pointcache)" ON)
 option(WITH_LZMA          "Enable best LZMA compression, (used for pointcache)" ON)
 if(UNIX AND NOT APPLE)
 	option(WITH_SYSTEM_LZO    "Use the system LZO library" OFF)
 endif()
-
-# Camera/motion tracking
-option(WITH_LIBMV         "Enable Libmv structure from motion library" OFF)
-option(WITH_LIBMV_SCHUR_SPECIALIZATIONS "Enable fixed-size schur specializations." OFF)
-mark_as_advanced(WITH_LIBMV_SCHUR_SPECIALIZATIONS)
 
 # Logging/unbit test libraries.
 option(WITH_SYSTEM_GFLAGS   "Use system-wide Gflags instead of a bundled one" OFF)
@@ -306,9 +287,6 @@ mark_as_advanced(WITH_SYSTEM_GFLAGS)
 mark_as_advanced(WITH_SYSTEM_GLOG)
 
 # Misc
-if(WIN32)
-	option(WITH_INPUT_IME "Enable Input Method Editor (IME) for complex Asian character input" ON)
-endif()
 if(UNIX AND NOT APPLE)
 	option(WITH_INSTALL_PORTABLE "Install redistributeable runtime, otherwise install into CMAKE_INSTALL_PREFIX" ON)
 	option(WITH_STATIC_LIBS "Try to link with static libraries, as much as possible, to make blender more portable across distributions" OFF)
@@ -462,68 +440,26 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
 	endif()
 endif()
 
-# Dependency graph
-option(WITH_LEGACY_DEPSGRAPH "Build Blender with legacy dependency graph" ON)
-mark_as_advanced(WITH_LEGACY_DEPSGRAPH)
-
-if(WIN32)
-	# Use hardcoded paths or find_package to find externals
-	option(WITH_WINDOWS_FIND_MODULES "Use find_package to locate libraries" OFF)
-	mark_as_advanced(WITH_WINDOWS_FIND_MODULES)
-
-	option(WITH_WINDOWS_CODESIGN "Use signtool to sign the final binary." OFF)
-	mark_as_advanced(WITH_WINDOWS_CODESIGN)
-
-	set(WINDOWS_CODESIGN_PFX CACHE FILEPATH  "Path to pfx file to use for codesigning.")
-	mark_as_advanced(WINDOWS_CODESIGN_PFX)
-
-	set(WINDOWS_CODESIGN_PFX_PASSWORD CACHE STRING  "password for pfx file used for codesigning.")
-	mark_as_advanced(WINDOWS_CODESIGN_PFX_PASSWORD)
-
-	option(WINDOWS_USE_VISUAL_STUDIO_FOLDERS "Organize the visual studio project according to source folders." ON)
-	mark_as_advanced(WINDOWS_USE_VISUAL_STUDIO_FOLDERS)
-
-	option(WINDOWS_PYTHON_DEBUG "Include the files needed for debugging python scripts with visual studio 2017+." OFF)
-	mark_as_advanced(WINDOWS_PYTHON_DEBUG)
-endif()
 
 # avoid using again
 option_defaults_clear()
 
 # end option(...)
 
-
-
 # By default we want to install to the directory we are compiling our executables
 # unless specified otherwise, which we currently do not allow
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-	if(WIN32)
-		set(CMAKE_INSTALL_PREFIX ${EXECUTABLE_OUTPUT_PATH}/\${BUILD_TYPE} CACHE PATH "default install path" FORCE)
-	elseif(APPLE)
-		set(CMAKE_INSTALL_PREFIX ${EXECUTABLE_OUTPUT_PATH}/\${BUILD_TYPE} CACHE PATH "default install path" FORCE)
-	else()
-		if(WITH_INSTALL_PORTABLE)
-			set(CMAKE_INSTALL_PREFIX ${EXECUTABLE_OUTPUT_PATH} CACHE PATH "default install path" FORCE)
-		endif()
+	if(WITH_INSTALL_PORTABLE)
+		set(CMAKE_INSTALL_PREFIX ${EXECUTABLE_OUTPUT_PATH} CACHE PATH "default install path" FORCE)
 	endif()
 endif()
-
-
-
-# Apple
-
-if(APPLE)
-	include(platform_apple_xcode)
-endif()
-
 
 #-----------------------------------------------------------------------------
 # Check for conflicting/unsupported configurations
 
-if(NOT WITH_BLENDER AND NOT WITH_PLAYER AND NOT WITH_CYCLES_STANDALONE)
+if(NOT WITH_BLENDER)
 	message(FATAL_ERROR
-		"At least one of WITH_BLENDER or WITH_PLAYER or "
-		"WITH_CYCLES_STANDALONE must be enabled, nothing to do!"
+		"At least WITH_BLENDER must be enabled, nothing to do!"
 	)
 endif()
 
@@ -701,10 +637,6 @@ endif()
 
 if(UNIX AND NOT APPLE)
 	include(platform_unix)
-elseif(WIN32)
-	include(platform_win32)
-elseif(APPLE)
-	include(platform_apple)
 endif()
 
 #-----------------------------------------------------------------------------
@@ -1034,53 +966,6 @@ endif()
 #-----------------------------------------------------------------------------
 # Configure GLog/GFlags
 
-if(WITH_LIBMV OR WITH_GTESTS OR (WITH_CYCLES AND WITH_CYCLES_LOGGING))
-	if(WITH_SYSTEM_GFLAGS)
-		find_package(Gflags)
-		if(NOT GFLAGS_FOUND)
-			message(FATAL_ERROR "System wide Gflags is requested but was not found")
-		endif()
-		# FindGflags does not define this, and we are not even sure what to use here.
-		set(GFLAGS_DEFINES)
-	else()
-		set(GFLAGS_DEFINES
-			-DGFLAGS_DLL_DEFINE_FLAG=
-			-DGFLAGS_DLL_DECLARE_FLAG=
-			-DGFLAGS_DLL_DECL=
-		)
-		set(GFLAGS_NAMESPACE "gflags")
-		set(GFLAGS_LIBRARIES extern_gflags)
-		set(GFLAGS_INCLUDE_DIRS "${PROJECT_SOURCE_DIR}/extern/gflags/src")
-	endif()
-
-	if(WITH_SYSTEM_GLOG)
-		find_package(Glog)
-		if(NOT GLOG_FOUND)
-			message(FATAL_ERROR "System wide Glog is requested but was not found")
-		endif()
-		# FindGlog does not define this, and we are not even sure what to use here.
-		set(GLOG_DEFINES)
-	else()
-		set(GLOG_DEFINES
-			-DGOOGLE_GLOG_DLL_DECL=
-		)
-		set(GLOG_LIBRARIES extern_glog)
-		if(WIN32)
-			set(GLOG_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/extern/glog/src/windows)
-		else()
-			set(GLOG_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/extern/glog/include)
-		endif()
-	endif()
-endif()
-
-#-----------------------------------------------------------------------------
-# Configure Ceres
-
-if(WITH_LIBMV)
-	# We always have C++11 which includes unordered_map.
-	set(CERES_DEFINES -DCERES_STD_UNORDERED_MAP)
-endif()
-
 #-----------------------------------------------------------------------------
 # Extra compile flags
 
@@ -1248,42 +1133,6 @@ elseif(CMAKE_C_COMPILER_ID MATCHES "Intel")
 	# disable numbered, false positives
 	set(C_WARNINGS "${C_WARNINGS} -wd188,186,144,913,556,858,597,177,1292,167,279,592,94,2722,3199")
 	set(CXX_WARNINGS "${CXX_WARNINGS} -wd188,186,144,913,556,858,597,177,1292,167,279,592,94,2722,3199")
-elseif(CMAKE_C_COMPILER_ID MATCHES "MSVC")
-	# most msvc warnings are C & C++
-	set(_WARNINGS
-		# warning level:
-		"/W3"
-		"/w34062"  # switch statement contains 'default' but no 'case' labels
-		"/w34115"  # 'type' : named type definition in parentheses
-		"/w34189"  # local variable is initialized but not referenced
-		# disable:
-		"/wd4018"  # signed/unsigned mismatch
-		"/wd4146"  # unary minus operator applied to unsigned type, result still unsigned
-		"/wd4065"  # switch statement contains 'default' but no 'case' labels
-		"/wd4127"  # conditional expression is constant
-		"/wd4181"  # qualifier applied to reference type; ignored
-		"/wd4200"  # zero-sized array in struct/union
-		"/wd4244"  # conversion from 'type1' to 'type2', possible loss of data
-		"/wd4267"  # conversion from 'size_t' to 'type', possible loss of data
-		"/wd4305"  # truncation from 'type1' to 'type2'
-		"/wd4800"  # forcing value to bool 'true' or 'false'
-		"/wd4828"  # The file contains a character that is illegal
-		"/wd4996"  # identifier was declared deprecated
-		# errors:
-		"/we4013"  # 'function' undefined; assuming extern returning int
-		"/we4133"  # incompatible pointer types
-		"/we4431"  # missing type specifier - int assumed
-	)
-
-	if(MSVC_VERSION GREATER_EQUAL 1911)
-		# see https://docs.microsoft.com/en-us/cpp/error-messages/compiler-warnings/c5038?view=vs-2017
-		set(_WARNINGS "${_WARNINGS} /w35038") #order of initialisation in c++ constructors
-	endif()
-
-	string(REPLACE ";" " " _WARNINGS "${_WARNINGS}")
-	set(C_WARNINGS "${_WARNINGS}")
-	set(CXX_WARNINGS "${_WARNINGS}")
-	unset(_WARNINGS)
 endif()
 
 # ensure python header is found since detection can fail, this could happen
@@ -1344,16 +1193,6 @@ endif()
 # eg: -Wno-uninitialized
 set(CMAKE_C_FLAGS "${C_WARNINGS} ${CMAKE_C_FLAGS} ${PLATFORM_CFLAGS}")
 set(CMAKE_CXX_FLAGS "${CXX_WARNINGS} ${CMAKE_CXX_FLAGS} ${PLATFORM_CFLAGS}")
-
-# defined above, platform specific but shared names
-mark_as_advanced(
-	CYCLES_OSL
-	OSL_LIB_EXEC
-	OSL_COMPILER
-	OSL_LIB_COMP
-	OSL_LIB_QUERY
-	OSL_INCLUDE_DIR
-)
 
 mark_as_advanced(
 	LLVM_CONFIG
