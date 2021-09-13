@@ -25,10 +25,6 @@
 
 #include "../generic/py_capi_utils.h"
 
-#ifdef WITH_OCIO
-#  include "ocio_capi.h"
-#endif
-
 static PyTypeObject BlenderAppOCIOType;
 
 static PyStructSequence_Field app_ocio_info_fields[] = {
@@ -50,34 +46,20 @@ static PyObject *make_ocio_info(void)
 	PyObject *ocio_info;
 	int pos = 0;
 
-#ifdef WITH_OCIO
-	int curversion;
-#endif
-
 	ocio_info = PyStructSequence_New(&BlenderAppOCIOType);
 	if (ocio_info == NULL) {
 		return NULL;
 	}
 
-#ifndef WITH_OCIO
 #define SetStrItem(str) \
 	PyStructSequence_SET_ITEM(ocio_info, pos++, PyUnicode_FromString(str))
-#endif
 
 #define SetObjItem(obj) \
 	PyStructSequence_SET_ITEM(ocio_info, pos++, obj)
 
-#ifdef WITH_OCIO
-	curversion = OCIO_getVersionHex();
-	SetObjItem(PyBool_FromLong(1));
-	SetObjItem(PyC_Tuple_Pack_I32(curversion >> 24, (curversion >> 16) % 256, (curversion >> 8) % 256));
-	SetObjItem(PyUnicode_FromFormat("%2d, %2d, %2d",
-	                                curversion >> 24, (curversion >> 16) % 256, (curversion >> 8) % 256));
-#else
 	SetObjItem(PyBool_FromLong(0));
 	SetObjItem(PyC_Tuple_Pack_I32(0, 0, 0));
 	SetStrItem("Unknown");
-#endif
 
 	if (PyErr_Occurred()) {
 		Py_CLEAR(ocio_info);
