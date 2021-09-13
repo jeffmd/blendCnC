@@ -37,7 +37,6 @@ set(INC
 	../../windowmanager
 	../../../../intern/clog
 	../../../../intern/guardedalloc
-	../../../../intern/opencolorio
 )
 
 set(INC_SYS
@@ -149,10 +148,6 @@ endif()
 
 if(WITH_MOD_REMESH)
 	add_definitions(-DWITH_MOD_REMESH)
-endif()
-
-if(WITH_OPENCOLORIO)
-	add_definitions(-DWITH_OCIO)
 endif()
 
 if(WITH_OPENIMAGEIO)

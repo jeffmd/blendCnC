@@ -163,7 +163,6 @@ endmacro()
 option_defaults_init(
 	_init_BUILDINFO
 	_init_IMAGE_OPENEXR
-	_init_OPENCOLORIO
 	_init_FFTW3
 )
 
@@ -172,7 +171,6 @@ if(UNIX AND NOT APPLE)
 	# some of these libraries are problematic on Linux
 	# disable less important dependencies by default
 	set(_init_IMAGE_OPENEXR                  OFF)
-	set(_init_OPENCOLORIO                    OFF)
 	set(_init_FFTW3                          OFF)
 endif()
 
@@ -219,7 +217,6 @@ option(WITH_FFTW3         "Enable FFTW3 support (Used for smoke, ocean sim, and 
 option(WITH_BULLET        "Enable Bullet (Physics Engine)" ON)
 option(WITH_SYSTEM_BULLET "Use the systems bullet library (currently unsupported due to missing features in upstream!)" )
 mark_as_advanced(WITH_SYSTEM_BULLET)
-option(WITH_OPENCOLORIO   "Enable OpenColorIO color management" ${_init_OPENCOLORIO})
 
 # GHOST Windowing Library Options
 option(WITH_GHOST_DEBUG   "Enable debugging output for the GHOST library" OFF)
@@ -1289,7 +1286,6 @@ if(FIRST_RUN)
 	info_cfg_option(WITH_BULLET)
 	info_cfg_option(WITH_FFTW3)
 	info_cfg_option(WITH_INTERNATIONAL)
-	info_cfg_option(WITH_OPENCOLORIO)
 
 	info_cfg_text("Compiler Options:")
 	info_cfg_option(WITH_BUILDINFO)

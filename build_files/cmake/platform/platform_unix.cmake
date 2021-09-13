@@ -198,19 +198,6 @@ if(WITH_OPENIMAGEIO)
 	endif()
 endif()
 
-if(WITH_OPENCOLORIO)
-	find_package_wrapper(OpenColorIO)
-
-	set(OPENCOLORIO_LIBRARIES ${OPENCOLORIO_LIBRARIES})
-	set(OPENCOLORIO_LIBPATH)  # TODO, remove and reference the absolute path everywhere
-	set(OPENCOLORIO_DEFINITIONS)
-
-	if(NOT OPENCOLORIO_FOUND)
-		set(WITH_OPENCOLORIO OFF)
-		message(STATUS "OpenColorIO not found")
-	endif()
-endif()
-
 if(WITH_LLVM)
 	if(EXISTS ${LIBDIR})
 		set(LLVM_STATIC ON)

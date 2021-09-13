@@ -25,11 +25,7 @@ static IOCIOImpl *impl = NULL;
 
 void OCIO_init(void)
 {
-#ifdef WITH_OCIO
-	impl = new OCIOImpl();
-#else
 	impl = new FallbackImpl();
-#endif
 }
 
 void OCIO_exit(void)

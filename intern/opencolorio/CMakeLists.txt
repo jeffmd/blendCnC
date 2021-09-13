@@ -42,34 +42,5 @@ set(SRC
 	ocio_impl.h
 )
 
-if(WITH_OPENCOLORIO)
-	add_definitions(
-		-DWITH_OCIO
-	)
-
-	add_definitions(${GL_DEFINITIONS})
-
-	list(APPEND INC_SYS
-		${OPENCOLORIO_INCLUDE_DIRS}
-		${GLEW_INCLUDE_PATH}
-	)
-
-	list(APPEND SRC
-		ocio_impl.cc
-		ocio_impl_glsl.cc
-	)
-
-	if(WIN32)
-		list(APPEND INC_SYS
-			${BOOST_INCLUDE_DIR}
-		)
-		add_definitions(
-			-DOpenColorIO_STATIC
-		)
-	endif()
-
-	data_to_c_simple(gpu_shader_display_transform.glsl SRC)
-endif()
-
 
 blender_add_lib(bf_intern_opencolorio "${SRC}" "${INC}" "${INC_SYS}")
