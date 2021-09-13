@@ -31,17 +31,13 @@ static PyStructSequence_Field app_builtopts_info_fields[] = {
 	{(char *)"bullet", NULL},
 	{(char *)"image_cineon", NULL},
 	{(char *)"image_dds", NULL},
-	{(char *)"image_frameserver", NULL},
 	{(char *)"image_hdr", NULL},
 	{(char *)"image_openexr", NULL},
 	{(char *)"image_openjpeg", NULL},
 	{(char *)"image_tiff", NULL},
-	{(char *)"input_ndof", NULL},
 	{(char *)"international", NULL},
 	{(char *)"mod_remesh", NULL},
-	{(char *)"opencolorio", NULL},
 	{(char *)"openmp", NULL},
-	{(char *)"openvdb", NULL},
 	{NULL}
 };
 
@@ -84,12 +80,6 @@ static PyObject *make_builtopts_info(void)
 	SetObjIncref(Py_False);
 #endif
 
-#ifdef WITH_FRAMESERVER
-	SetObjIncref(Py_True);
-#else
-	SetObjIncref(Py_False);
-#endif
-
 #ifdef WITH_HDR
 	SetObjIncref(Py_True);
 #else
@@ -114,12 +104,6 @@ static PyObject *make_builtopts_info(void)
 	SetObjIncref(Py_False);
 #endif
 
-#ifdef WITH_INPUT_NDOF
-	SetObjIncref(Py_True);
-#else
-	SetObjIncref(Py_False);
-#endif
-
 #ifdef WITH_INTERNATIONAL
 	SetObjIncref(Py_True);
 #else
@@ -132,19 +116,7 @@ static PyObject *make_builtopts_info(void)
 	SetObjIncref(Py_False);
 #endif
 
-#ifdef WITH_OCIO
-	SetObjIncref(Py_True);
-#else
-	SetObjIncref(Py_False);
-#endif
-
 #ifdef _OPENMP
-	SetObjIncref(Py_True);
-#else
-	SetObjIncref(Py_False);
-#endif
-
-#ifdef WITH_OPENVDB
 	SetObjIncref(Py_True);
 #else
 	SetObjIncref(Py_False);
