@@ -441,16 +441,12 @@ void uiTemplateImageSettings(uiLayout *layout, PointerRNA *imfptr, bool color_ma
 		uiItemR(col, imfptr, "compression", 0, NULL, ICON_NONE);
 	}
 
-	if (ELEM(imf->imtype, R_IMF_IMTYPE_OPENEXR, R_IMF_IMTYPE_MULTILAYER)) {
-		uiItemR(col, imfptr, "exr_codec", 0, NULL, ICON_NONE);
-	}
-
 	row = uiLayoutRow(col, false);
 	if (BKE_imtype_supports_zbuf(imf->imtype)) {
 		uiItemR(row, imfptr, "use_zbuffer", 0, NULL, ICON_NONE);
 	}
 
-	if (is_render_out && ELEM(imf->imtype, R_IMF_IMTYPE_OPENEXR, R_IMF_IMTYPE_MULTILAYER)) {
+	if (is_render_out && ELEM(imf->imtype, R_IMF_IMTYPE_OPENEXR)) {
 		show_preview = true;
 		uiItemR(row, imfptr, "use_preview", 0, NULL, ICON_NONE);
 	}
@@ -531,27 +527,7 @@ void uiTemplateImageViews(uiLayout *layout, PointerRNA *imaptr)
 
 void uiTemplateImageFormatViews(uiLayout *layout, PointerRNA *imfptr, PointerRNA *ptr)
 {
-	ImageFormatData *imf = imfptr->data;
 
-	if (ptr == NULL)
-		return;
-
-	uiItemR(layout, ptr, "use_multiview", 0, NULL, ICON_NONE);
-
-	if (RNA_boolean_get(ptr, "use_multiview")) {
-		if (imf->imtype != R_IMF_IMTYPE_MULTILAYER) {
-			PropertyRNA *prop;
-			PointerRNA stereo3d_format_ptr;
-
-			prop = RNA_struct_find_property(imfptr, "stereo_3d_format");
-			stereo3d_format_ptr = RNA_property_pointer_get(imfptr, prop);
-
-			uiTemplateViewsFormat(layout, imfptr, &stereo3d_format_ptr);
-		}
-		else {
-			uiTemplateViewsFormat(layout, imfptr, NULL);
-		}
-	}
 }
 
 void uiTemplateImageInfo(uiLayout *layout, bContext *C, Image *ima, ImageUser *iuser)

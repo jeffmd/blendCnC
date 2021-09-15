@@ -981,9 +981,6 @@ int BKE_image_imtype_to_ftype(const char imtype, ImbFormatOptions *r_options)
 		return IMB_FTYPE_TIF;
 	}
 #endif
-	else if (imtype == R_IMF_IMTYPE_OPENEXR || imtype == R_IMF_IMTYPE_MULTILAYER) {
-		return IMB_FTYPE_OPENEXR;
-	}
 #ifdef WITH_CINEON
 	else if (imtype == R_IMF_IMTYPE_CINEON) {
 		return IMB_FTYPE_CINEON;
@@ -1101,7 +1098,6 @@ int BKE_imtype_requires_linear_float(const char imtype)
 		case R_IMF_IMTYPE_DPX:
 		case R_IMF_IMTYPE_RADHDR:
 		case R_IMF_IMTYPE_OPENEXR:
-		case R_IMF_IMTYPE_MULTILAYER:
 			return true;
 	}
 	return 0;
@@ -1122,7 +1118,6 @@ char BKE_imtype_valid_channels(const char imtype, bool write_file)
 		case R_IMF_IMTYPE_PNG:
 		case R_IMF_IMTYPE_TIFF:
 		case R_IMF_IMTYPE_OPENEXR:
-		case R_IMF_IMTYPE_MULTILAYER:
 		case R_IMF_IMTYPE_DDS:
 		case R_IMF_IMTYPE_JP2:
 		case R_IMF_IMTYPE_DPX:
@@ -1153,8 +1148,6 @@ char BKE_imtype_valid_depths(const char imtype)
 		case R_IMF_IMTYPE_TIFF:
 			return R_IMF_CHAN_DEPTH_8 | R_IMF_CHAN_DEPTH_16;
 		case R_IMF_IMTYPE_OPENEXR:
-			return R_IMF_CHAN_DEPTH_16 | R_IMF_CHAN_DEPTH_32;
-		case R_IMF_IMTYPE_MULTILAYER:
 			return R_IMF_CHAN_DEPTH_16 | R_IMF_CHAN_DEPTH_32;
 		/* eeh, cineon does some strange 10bits per channel */
 		case R_IMF_IMTYPE_DPX:
@@ -1227,7 +1220,7 @@ static bool do_add_image_extension(char *string, const char imtype, const ImageF
 			extension = extension_test;
 	}
 #endif
-	else if (ELEM(imtype, R_IMF_IMTYPE_PNG, R_IMF_IMTYPE_FFMPEG, R_IMF_IMTYPE_H264, R_IMF_IMTYPE_THEORA, R_IMF_IMTYPE_XVID)) {
+	else if (ELEM(imtype, R_IMF_IMTYPE_PNG, R_IMF_IMTYPE_H264, R_IMF_IMTYPE_THEORA, R_IMF_IMTYPE_XVID)) {
 		if (!BLI_path_extension_check(string, extension_test = ".png"))
 			extension = extension_test;
 	}
@@ -1259,7 +1252,7 @@ static bool do_add_image_extension(char *string, const char imtype, const ImageF
 	}
 #endif
 #ifdef WITH_OPENEXR
-	else if (imtype == R_IMF_IMTYPE_OPENEXR || imtype == R_IMF_IMTYPE_MULTILAYER) {
+	else if (imtype == R_IMF_IMTYPE_OPENEXR) {
 		if (!BLI_path_extension_check(string, extension_test = ".exr"))
 			extension = extension_test;
 	}
@@ -1494,7 +1487,7 @@ void BKE_imbuf_write_prepare(ImBuf *ibuf, const ImageFormatData *imf)
 		ibuf->ftype = IMB_FTYPE_RADHDR;
 	}
 #endif
-	else if (ELEM(imtype, R_IMF_IMTYPE_PNG, R_IMF_IMTYPE_FFMPEG, R_IMF_IMTYPE_H264, R_IMF_IMTYPE_THEORA, R_IMF_IMTYPE_XVID)) {
+	else if (ELEM(imtype, R_IMF_IMTYPE_PNG, R_IMF_IMTYPE_H264, R_IMF_IMTYPE_THEORA, R_IMF_IMTYPE_XVID)) {
 		ibuf->ftype = IMB_FTYPE_PNG;
 
 		if (imtype == R_IMF_IMTYPE_PNG) {
@@ -1535,7 +1528,7 @@ void BKE_imbuf_write_prepare(ImBuf *ibuf, const ImageFormatData *imf)
 	}
 #endif
 #ifdef WITH_OPENEXR
-	else if (ELEM(imtype, R_IMF_IMTYPE_OPENEXR, R_IMF_IMTYPE_MULTILAYER)) {
+	else if (ELEM(imtype, R_IMF_IMTYPE_OPENEXR)) {
 		ibuf->ftype = IMB_FTYPE_OPENEXR;
 		if (imf->depth == R_IMF_CHAN_DEPTH_16)
 			ibuf->foptions.flag |= OPENEXR_HALF;
@@ -1883,11 +1876,6 @@ void BKE_image_signal(Main *bmain, Image *ima, ImageUser *iuser, int signal)
 		case IMA_SIGNAL_USER_NEW_IMAGE:
 			if (iuser) {
 				iuser->ok = 1;
-				if (ima->source == IMA_SRC_FILE) {
-					if (ima->type == IMA_TYPE_MULTILAYER) {
-						image_init_imageuser(ima, iuser);
-					}
-				}
 			}
 			break;
 		case IMA_SIGNAL_COLORMANAGE:

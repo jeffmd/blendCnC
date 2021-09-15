@@ -268,7 +268,6 @@ option(WITH_IMAGE_TIFF          "Enable LibTIFF Support" ON)
 option(WITH_IMAGE_DDS           "Enable DDS Image Support" OFF)
 option(WITH_IMAGE_CINEON        "Enable CINEON and DPX Image Support" OFF)
 option(WITH_IMAGE_HDR           "Enable HDR Image Support" ON)
-option(WITH_IMAGE_FRAMESERVER   "Enable image FrameServer Support for rendering" OFF)
 
 # Compression
 option(WITH_LZO           "Enable fast LZO compression (used for pointcache)" ON)

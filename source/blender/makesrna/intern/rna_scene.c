@@ -170,13 +170,9 @@ static const EnumPropertyItem snap_uv_element_items[] = {
 #endif
 
 #ifdef WITH_OPENEXR
-#  define R_IMF_ENUM_EXR_MULTILAYER  {R_IMF_IMTYPE_MULTILAYER, "OPEN_EXR_MULTILAYER", ICON_FILE_IMAGE, \
-                                                          "OpenEXR MultiLayer", \
-                                                          "Output image in multilayer OpenEXR format"},
 #  define R_IMF_ENUM_EXR        {R_IMF_IMTYPE_OPENEXR, "OPEN_EXR", ICON_FILE_IMAGE, "OpenEXR", \
                                                        "Output image in OpenEXR format"},
 #else
-#  define R_IMF_ENUM_EXR_MULTILAYER
 #  define R_IMF_ENUM_EXR
 #endif
 
@@ -205,7 +201,6 @@ static const EnumPropertyItem snap_uv_element_items[] = {
 	{0, "", 0, " ", NULL},                                                    \
 	R_IMF_ENUM_CINEON                                                         \
 	R_IMF_ENUM_DPX                                                            \
-	R_IMF_ENUM_EXR_MULTILAYER                                                 \
 	R_IMF_ENUM_EXR                                                            \
 	R_IMF_ENUM_HDR                                                            \
 	R_IMF_ENUM_TIFF                                                           \
