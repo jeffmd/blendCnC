@@ -213,12 +213,6 @@ endif()
 
 add_definitions(${GL_DEFINITIONS})
 
-if(WIN32)
-	list(APPEND INC
-		../../../intern/utfconv
-	)
-endif()
-
 if(WITH_BULLET)
 	list(APPEND INC_SYS
 		${BULLET_INCLUDE_DIRS}
@@ -251,10 +245,6 @@ endif()
 
 if(WITH_IMAGE_CINEON)
 	add_definitions(-DWITH_CINEON)
-endif()
-
-if(WITH_IMAGE_FRAMESERVER)
-	add_definitions(-DWITH_FRAMESERVER)
 endif()
 
 if(WITH_IMAGE_HDR)
@@ -310,10 +300,5 @@ endif()
 if(WITH_INTERNATIONAL)
 	add_definitions(-DWITH_INTERNATIONAL)
 endif()
-
-## Warnings as errors, this is too strict!
-#if(MSVC)
-#	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /WX")
-#endif()
 
 blender_add_lib(bf_blenkernel "${SRC}" "${INC}" "${INC_SYS}")
