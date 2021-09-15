@@ -241,32 +241,6 @@ class ExecutePreset(Operator):
         return {'FINISHED'}
 
 
-class AddPresetRender(AddPresetBase, Operator):
-    """Add or remove a Render Preset"""
-    bl_idname = "render.preset_add"
-    bl_label = "Add Render Preset"
-    preset_menu = "RENDER_MT_presets"
-
-    preset_defines = [
-        "scene = bpy.context.scene"
-    ]
-
-    preset_values = [
-        "scene.render.field_order",
-        "scene.render.fps",
-        "scene.render.fps_base",
-        "scene.render.pixel_aspect_x",
-        "scene.render.pixel_aspect_y",
-        "scene.render.resolution_percentage",
-        "scene.render.resolution_x",
-        "scene.render.resolution_y",
-        "scene.render.use_fields",
-        "scene.render.use_fields_still",
-    ]
-
-    preset_subdir = "render"
-
-
 class AddPresetCamera(AddPresetBase, Operator):
     """Add or remove a Camera Preset"""
     bl_idname = "camera.preset_add"
@@ -317,134 +291,6 @@ class AddPresetSafeAreas(AddPresetBase, Operator):
 
     preset_subdir = "safe_areas"
 
-
-class AddPresetSSS(AddPresetBase, Operator):
-    """Add or remove a Subsurface Scattering Preset"""
-    bl_idname = "material.sss_preset_add"
-    bl_label = "Add SSS Preset"
-    preset_menu = "MATERIAL_MT_sss_presets"
-
-    preset_defines = [
-        ("material = "
-         "bpy.context.material.active_node_material "
-         "if bpy.context.material.active_node_material "
-         "else bpy.context.material")
-    ]
-
-    preset_values = [
-        "material.subsurface_scattering.back",
-        "material.subsurface_scattering.color",
-        "material.subsurface_scattering.color_factor",
-        "material.subsurface_scattering.error_threshold",
-        "material.subsurface_scattering.front",
-        "material.subsurface_scattering.ior",
-        "material.subsurface_scattering.radius",
-        "material.subsurface_scattering.scale",
-        "material.subsurface_scattering.texture_factor",
-    ]
-
-    preset_subdir = "sss"
-
-
-class AddPresetCloth(AddPresetBase, Operator):
-    """Add or remove a Cloth Preset"""
-    bl_idname = "cloth.preset_add"
-    bl_label = "Add Cloth Preset"
-    preset_menu = "CLOTH_MT_presets"
-
-    preset_defines = [
-        "cloth = bpy.context.cloth"
-    ]
-
-    preset_values = [
-        "cloth.settings.air_damping",
-        "cloth.settings.bending_stiffness",
-        "cloth.settings.mass",
-        "cloth.settings.quality",
-        "cloth.settings.spring_damping",
-        "cloth.settings.structural_stiffness",
-    ]
-
-    preset_subdir = "cloth"
-
-
-class AddPresetFluid(AddPresetBase, Operator):
-    """Add or remove a Fluid Preset"""
-    bl_idname = "fluid.preset_add"
-    bl_label = "Add Fluid Preset"
-    preset_menu = "FLUID_MT_presets"
-
-    preset_defines = [
-        "fluid = bpy.context.fluid"
-    ]
-
-    preset_values = [
-        "fluid.settings.viscosity_base",
-        "fluid.settings.viscosity_exponent",
-    ]
-
-    preset_subdir = "fluid"
-
-
-class AddPresetHairDynamics(AddPresetBase, Operator):
-    """Add or remove a Hair Dynamics Preset"""
-    bl_idname = "particle.hair_dynamics_preset_add"
-    bl_label = "Add Hair Dynamics Preset"
-    preset_menu = "PARTICLE_MT_hair_dynamics_presets"
-
-    preset_defines = [
-        "psys = bpy.context.particle_system",
-        "cloth = bpy.context.particle_system.cloth",
-        "settings = bpy.context.particle_system.cloth.settings",
-        "collision = bpy.context.particle_system.cloth.collision_settings",
-    ]
-
-    preset_subdir = "hair_dynamics"
-
-    preset_values = [
-        "settings.quality",
-        "settings.mass",
-        "settings.bending_stiffness",
-        "psys.settings.bending_random",
-        "settings.bending_damping",
-        "settings.air_damping",
-        "settings.internal_friction",
-        "settings.density_target",
-        "settings.density_strength",
-        "settings.voxel_cell_size",
-        "settings.pin_stiffness",
-    ]
-
-
-class AddPresetSunSky(AddPresetBase, Operator):
-    """Add or remove a Sky & Atmosphere Preset"""
-    bl_idname = "lamp.sunsky_preset_add"
-    bl_label = "Add Sunsky Preset"
-    preset_menu = "LAMP_MT_sunsky_presets"
-
-    preset_defines = [
-        "sky = bpy.context.lamp.sky"
-    ]
-
-    preset_values = [
-        "sky.atmosphere_extinction",
-        "sky.atmosphere_inscattering",
-        "sky.atmosphere_turbidity",
-        "sky.backscattered_light",
-        "sky.horizon_brightness",
-        "sky.spread",
-        "sky.sun_brightness",
-        "sky.sun_intensity",
-        "sky.sun_size",
-        "sky.sky_blend",
-        "sky.sky_blend_type",
-        "sky.sky_color_space",
-        "sky.sky_exposure",
-    ]
-
-    preset_subdir = "sunsky"
-
-
 class AddPresetInteraction(AddPresetBase, Operator):
     """Add or remove an Application Interaction Preset"""
     bl_idname = "wm.interaction_preset_add"
@@ -469,106 +315,6 @@ class AddPresetInteraction(AddPresetBase, Operator):
     ]
 
     preset_subdir = "interaction"
-
-
-class AddPresetTrackingCamera(AddPresetBase, Operator):
-    """Add or remove a Tracking Camera Intrinsics Preset"""
-    bl_idname = "clip.camera_preset_add"
-    bl_label = "Add Camera Preset"
-    preset_menu = "CLIP_MT_camera_presets"
-
-    preset_defines = [
-        "camera = bpy.context.edit_movieclip.tracking.camera"
-    ]
-
-    preset_subdir = "tracking_camera"
-
-    use_focal_length = BoolProperty(
-        name="Include Focal Length",
-        description="Include focal length into the preset",
-        options={'SKIP_SAVE'},
-        default=True
-    )
-
-    @property
-    def preset_values(self):
-        preset_values = [
-            "camera.sensor_width",
-            "camera.pixel_aspect",
-            "camera.k1",
-            "camera.k2",
-            "camera.k3"
-        ]
-        if self.use_focal_length:
-            preset_values.append("camera.units")
-            preset_values.append("camera.focal_length")
-        return preset_values
-
-
-class AddPresetTrackingTrackColor(AddPresetBase, Operator):
-    """Add or remove a Clip Track Color Preset"""
-    bl_idname = "clip.track_color_preset_add"
-    bl_label = "Add Track Color Preset"
-    preset_menu = "CLIP_MT_track_color_presets"
-
-    preset_defines = [
-        "track = bpy.context.edit_movieclip.tracking.tracks.active"
-    ]
-
-    preset_values = [
-        "track.color",
-        "track.use_custom_color"
-    ]
-
-    preset_subdir = "tracking_track_color"
-
-
-class AddPresetTrackingSettings(AddPresetBase, Operator):
-    """Add or remove a motion tracking settings preset"""
-    bl_idname = "clip.tracking_settings_preset_add"
-    bl_label = "Add Tracking Settings Preset"
-    preset_menu = "CLIP_MT_tracking_settings_presets"
-
-    preset_defines = [
-        "settings = bpy.context.edit_movieclip.tracking.settings"
-    ]
-
-    preset_values = [
-        "settings.default_correlation_min",
-        "settings.default_pattern_size",
-        "settings.default_search_size",
-        "settings.default_frames_limit",
-        "settings.default_pattern_match",
-        "settings.default_margin",
-        "settings.default_motion_model",
-        "settings.use_default_brute",
-        "settings.use_default_normalization",
-        "settings.use_default_mask",
-        "settings.use_default_red_channel",
-        "settings.use_default_green_channel",
-        "settings.use_default_blue_channel"
-        "settings.default_weight"
-    ]
-
-    preset_subdir = "tracking_settings"
-
-
-class AddPresetNodeColor(AddPresetBase, Operator):
-    """Add or remove a Node Color Preset"""
-    bl_idname = "node.node_color_preset_add"
-    bl_label = "Add Node Color Preset"
-    preset_menu = "NODE_MT_node_color_presets"
-
-    preset_defines = [
-        "node = bpy.context.active_node"
-    ]
-
-    preset_values = [
-        "node.color",
-        "node.use_custom_color"
-    ]
-
-    preset_subdir = "node_color"
 
 
 class AddPresetInterfaceTheme(AddPresetBase, Operator):
@@ -687,20 +433,11 @@ class AddPresetUnitsLength(AddPresetBase, Operator):
 classes = (
     AddPresetCamera,
     AddPresetCloth,
-    AddPresetFluid,
-    AddPresetHairDynamics,
     AddPresetInteraction,
     AddPresetInterfaceTheme,
     AddPresetKeyconfig,
-    AddPresetNodeColor,
     AddPresetOperator,
-    AddPresetRender,
-    AddPresetSSS,
     AddPresetSafeAreas,
-    AddPresetSunSky,
-    AddPresetTrackingCamera,
-    AddPresetTrackingSettings,
-    AddPresetTrackingTrackColor,
     AddPresetUnitsLength,
     ExecutePreset,
     WM_MT_operator_presets,
