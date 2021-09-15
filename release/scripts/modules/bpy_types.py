@@ -61,7 +61,7 @@ class Library(bpy_types.ID):
         # we could make this an attribute in rna.
         attr_links = ("cameras",
                       "curves", "groups", "images",
-                      "lamps", "lattices", "materials", 
+                      "lamps", "materials", 
                       "meshes", "objects", "scenes",
                       "textures", "texts",
                       "fonts", "worlds")
