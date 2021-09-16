@@ -102,11 +102,10 @@ typedef struct Object {
 	short type, partype;
 	int par1, par2, par3;	/* can be vertexnrs */
 	char parsubstr[64];	/* String describing subobject info, MAX_ID_NAME-2 */
-	struct Object *parent, *track;
+	struct Object *parent;
 	/* if ob->proxy (or proxy_group), this object is proxy for object ob->proxy */
 	/* proxy_from is set in target back to the proxy. */
 	struct Object *proxy, *proxy_group, *proxy_from;
-	/* struct Path *path; */
 	struct BoundBox *bb;  /* axis aligned boundbox (in localspace) */
 	void *data;  /* pointer to objects data - an 'ID' or NULL */
 
@@ -134,64 +133,20 @@ typedef struct Object {
 	float rotAngle, drotAngle;	/* axis angle rotation - angle part */
 	float obmat[4][4];		/* final worldspace matrix with constraints & animsys applied */
 	float parentinv[4][4]; /* inverse result of parent, so that object doesn't 'stick' to parent */
-	float constinv[4][4]; /* inverse result of constraints. doesn't include effect of parent or object local transform */
 	float imat[4][4];	/* inverse matrix of 'obmat' for any other use than rendering! */
 	                    /* note: this isn't assured to be valid as with 'obmat',
 	                     *       before using this value you should do...
 	                     *       invert_m4_m4(ob->imat, ob->obmat); */
-
-	/* Previously 'imat' was used at render time, but as other places use it too
-	 * the interactive ui of 2.5 creates problems. So now only 'imat_ren' should
-	 * be used when ever the inverse of ob->obmat * re->viewmat is needed! - jahka
-	 */
-	float imat_ren[4][4];
 
 	unsigned int lay;	/* copy of Base's layer in the scene */
 
 	short flag;			/* copy of Base */
 
 	short transflag, protectflag;	/* transformation settings and transform locks  */
-	short scaflag;				/* ui state for game logic */
-	char scavisflag;			/* more display settings for game logic */
 	char depsflag;
 
 	/* did last modifier stack generation need mapping support? */
 	char lastNeedMapping;  /* bool */
-	char pad[1];
-
-	/* during realtime */
-
-	/* note that inertia is only called inertia for historical reasons
-	 * and is not changed to avoid DNA surgery. It actually reflects the
-	 * Size value in the GameButtons (= radius) */
-
-	float mass, damping, inertia;
-	/* The form factor k is introduced to give the user more control
-	 * and to fix incompatibility problems.
-	 * For rotational symmetric objects, the inertia value can be
-	 * expressed as: Theta = k * m * r^2
-	 * where m = Mass, r = Radius
-	 * For a Sphere, the form factor is by default = 0.4
-	 */
-
-	float formfactor;
-	float rdamping;
-	float margin;
-	float max_vel; /* clamp the maximum velocity 0.0 is disabled */
-	float min_vel; /* clamp the minimum velocity 0.0 is disabled */
-	float max_angvel; /* clamp the maximum angular velocity, 0.0 is disabled */
-	float min_angvel; /* clamp the minimum angular velocity, 0.0 is disabled */
-	float obstacleRad;
-
-	/* "Character" physics properties */
-	float step_height;
-	float jump_speed;
-	float fall_speed;
-	unsigned char max_jumps;
-	char pad2[3];
-
-	/** Collision mask settings */
-	unsigned short col_group, col_mask;
 
 	short rotmode;		/* rotation mode */
 
@@ -203,17 +158,14 @@ typedef struct Object {
 	char empty_drawtype;
 	float empty_drawsize;
 
-	float sf; /* sf is time-offset */
-
 	short index;			/* custom index, for renderpasses */
 	unsigned short actdef;	/* current deformation group, note: index starts at 1 */
 	float col[4];			/* object color */
 
 	char restrictflag;		/* for restricting view, select, render etc. accessible in outliner */
 	char recalc;			/* dependency flag */
-	short pad20;
-	float anisotropicFriction[3];
-
+	short pad20[3];
+	
 	struct Group *dup_group;	/* object duplicator for group */
 
 	char  body_type;			/* for now used to temporarily holds the type of collision object */
@@ -225,11 +177,9 @@ typedef struct Object {
 	struct CurveCache *curve_cache;
 
 	struct DerivedMesh *derivedDeform, *derivedFinal;
-	void *pad22;
+	void *pad22[2];
 	uint64_t lastDataMask;   /* the custom data layer mask that was last used to calculate derivedDeform and derivedFinal */
 	uint64_t customdata_mask; /* (extra) custom data layer mask to use for creating derivedmesh, set by depsgraph */
-	unsigned int state;			/* bit masks of game controllers that are active */
-	unsigned int init_state;	/* bit masks of initial state as recorded by the users */
 
 	ListBase gpulamp;		/* runtime, for glsl lamp display only */
 	ListBase pc_ids;

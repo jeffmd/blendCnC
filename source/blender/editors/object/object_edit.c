@@ -662,28 +662,6 @@ static void copy_attr(Main *bmain, Scene *scene, View3D *v3d, short event)
 					base->object->empty_drawtype = ob->empty_drawtype;
 					base->object->empty_drawsize = ob->empty_drawsize;
 				}
-				else if (event == 5) {  /* time offs */
-					base->object->sf = ob->sf;
-				}
-				else if (event == 7) {    /* mass */
-					base->object->mass = ob->mass;
-				}
-				else if (event == 8) {    /* damping */
-					base->object->damping = ob->damping;
-					base->object->rdamping = ob->rdamping;
-				}
-				else if (event == 11) {   /* all physical attributes */
-					base->object->inertia = ob->inertia;
-					base->object->formfactor = ob->formfactor;
-					base->object->damping = ob->damping;
-					base->object->rdamping = ob->rdamping;
-					base->object->min_vel = ob->min_vel;
-					base->object->max_vel = ob->max_vel;
-					base->object->min_angvel = ob->min_angvel;
-					base->object->max_angvel = ob->max_angvel;
-					base->object->margin = ob->margin;
-
-				}
 				else if (event == 17) {   /* tex space */
 					copy_texture_space(base->object, ob);
 				}

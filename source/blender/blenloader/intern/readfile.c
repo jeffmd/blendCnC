@@ -2706,7 +2706,6 @@ static void lib_link_object(FileData *fd, Main *main)
 			IDP_LibLinkProperty(ob->id.properties, fd);
 
 			ob->parent = newlibadr(fd, ob->id.lib, ob->parent);
-			ob->track = newlibadr(fd, ob->id.lib, ob->track);
 			ob->dup_group = newlibadr_us(fd, ob->id.lib, ob->dup_group);
 
 			ob->proxy = newlibadr_us(fd, ob->id.lib, ob->proxy);

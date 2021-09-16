@@ -401,7 +401,6 @@ void BKE_object_init(Object *ob)
 	/* rotation locks should be 4D for 4 component rotations by default... */
 	ob->protectflag = OB_LOCK_ROT4D;
 
-	unit_m4(ob->constinv);
 	unit_m4(ob->parentinv);
 	unit_m4(ob->obmat);
 	ob->dt = OB_TEXTURE;
@@ -411,24 +410,6 @@ void BKE_object_init(Object *ob)
 		copy_v2_fl(ob->ima_ofs, -0.5f);
 	}
 
-	/* Game engine defaults*/
-	ob->mass = ob->inertia = 1.0f;
-	ob->formfactor = 0.4f;
-	ob->damping = 0.04f;
-	ob->rdamping = 0.1f;
-	ob->anisotropicFriction[0] = 1.0f;
-	ob->anisotropicFriction[1] = 1.0f;
-	ob->anisotropicFriction[2] = 1.0f;
-	ob->margin = 0.04f;
-	ob->init_state = 1;
-	ob->state = 1;
-	ob->obstacleRad = 1.0f;
-	ob->step_height = 0.15f;
-	ob->jump_speed = 10.0f;
-	ob->fall_speed = 55.0f;
-	ob->max_jumps = 1;
-	ob->col_group = 0x01;
-	ob->col_mask = 0xffff;
 	ob->preview = NULL;
 
 	BLI_listbase_clear(&ob->pc_ids);
@@ -1233,22 +1214,7 @@ static void solve_parenting(Scene *scene, Object *ob, Object *par, float obmat[4
 
 static bool where_is_object_parslow(Object *ob, float obmat[4][4], float slowmat[4][4])
 {
-	float *fp1, *fp2;
-	float fac1, fac2;
-	int a;
-
-	/* include framerate */
-	fac1 = (1.0f / (1.0f + fabsf(ob->sf)));
-	if (fac1 >= 1.0f) return false;
-	fac2 = 1.0f - fac1;
-
-	fp1 = obmat[0];
-	fp2 = slowmat[0];
-	for (a = 0; a < 16; a++, fp1++, fp2++) {
-		fp1[0] = fac1 * fp1[0] + fac2 * fp2[0];
-	}
-
-	return true;
+	return false;
 }
 
 /* note, scene is the active scene while actual_scene is the scene the object resides in */
@@ -1331,7 +1297,6 @@ void BKE_object_workob_calc_parent(Scene *scene, Object *ob, Object *workob)
 
 	unit_m4(workob->obmat);
 	unit_m4(workob->parentinv);
-	unit_m4(workob->constinv);
 	workob->parent = ob->parent;
 
 	workob->partype = ob->partype;
@@ -1622,7 +1587,6 @@ typedef struct ObTfmBack {
 	float rotAngle, drotAngle;  /* axis angle rotation - angle part */
 	float obmat[4][4];      /* final worldspace matrix with constraints & animsys applied */
 	float parentinv[4][4]; /* inverse result of parent, so that object doesn't 'stick' to parent */
-	float constinv[4][4]; /* inverse result of constraints. doesn't include effect of parent or object local transform */
 	float imat[4][4];   /* inverse matrix of 'obmat' for during render, old game engine, temporally: ipokeys of transform  */
 } ObTfmBack;
 
@@ -1644,7 +1608,6 @@ void *BKE_object_tfm_backup(Object *ob)
 	obtfm->drotAngle = ob->drotAngle;
 	copy_m4_m4(obtfm->obmat, ob->obmat);
 	copy_m4_m4(obtfm->parentinv, ob->parentinv);
-	copy_m4_m4(obtfm->constinv, ob->constinv);
 	copy_m4_m4(obtfm->imat, ob->imat);
 
 	return (void *)obtfm;
@@ -1668,7 +1631,6 @@ void BKE_object_tfm_restore(Object *ob, void *obtfm_pt)
 	ob->drotAngle = obtfm->drotAngle;
 	copy_m4_m4(ob->obmat, obtfm->obmat);
 	copy_m4_m4(ob->parentinv, obtfm->parentinv);
-	copy_m4_m4(ob->constinv, obtfm->constinv);
 	copy_m4_m4(ob->imat, obtfm->imat);
 }
 
@@ -2103,7 +2065,6 @@ bool BKE_object_modifier_update_subframe(
 		int recursion = parent_recursion - 1;
 		bool no_update = false;
 		if (ob->parent) no_update |= BKE_object_modifier_update_subframe(bmain, scene, ob->parent, 0, recursion, frame, type);
-		if (ob->track) no_update |= BKE_object_modifier_update_subframe(bmain, scene, ob->track, 0, recursion, frame, type);
 
 		/* skip subframe if object is parented
 		 * to vertex of a dynamic paint canvas */
