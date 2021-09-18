@@ -471,7 +471,6 @@ static const char *wm_context_member_from_ptr(bContext *C, PointerRNA *ptr)
 				CTX_TEST_PTR_DATA_TYPE(C, "region", RNA_Region, ptr, CTX_wm_region(C));
 
 				CTX_TEST_SPACE_TYPE(SPACE_IMAGE, "space_data.uv_editor", space_data);
-				CTX_TEST_SPACE_TYPE(SPACE_VIEW3D, "space_data.fx_settings", &(CTX_wm_view3d(C)->fx_settings));
 				CTX_TEST_SPACE_TYPE(SPACE_FILE, "space_data.params", CTX_wm_space_file(C)->params);
 				break;
 			}

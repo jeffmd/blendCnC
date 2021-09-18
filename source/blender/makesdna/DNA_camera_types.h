@@ -25,7 +25,6 @@
 #define __DNA_CAMERA_TYPES_H__
 
 #include "DNA_defs.h"
-#include "DNA_gpu_types.h"
 #include "DNA_ID.h"
 
 #ifdef __cplusplus
@@ -35,20 +34,6 @@ extern "C" {
 struct Object;
 
 /* ------------------------------------------- */
-/* Stereo Settings */
-typedef struct CameraStereoSettings {
-	float interocular_distance;
-	float convergence_distance;
-	short convergence_mode;
-	short pivot;
-	short flag;
-	short pad;
-	/* Cut-off angle at which interocular distance start to fade down. */
-	float pole_merge_angle_from;
-	/* Cut-off angle at which interocular distance stops to fade down. */
-	float pole_merge_angle_to;
-} CameraStereoSettings;
-
 typedef struct Camera {
 	ID id;
 
@@ -61,16 +46,8 @@ typedef struct Camera {
 	float sensor_x, sensor_y;
 	float shiftx, shifty;
 
-	/* yafray: dof params */
-	/* qdn: yafray var 'YF_dofdist' now enabled for defocus composite node as well.
-	 * The name was not changed so that no other files need to be modified */
-	float YF_dofdist;
-
-	struct Object *dof_ob;
-	struct GPUDOFSettings gpu_dof;
-
 	char sensor_fit;
-	char pad[7];
+	char pad[3];
 
 } Camera;
 
@@ -120,26 +97,6 @@ enum {
 
 #define DEFAULT_SENSOR_WIDTH	32.0f
 #define DEFAULT_SENSOR_HEIGHT	18.0f
-
-/* stereo->convergence_mode */
-enum {
-	CAM_S3D_OFFAXIS    = 0,
-	CAM_S3D_PARALLEL   = 1,
-	CAM_S3D_TOE        = 2,
-};
-
-/* stereo->pivot */
-enum {
-	CAM_S3D_PIVOT_LEFT      = 0,
-	CAM_S3D_PIVOT_RIGHT     = 1,
-	CAM_S3D_PIVOT_CENTER    = 2,
-};
-
-/* stereo->flag */
-enum {
-	CAM_S3D_SPHERICAL       = (1 << 0),
-	CAM_S3D_POLE_MERGE      = (1 << 1),
-};
 
 #ifdef __cplusplus
 }

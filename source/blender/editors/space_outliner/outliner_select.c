@@ -106,22 +106,6 @@ static int outliner_select(SpaceOops *soops, ListBase *lb, int *index, short *se
 /* ****************************************************** */
 /* Outliner Element Selection/Activation on Click */
 
-static eOLDrawState tree_element_active_renderlayer(
-        bContext *C, TreeElement *te, TreeStoreElem *tselem, const eOLSetState set)
-{
-	Scene *sce;
-
-	/* paranoia check */
-	if (te->idcode != ID_SCE)
-		return OL_DRAWSEL_NONE;
-	sce = (Scene *)tselem->id;
-
-	if (set != OL_SETSEL_NONE) {
-		WM_event_add_notifier(C, NC_SCENE, sce);
-	}
-	return OL_DRAWSEL_NONE;
-}
-
 /**
  * Select object tree:
  * CTRL+LMB: Select/Deselect object and all children.
@@ -447,12 +431,6 @@ static eOLDrawState tree_element_active_modifier(
 	return OL_DRAWSEL_NONE;
 }
 
-static int tree_element_active_constraint(
-        bContext *C, TreeElement *UNUSED(te), TreeStoreElem *tselem, const eOLSetState set)
-{
-	return OL_DRAWSEL_NONE;
-}
-
 static eOLDrawState tree_element_active_text(
         bContext *UNUSED(C), Scene *UNUSED(scene), SpaceOops *UNUSED(soops),
         TreeElement *UNUSED(te), int UNUSED(set))
@@ -532,15 +510,8 @@ eOLDrawState tree_element_type_active(
 				return OL_DRAWSEL_NORMAL;
 			}
 			break;
-		case TSE_CONSTRAINT:
-			return tree_element_active_constraint(C, te, tselem, set);
-		case TSE_R_LAYER:
-			return tree_element_active_renderlayer(C, te, tselem, set);
 		case TSE_KEYMAP_ITEM:
 			return tree_element_active_keymap_item(C, te, tselem, set);
-		case TSE_GP_LAYER:
-			//return tree_element_active_gplayer(C, scene, te, tselem, set);
-			break;
 
 	}
 	return OL_DRAWSEL_NONE;
@@ -562,7 +533,7 @@ static void do_outliner_item_activate_tree_element(
 	/* always makes active object, except for some specific types.
 	 * Note about TSE_EBONE: In case of a same ID_AR datablock shared among several objects, we do not want
 	 * to switch out of edit mode (see T48328 for details). */
-	if (!ELEM(tselem->type, TSE_SEQUENCE, TSE_SEQ_STRIP, TSE_SEQUENCE_DUP, TSE_EBONE)) {
+	{
 		tree_element_set_active_object(
 		        C, scene, soops, te,
 		        (extend && tselem->type == 0) ? OL_SETSEL_EXTEND : OL_SETSEL_NORMAL,

@@ -37,7 +37,6 @@
 
 #include "ED_screen.h"
 
-#include "GPU_compositing.h"
 #include "GPU_framebuffer.h"
 
 #include "../mathutils/mathutils.h"
@@ -171,8 +170,6 @@ static PyObject *pygpu_offscreen_draw_view3d(BPy_GPUOffScreen *self, PyObject *a
 	Scene *scene;
 	View3D *v3d;
 	ARegion *ar;
-	GPUFX *fx;
-	GPUFXSettings fx_settings;
 	struct RV3DMatrixStore *rv3d_mats;
 
 	BPY_GPU_OFFSCREEN_CHECK_OBJ(self);
@@ -191,10 +188,6 @@ static PyObject *pygpu_offscreen_draw_view3d(BPy_GPUOffScreen *self, PyObject *a
 
 	BLI_assert(BKE_id_is_in_gobal_main(&scene->id));
 
-	fx = GPU_fx_compositor_create();
-
-	fx_settings = v3d->fx_settings;  /* full copy */
-
 	ED_view3d_draw_offscreen_init(bmain, scene, v3d);
 
 	rv3d_mats = ED_view3d_mats_rv3d_backup(ar->regiondata);
@@ -205,10 +198,8 @@ static PyObject *pygpu_offscreen_draw_view3d(BPy_GPUOffScreen *self, PyObject *a
 	        bmain, scene, v3d, ar, GPU_offscreen_width(self->ofs), GPU_offscreen_height(self->ofs),
 	        (float(*)[4])py_mat_modelview->matrix, (float(*)[4])py_mat_projection->matrix,
 	        false, true, true, "",
-	        fx, &fx_settings,
 	        self->ofs);
 
-	GPU_fx_compositor_destroy(fx);
 	GPU_offscreen_unbind(self->ofs, true); /* unbind */
 
 	ED_view3d_mats_rv3d_restore(ar->regiondata, rv3d_mats);

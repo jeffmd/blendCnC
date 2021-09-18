@@ -79,7 +79,6 @@
 #include "GPU_draw.h"
 #include "GPU_framebuffer.h"
 #include "GPU_material.h"
-#include "GPU_compositing.h"
 #include "GPU_extensions.h"
 #include "GPU_select.h"
 
@@ -2224,7 +2223,7 @@ static void gpu_update_lamps_shadows_world(Main *bmain, Scene *scene, View3D *v3
 		ED_view3d_draw_offscreen(
 		            bmain, scene, v3d, &ar, winsize, winsize, viewmat, winmat,
 		            false, false, true,
-		            NULL, NULL, NULL, NULL);
+		            NULL, NULL);
 		GPU_lamp_shadow_buffer_unbind(shadow->lamp);
 
 		v3d->drawtype = drawtype;
@@ -2375,7 +2374,7 @@ static void view3d_draw_objects(
         Main *bmain,
         Scene *scene, View3D *v3d, ARegion *ar,
         const char **grid_unit,
-        const bool do_bgpic, const bool draw_offscreen, GPUFX *fx)
+        const bool do_bgpic, const bool draw_offscreen)
 {
 	if (bmain == NULL) {
 		bmain = CTX_data_main(C);
@@ -2386,8 +2385,7 @@ static void view3d_draw_objects(
 	const bool draw_grids = !draw_offscreen && (v3d->flag2 & V3D_RENDER_OVERRIDE) == 0;
 	const bool draw_floor = (rv3d->view == RV3D_VIEW_USER) || (rv3d->persp != RV3D_ORTHO);
 	/* only draw grids after in solid modes, else it hovers over mesh wires */
-	const bool draw_grids_after = draw_grids && draw_floor && (v3d->drawtype > OB_WIRE) && fx;
-	bool do_composite_xray = false;
+	const bool draw_grids_after = false;
 	bool xrayclear = true;
 
 	if (!draw_offscreen) {
@@ -2509,18 +2507,8 @@ static void view3d_draw_objects(
 	/* transp and X-ray afterdraw stuff */
 	if (v3d->afterdraw_transp.first)     view3d_draw_transp(bmain, scene, ar, v3d);
 
-	/* always do that here to cleanup depth buffers if none needed */
-	if (fx) {
-		do_composite_xray = v3d->zbuf && (v3d->afterdraw_xray.first || v3d->afterdraw_xraytransp.first);
-		GPU_fx_compositor_setup_XRay_pass(fx, do_composite_xray);
-	}
-
 	if (v3d->afterdraw_xray.first)       view3d_draw_xray(bmain, scene, ar, v3d, &xrayclear);
 	if (v3d->afterdraw_xraytransp.first) view3d_draw_xraytransp(bmain, scene, ar, v3d, xrayclear);
-
-	if (fx && do_composite_xray) {
-		GPU_fx_compositor_XRay_resolve(fx);
-	}
 
 	if (!draw_offscreen) {
 		ED_region_draw_cb_draw(C, ar, REGION_DRAW_POST_VIEW);
@@ -2698,14 +2686,11 @@ void ED_view3d_draw_offscreen(
         Main *bmain, Scene *scene, View3D *v3d, ARegion *ar, int winx, int winy,
         float viewmat[4][4], float winmat[4][4],
         bool do_bgpic, bool do_sky, bool is_persp, const char *viewname,
-        GPUFX *fx, GPUFXSettings *fx_settings,
         GPUOffScreen *ofs)
 {
 	struct bThemeState theme_state;
 	int bwinx, bwiny;
 	rcti brect;
-	bool do_compositing = false;
-	RegionView3D *rv3d = ar->regiondata;
 
 	glPushMatrix();
 
@@ -2730,21 +2715,6 @@ void ED_view3d_draw_offscreen(
 	/* setup view matrices before fx or unbinding the offscreen buffers will cause issues */
 	view3d_main_region_setup_view(scene, v3d, ar, viewmat, winmat, NULL);
 
-	/* framebuffer fx needed, we need to draw offscreen first */
-	if (v3d->fx_settings.fx_flag && fx) {
-		GPUSSAOSettings *ssao = NULL;
-
-		if (v3d->drawtype < OB_SOLID) {
-			ssao = v3d->fx_settings.ssao;
-			v3d->fx_settings.ssao = NULL;
-		}
-
-		do_compositing = GPU_fx_compositor_initialize_passes(fx, &ar->winrct, NULL, fx_settings);
-
-		if (ssao)
-			v3d->fx_settings.ssao = ssao;
-	}
-
 	/* clear opengl buffers */
 	if (do_sky) {
 		view3d_main_region_clear(scene, v3d, ar);
@@ -2755,14 +2725,7 @@ void ED_view3d_draw_offscreen(
 	}
 
 	/* main drawing call */
-	view3d_draw_objects(NULL, bmain, scene, v3d, ar, NULL, do_bgpic, true, do_compositing ? fx : NULL);
-
-	/* post process */
-	if (do_compositing) {
-		if (!winmat)
-			is_persp = rv3d->is_persp;
-		GPU_fx_do_composite_pass(fx, winmat, is_persp, scene, ofs);
-	}
+	view3d_draw_objects(NULL, bmain, scene, v3d, ar, NULL, do_bgpic, true);
 
 	if ((v3d->flag2 & V3D_RENDER_SHADOW) == 0) {
 		/* draw grease-pencil stuff */
@@ -2803,7 +2766,7 @@ ImBuf *ED_view3d_draw_offscreen_imbuf(
         unsigned int flag, unsigned int draw_flags,
         int alpha_mode, int samples, const char *viewname,
         /* output vars */
-        GPUFX *fx, GPUOffScreen *ofs, char err_out[256])
+        GPUOffScreen *ofs, char err_out[256])
 {
 	RegionView3D *rv3d = ar->regiondata;
 	ImBuf *ibuf;
@@ -2811,7 +2774,6 @@ ImBuf *ED_view3d_draw_offscreen_imbuf(
 	const bool use_full_sample = (draw_flags & V3D_OFSDRAW_USE_FULL_SAMPLE);
 
 	/* view state */
-	GPUFXSettings fx_settings = v3d->fx_settings;
 	bool is_ortho = false;
 	float winmat[4][4];
 
@@ -2850,8 +2812,6 @@ ImBuf *ED_view3d_draw_offscreen_imbuf(
 		BKE_camera_params_compute_viewplane(&params, sizex, sizey, 1.0f, 1.0f);
 		BKE_camera_params_compute_matrix(&params);
 
-		BKE_camera_to_gpu_dof(camera, &fx_settings);
-
 		is_ortho = params.is_ortho;
 		copy_m4_m4(winmat, params.winmat);
 	}
@@ -2873,7 +2833,7 @@ ImBuf *ED_view3d_draw_offscreen_imbuf(
 		ED_view3d_draw_offscreen(
 		        bmain, scene, v3d, ar, sizex, sizey, NULL, winmat,
 		        draw_background, false, !is_ortho, viewname,
-		        fx, &fx_settings, ofs);
+		        ofs);
 
 		if (ibuf->rect_float) {
 			GPU_offscreen_read_pixels(ofs, GL_FLOAT, ibuf->rect_float);
@@ -2899,7 +2859,7 @@ ImBuf *ED_view3d_draw_offscreen_imbuf(
 		ED_view3d_draw_offscreen(
 		        bmain, scene, v3d, ar, sizex, sizey, NULL, winmat,
 		        draw_background, false, !is_ortho, viewname,
-		        fx, &fx_settings, ofs);
+		        ofs);
 		GPU_offscreen_read_pixels(ofs, GL_UNSIGNED_BYTE, rect_temp);
 
 		i = sizex * sizey * 4;
@@ -2918,7 +2878,7 @@ ImBuf *ED_view3d_draw_offscreen_imbuf(
 			ED_view3d_draw_offscreen(
 			        bmain, scene, v3d, ar, sizex, sizey, NULL, winmat_jitter,
 			        draw_background, false, !is_ortho, viewname,
-			        fx, &fx_settings, ofs);
+			        ofs);
 			GPU_offscreen_read_pixels(ofs, GL_UNSIGNED_BYTE, rect_temp);
 
 			i = sizex * sizey * 4;
@@ -2971,7 +2931,7 @@ ImBuf *ED_view3d_draw_offscreen_imbuf_simple(
         Object *camera, int width, int height,
         unsigned int flag, unsigned int draw_flags, int drawtype,
         int alpha_mode, int samples, const char *viewname,
-        GPUFX *fx, GPUOffScreen *ofs, char err_out[256])
+        GPUOffScreen *ofs, char err_out[256])
 {
 	View3D v3d = {NULL};
 	ARegion ar = {NULL};
@@ -2992,12 +2952,6 @@ ImBuf *ED_view3d_draw_offscreen_imbuf_simple(
 	}
 	if (draw_flags & V3D_OFSDRAW_USE_BACKGROUND) {
 		v3d.flag2 |= V3D_SHOW_WORLD;
-	}
-	if (draw_flags & V3D_OFSDRAW_USE_CAMERA_DOF) {
-		if (camera->type == OB_CAMERA) {
-			v3d.fx_settings.dof = &((Camera *)camera->data)->gpu_dof;
-			v3d.fx_settings.fx_flag |= GPU_FX_FLAG_DOF;
-		}
 	}
 
 	rv3d.persp = RV3D_CAMOB;
@@ -3026,7 +2980,7 @@ ImBuf *ED_view3d_draw_offscreen_imbuf_simple(
 
 	return ED_view3d_draw_offscreen_imbuf(
 	        bmain, scene, &v3d, &ar, width, height, flag, draw_flags,
-	        alpha_mode, samples, viewname, fx, ofs, err_out);
+	        alpha_mode, samples, viewname, ofs, err_out);
 }
 
 
@@ -3037,9 +2991,6 @@ static void view3d_main_region_draw_objects(const bContext *C, Scene *scene, Vie
 	wmWindow *win = CTX_wm_window(C);
 	RegionView3D *rv3d = ar->regiondata;
 	unsigned int lay_used = v3d->lay_used;
-
-	/* post processing */
-	bool do_compositing = false;
 
 	/* shadow buffers, before we setup matrices */
 	if (draw_glsl_material(scene, NULL, v3d, v3d->drawtype))
@@ -3054,23 +3005,6 @@ static void view3d_main_region_draw_objects(const bContext *C, Scene *scene, Vie
 	/* Setup the view matrix. */
 	ED_view3d_draw_setup_view(CTX_wm_window(C), scene, ar, v3d, NULL, NULL, NULL);
 
-	/* framebuffer fx needed, we need to draw offscreen first */
-	if (v3d->fx_settings.fx_flag && v3d->drawtype >= OB_SOLID) {
-		GPUFXSettings fx_settings;
-		BKE_screen_gpu_fx_validate(&v3d->fx_settings);
-		fx_settings = v3d->fx_settings;
-		if (!rv3d->compositor)
-			rv3d->compositor = GPU_fx_compositor_create();
-
-		if (rv3d->persp == RV3D_CAMOB && v3d->camera)
-			BKE_camera_to_gpu_dof(v3d->camera, &fx_settings);
-		else {
-			fx_settings.dof = NULL;
-		}
-
-		do_compositing = GPU_fx_compositor_initialize_passes(rv3d->compositor, &ar->winrct, &ar->drawrct, &fx_settings);
-	}
-
 	/* clear the background */
 	view3d_main_region_clear(scene, v3d, ar);
 
@@ -3080,12 +3014,7 @@ static void view3d_main_region_draw_objects(const bContext *C, Scene *scene, Vie
 	}
 
 	/* main drawing call */
-	view3d_draw_objects(C, bmain, scene, v3d, ar, grid_unit, true, false, do_compositing ? rv3d->compositor : NULL);
-
-	/* post process */
-	if (do_compositing) {
-		GPU_fx_do_composite_pass(rv3d->compositor, rv3d->winmat, rv3d->is_persp, scene, NULL);
-	}
+	view3d_draw_objects(C, bmain, scene, v3d, ar, grid_unit, true, false);
 
 	/* Disable back anti-aliasing */
 	if (win->multisamples != USER_MULTISAMPLE_NONE) {

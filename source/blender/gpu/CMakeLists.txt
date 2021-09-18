@@ -44,7 +44,6 @@ set(SRC
 	intern/gpu_basic_shader.c
 	intern/gpu_buffers.c
 	intern/gpu_codegen.c
-	intern/gpu_compositing.c
 	intern/gpu_debug.c
 	intern/gpu_draw.c
 	intern/gpu_extensions.c
@@ -59,7 +58,6 @@ set(SRC
 
 	GPU_basic_shader.h
 	GPU_buffers.h
-	GPU_compositing.h
 	GPU_debug.h
 	GPU_draw.h
 	GPU_extensions.h

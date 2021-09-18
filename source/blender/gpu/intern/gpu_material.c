@@ -56,10 +56,6 @@
 
 #include "gpu_codegen.h"
 
-#ifdef WITH_OPENSUBDIV
-#  include "BKE_DerivedMesh.h"
-#endif
-
 /* Structs */
 
 typedef enum DynMatProperty {
@@ -2503,7 +2499,6 @@ void GPU_lamp_shadow_buffer_unbind(GPULamp *lamp)
 {
 	if (lamp->la->shadowmap_type == LA_SHADMAP_VARIANCE) {
 		GPU_shader_unbind();
-		GPU_framebuffer_blur(lamp->fb, lamp->tex, lamp->blurfb, lamp->blurtex);
 	}
 
 	GPU_framebuffer_texture_unbind(lamp->fb, lamp->tex);

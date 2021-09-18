@@ -25,7 +25,6 @@
 #define __DNA_VIEW3D_TYPES_H__
 
 struct BoundBox;
-struct GPUFX;
 struct Image;
 struct Material;
 struct Object;
@@ -125,7 +124,6 @@ typedef struct RegionView3D {
 	float rot_angle;
 	float rot_axis[3];
 
-	struct GPUFX *compositor;
 } RegionView3D;
 
 /* 3D ViewPort Struct */
@@ -188,12 +186,6 @@ typedef struct View3D {
 	char zbuf, transp, xray;
 
 	char multiview_eye;				/* multiview current eye - for internal use */
-
-	/* built-in shader effects (eGPUFXFlags) */
-
-	/* note, 'fx_settings.dof' is currently _not_ allocated,
-	 * instead set (temporarily) from camera */
-	struct GPUFXSettings fx_settings;
 
 	void *properties_storage;		/* Nkey panel stores stuff here (runtime only!) */
 	/* Allocated per view, not library data (used by matcap). */

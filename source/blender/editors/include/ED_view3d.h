@@ -33,8 +33,6 @@ struct BPoint;
 struct Base;
 struct BezTriple;
 struct BoundBox;
-struct GPUFX;
-struct GPUFXSettings;
 struct GPUOffScreen;
 struct ImBuf;
 struct MVert;
@@ -56,7 +54,6 @@ struct wmOperator;
 struct wmOperatorType;
 struct wmWindow;
 struct wmWindowManager;
-enum eGPUFXFlags;
 
 /* for derivedmesh drawing callbacks, for view3d_select, .... */
 typedef struct ViewContext {
@@ -340,7 +337,6 @@ void ED_view3d_draw_offscreen_init(struct Main *bmain, struct Scene *scene, stru
 void ED_view3d_draw_offscreen(
         struct Main *bmain, struct Scene *scene, struct View3D *v3d, struct ARegion *ar, int winx, int winy, float viewmat[4][4],
         float winmat[4][4], bool do_bgpic, bool do_sky, bool is_persp, const char *viewname,
-        struct GPUFX *fx, struct GPUFXSettings *fx_settings,
         struct GPUOffScreen *ofs);
 void ED_view3d_draw_setup_view(
         struct wmWindow *win, struct Scene *scene, struct ARegion *ar, struct View3D *v3d,
@@ -362,13 +358,13 @@ struct ImBuf *ED_view3d_draw_offscreen_imbuf(
         struct View3D *v3d, struct ARegion *ar, int sizex, int sizey,
         unsigned int flag, unsigned int draw_flags,
         int alpha_mode, int samples, const char *viewname,
-        struct GPUFX *fx, struct GPUOffScreen *ofs, char err_out[256]);
+        struct GPUOffScreen *ofs, char err_out[256]);
 struct ImBuf *ED_view3d_draw_offscreen_imbuf_simple(
         struct Main *bmain, struct Scene *scene,
         struct Object *camera, int width, int height,
         unsigned int flag, unsigned int draw_flags, int drawtype, int alpha_mode,
         int samples, const char *viewname,
-        struct GPUFX *fx, struct GPUOffScreen *ofs, char err_out[256]);
+        struct GPUOffScreen *ofs, char err_out[256]);
 
 struct Base *ED_view3d_give_base_under_cursor(struct bContext *C, const int mval[2]);
 void ED_view3d_quadview_update(struct ScrArea *sa, struct ARegion *ar, bool do_clip);

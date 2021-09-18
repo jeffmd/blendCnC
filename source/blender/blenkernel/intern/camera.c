@@ -45,8 +45,6 @@
 #include "BKE_scene.h"
 #include "BKE_screen.h"
 
-#include "GPU_compositing.h"
-
 /****************************** Camera Datablock *****************************/
 
 void BKE_camera_init(Camera *cam)
@@ -62,8 +60,6 @@ void BKE_camera_init(Camera *cam)
 	cam->ortho_scale = 6.0;
 	cam->flag |= CAM_SHOWPASSEPARTOUT;
 	cam->passepartalpha = 0.5f;
-
-	GPU_fx_compositor_init_dof_settings(&cam->gpu_dof);
 
 }
 
@@ -109,21 +105,6 @@ void BKE_camera_free(Camera *ca)
 }
 
 /******************************** Camera Usage *******************************/
-
-/* get the camera's dof value, takes the dof object into account */
-float BKE_camera_object_dof_distance(Object *ob)
-{
-	Camera *cam = (Camera *)ob->data;
-	if (ob->type != OB_CAMERA)
-		return 0.0f;
-	if (cam->dof_ob) {
-		float view_dir[3], dof_dir[3];
-		normalize_v3_v3(view_dir, ob->obmat[2]);
-		sub_v3_v3v3(dof_dir, ob->obmat[3], cam->dof_ob->obmat[3]);
-		return fabsf(dot_v3v3(view_dir, dof_dir));
-	}
-	return cam->YF_dofdist;
-}
 
 float BKE_camera_sensor_size(int sensor_fit, float sensor_x, float sensor_y)
 {
@@ -622,17 +603,6 @@ bool BKE_camera_view_frame_fit_to_coords(
 	}
 
 	return camera_frame_fit_calc_from_data(&params, &data_cb, r_co, r_scale);
-}
-
-void BKE_camera_to_gpu_dof(struct Object *camera, struct GPUFXSettings *r_fx_settings)
-{
-	if (camera->type == OB_CAMERA) {
-		Camera *cam = camera->data;
-		r_fx_settings->dof = &cam->gpu_dof;
-		r_fx_settings->dof->focal_length = cam->lens;
-		r_fx_settings->dof->sensor = BKE_camera_sensor_size(cam->sensor_fit, cam->sensor_x, cam->sensor_y);
-		r_fx_settings->dof->focus_distance = BKE_camera_object_dof_distance(camera);
-	}
 }
 
 void BKE_camera_model_matrix(Object *camera, float r_modelmat[4][4])

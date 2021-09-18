@@ -404,10 +404,6 @@ static TreeElement *outliner_add_element(SpaceOops *soops, ListBase *lb, void *i
 		id = ((PointerRNA *)idv)->id.data;
 		if (!id) id = ((PointerRNA *)idv)->data;
 	}
-	else if (type == TSE_GP_LAYER) {
-		/* idv is the layer its self */
-		id = TREESTORE(parent)->id;
-	}
 
 	/* One exception */
 	if (type == TSE_ID_BASE) {
@@ -435,16 +431,7 @@ static TreeElement *outliner_add_element(SpaceOops *soops, ListBase *lb, void *i
 
 	te->parent = parent;
 	te->index = index;   // for data arrays
-	if (ELEM(type, TSE_SEQUENCE, TSE_SEQ_STRIP, TSE_SEQUENCE_DUP)) {
-		/* pass */
-	}
-	else if (ELEM(type, TSE_RNA_STRUCT, TSE_RNA_PROPERTY, TSE_RNA_ARRAY_ELEM)) {
-		/* pass */
-	}
-	else if (type == TSE_ANIM_DATA) {
-		/* pass */
-	}
-	else if (type == TSE_GP_LAYER) {
+	if (ELEM(type, TSE_RNA_STRUCT, TSE_RNA_PROPERTY, TSE_RNA_ARRAY_ELEM)) {
 		/* pass */
 	}
 	else if (type == TSE_ID_BASE) {

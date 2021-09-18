@@ -1611,8 +1611,6 @@ static void drawcamera(Scene *scene, View3D *v3d, RegionView3D *rv3d, Base *base
 				const unsigned char col[3] = {128, 128, 60}, col_hi[3] = {255, 255, 120};
 
 				draw_limit_line(cam->clipsta, cam->clipend, dflag, (is_active ? col_hi : col));
-				/* qdn: was yafray only, now also enabled for Blender to be used with defocus composite node */
-				draw_focus_cross(BKE_camera_object_dof_distance(ob), cam->drawsize);
 			}
 
 			if (cam->flag & CAM_SHOWMIST) {

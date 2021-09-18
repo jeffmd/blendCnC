@@ -149,9 +149,9 @@ static bool outliner_parent_clear_poll(bContext *C, wmDrag *drag, const wmEvent 
 
 					switch (te->idcode) {
 						case ID_SCE:
-							return (ELEM(tselem->type, TSE_R_LAYER_BASE, TSE_R_LAYER, TSE_R_PASS));
+							return false;
 						case ID_OB:
-							return (ELEM(tselem->type, TSE_MODIFIER_BASE, TSE_CONSTRAINT_BASE));
+							return (ELEM(tselem->type, TSE_MODIFIER_BASE));
 						/* Other codes to ignore? */
 					}
 				}

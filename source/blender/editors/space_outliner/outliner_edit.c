@@ -182,13 +182,9 @@ static void do_item_rename(ARegion *ar, TreeElement *te, TreeStoreElem *tselem, 
 	if (ELEM(tselem->type, TSE_RNA_STRUCT, TSE_RNA_PROPERTY, TSE_RNA_ARRAY_ELEM, TSE_ID_BASE)) {
 		/* do nothing */;
 	}
-	else if (ELEM(tselem->type, TSE_ANIM_DATA, TSE_NLA, TSE_DEFGROUP_BASE, TSE_CONSTRAINT_BASE, TSE_MODIFIER_BASE,
-	              TSE_DRIVER_BASE, TSE_POSE_BASE, TSE_POSEGRP_BASE, TSE_R_LAYER_BASE, TSE_R_PASS))
+	else if (ELEM(tselem->type, TSE_DEFGROUP_BASE, TSE_MODIFIER_BASE))
 	{
 		BKE_report(reports, RPT_WARNING, "Cannot edit builtin name");
-	}
-	else if (ELEM(tselem->type, TSE_SEQUENCE, TSE_SEQ_STRIP, TSE_SEQUENCE_DUP)) {
-		BKE_report(reports, RPT_WARNING, "Cannot edit sequence name");
 	}
 	else if (ID_IS_LINKED(tselem->id)) {
 		BKE_report(reports, RPT_WARNING, "Cannot edit external libdata");

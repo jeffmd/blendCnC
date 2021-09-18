@@ -367,8 +367,6 @@ static void namebutton_cb(bContext *C, void *tsep, char *oldname)
 				case TSE_DEFGROUP:
 					defgroup_unique_name(te->directdata, (Object *)tselem->id); //	id = object
 					break;
-				case TSE_R_LAYER:
-					break;
 			}
 		}
 		tselem->flag &= ~TSE_TEXTBUT;
@@ -701,8 +699,6 @@ static void tselem_draw_icon(uiBlock *block, int xmax, float x, float y, TreeSto
 		switch (tselem->type) {
 			case TSE_DEFGROUP_BASE:
 				UI_icon_draw(x, y, ICON_GROUP_VERTEX); break;
-			case TSE_CONSTRAINT_BASE:
-				UI_icon_draw(x, y, ICON_CONSTRAINT); break;
 			case TSE_MODIFIER_BASE:
 				UI_icon_draw(x, y, ICON_MODIFIER); break;
 			case TSE_LINKED_OB:
@@ -789,10 +785,6 @@ static void tselem_draw_icon(uiBlock *block, int xmax, float x, float y, TreeSto
 			}
 			case TSE_PROXY:
 				UI_icon_draw(x, y, ICON_GHOST); break;
-			case TSE_R_LAYER_BASE:
-				UI_icon_draw(x, y, ICON_RENDERLAYERS); break;
-			case TSE_R_LAYER:
-				UI_icon_draw(x, y, ICON_RENDERLAYERS); break;
 			case TSE_LINKED_LAMP:
 				UI_icon_draw(x, y, ICON_LAMP_DATA); break;
 			case TSE_LINKED_MAT:
@@ -949,8 +941,7 @@ static void outliner_draw_iconrow(bContext *C, uiBlock *block, Scene *scene, Spa
 		}
 
 		/* this tree element always has same amount of branches, so don't draw */
-		if (tselem->type != TSE_R_LAYER)
-			outliner_draw_iconrow(C, block, scene, soops, &te->subtree, level + 1, xmax, offsx, ys);
+		outliner_draw_iconrow(C, block, scene, soops, &te->subtree, level + 1, xmax, offsx, ys);
 	}
 
 }
@@ -1151,7 +1142,7 @@ static void outliner_draw_tree_element(
 				if (tselem->type == 0 && te->idcode == ID_SCE) {
 					/* pass */
 				}
-				else if (tselem->type != TSE_R_LAYER) {
+				else {
 					/* this tree element always has same amount of branches, so don't draw */
 
 					int tempx = startx + offsx;

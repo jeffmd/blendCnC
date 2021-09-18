@@ -1528,12 +1528,6 @@ static void write_screen(WriteData *wd, bScreen *sc)
 					writestruct(wd, DATA, View3D, 1, v3d->localvd);
 				}
 
-				if (v3d->fx_settings.ssao) {
-					writestruct(wd, DATA, GPUSSAOSettings, 1, v3d->fx_settings.ssao);
-				}
-				if (v3d->fx_settings.dof) {
-					writestruct(wd, DATA, GPUDOFSettings, 1, v3d->fx_settings.dof);
-				}
 			}
 			else if (sl->spacetype == SPACE_BUTS) {
 				writestruct(wd, DATA, SpaceButs, 1, sl);

@@ -50,8 +50,6 @@ void BKE_camera_free(struct Camera *ca);
 
 /* Camera Usage */
 
-float BKE_camera_object_dof_distance(struct Object *ob);
-
 int BKE_camera_sensor_fit(int sensor_fit, float sizex, float sizey);
 float BKE_camera_sensor_size(int sensor_fit, float sensor_x, float sensor_y);
 
@@ -128,8 +126,6 @@ bool BKE_camera_view_frame_fit_to_coords(
 
 void BKE_camera_model_matrix(struct Object *camera, float r_modelmat[4][4]);
 void BKE_camera_view_matrix(struct Object *camera, float r_viewmat[4][4]);
-
-void BKE_camera_to_gpu_dof(struct Object *camera, struct GPUFXSettings *r_fx_settings);
 
 #ifdef __cplusplus
 }

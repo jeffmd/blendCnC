@@ -407,13 +407,6 @@ void BKE_library_foreach_ID_link(Main *bmain, ID *id, LibraryIDLinkCallback call
 				break;
 			}
 
-			case ID_CA:
-			{
-				Camera *camera = (Camera *) id;
-				CALLBACK_INVOKE(camera->dof_ob, IDWALK_CB_NOP);
-				break;
-			}
-
 			case ID_SCR:
 			{
 				bScreen *screen = (bScreen *) id;

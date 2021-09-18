@@ -2043,8 +2043,6 @@ static void lib_link_camera(FileData *fd, Main *main)
 		if (ca->id.tag & LIB_TAG_NEED_LINK) {
 			IDP_LibLinkProperty(ca->id.properties, fd);
 
-			ca->dof_ob = newlibadr(fd, ca->id.lib, ca->dof_ob);
-
 			ca->id.tag &= ~LIB_TAG_NEED_LINK;
 		}
 	}
@@ -3629,7 +3627,6 @@ static void direct_link_region(FileData *fd, ARegion *ar, int spacetype)
 				rv3d->gpuoffscreen = NULL;
 				rv3d->sms = NULL;
 				rv3d->smooth_timer = NULL;
-				rv3d->compositor = NULL;
 			}
 		}
 	}
@@ -3766,11 +3763,6 @@ static bool direct_link_screen(FileData *fd, bScreen *sc)
 				if (v3d->drawtype == OB_RENDER)
 					v3d->drawtype = OB_SOLID;
 				v3d->prev_drawtype = OB_SOLID;
-
-				if (v3d->fx_settings.dof)
-					v3d->fx_settings.dof = newdataadr(fd, v3d->fx_settings.dof);
-				if (v3d->fx_settings.ssao)
-					v3d->fx_settings.ssao = newdataadr(fd, v3d->fx_settings.ssao);
 
 				blo_do_versions_view3d_split_250(v3d, &sl->regionbase);
 			}

@@ -1034,14 +1034,14 @@ static ImBuf *blend_file_thumb(Main *bmain, Scene *scene, bScreen *screen, Blend
 		        bmain, scene, scene->camera,
 		        BLEN_THUMB_SIZE * 2, BLEN_THUMB_SIZE * 2,
 		        IB_rect, V3D_OFSDRAW_NONE, OB_SOLID, IMA_ALPHA_PREMUL, 0, NULL,
-		        NULL, NULL, err_out);
+		        NULL, err_out);
 	}
 	else {
 		ibuf = ED_view3d_draw_offscreen_imbuf(
 		        bmain, scene, v3d, ar,
 		        BLEN_THUMB_SIZE * 2, BLEN_THUMB_SIZE * 2,
 		        IB_rect, V3D_OFSDRAW_NONE, IMA_ALPHA_PREMUL, 0, NULL,
-		        NULL, NULL, err_out);
+		        NULL, err_out);
 	}
 
 	if (ibuf) {
