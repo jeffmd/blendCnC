@@ -432,7 +432,6 @@ class AddPresetUnitsLength(AddPresetBase, Operator):
 
 classes = (
     AddPresetCamera,
-    AddPresetCloth,
     AddPresetInteraction,
     AddPresetInterfaceTheme,
     AddPresetKeyconfig,
