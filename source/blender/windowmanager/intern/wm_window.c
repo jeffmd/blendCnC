@@ -1016,7 +1016,6 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 	bContext *C = C_void_ptr;
 	wmWindowManager *wm = CTX_wm_manager(C);
 	GHOST_TEventType type = GHOST_GetEventType(evt);
-	int time = GHOST_GetEventTime(evt);
 
 	if (type == GHOST_kEventQuit) {
 		WM_exit(C);
@@ -1049,7 +1048,7 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 
 		switch (type) {
 			case GHOST_kEventWindowDeactivate:
-				wm_event_add_ghostevent(wm, win, type, time, data);
+				wm_event_add_ghostevent(wm, win, type, data);
 				win->active = 0; /* XXX */
 
 				/* clear modifiers for inactive windows */
@@ -1093,7 +1092,7 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 				if (win->eventstate->shift) {
 					if ((keymodifier & KM_SHIFT) == 0) {
 						kdata.key = GHOST_kKeyLeftShift;
-						wm_event_add_ghostevent(wm, win, GHOST_kEventKeyUp, time, &kdata);
+						wm_event_add_ghostevent(wm, win, GHOST_kEventKeyUp, &kdata);
 					}
 				}
 #ifdef USE_WIN_ACTIVATE
@@ -1106,7 +1105,7 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 				if (win->eventstate->ctrl) {
 					if ((keymodifier & KM_CTRL) == 0) {
 						kdata.key = GHOST_kKeyLeftControl;
-						wm_event_add_ghostevent(wm, win, GHOST_kEventKeyUp, time, &kdata);
+						wm_event_add_ghostevent(wm, win, GHOST_kEventKeyUp, &kdata);
 					}
 				}
 #ifdef USE_WIN_ACTIVATE
@@ -1119,7 +1118,7 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 				if (win->eventstate->alt) {
 					if ((keymodifier & KM_ALT) == 0) {
 						kdata.key = GHOST_kKeyLeftAlt;
-						wm_event_add_ghostevent(wm, win, GHOST_kEventKeyUp, time, &kdata);
+						wm_event_add_ghostevent(wm, win, GHOST_kEventKeyUp, &kdata);
 					}
 				}
 #ifdef USE_WIN_ACTIVATE
@@ -1132,7 +1131,7 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 				if (win->eventstate->oskey) {
 					if ((keymodifier & KM_OSKEY) == 0) {
 						kdata.key = GHOST_kKeyOS;
-						wm_event_add_ghostevent(wm, win, GHOST_kEventKeyUp, time, &kdata);
+						wm_event_add_ghostevent(wm, win, GHOST_kEventKeyUp, &kdata);
 					}
 				}
 #ifdef USE_WIN_ACTIVATE
@@ -1400,7 +1399,7 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 				GHOST_TEventTrackpadData *pd = data;
 
 				wm_cursor_position_from_ghost(win, &pd->x, &pd->y);
-				wm_event_add_ghostevent(wm, win, type, time, data);
+				wm_event_add_ghostevent(wm, win, type, data);
 				break;
 			}
 			case GHOST_kEventCursorMove:
@@ -1408,11 +1407,11 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 				GHOST_TEventCursorData *cd = data;
 
 				wm_cursor_position_from_ghost(win, &cd->x, &cd->y);
-				wm_event_add_ghostevent(wm, win, type, time, data);
+				wm_event_add_ghostevent(wm, win, type, data);
 				break;
 			}
 			default:
-				wm_event_add_ghostevent(wm, win, type, time, data);
+				wm_event_add_ghostevent(wm, win, type, data);
 				break;
 		}
 
