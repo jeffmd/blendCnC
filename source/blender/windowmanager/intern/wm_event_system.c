@@ -88,20 +88,23 @@ static int wm_operator_call_internal(bContext *C, wmOperatorType *ot, PointerRNA
 
 /* ************ event management ************** */
 
-wmEvent *wm_event_add_ex(wmWindow *win, const wmEvent *event_to_add, const wmEvent *event_to_add_after)
+void wm_event_set_type(wmEvent *event, const short type)
 {
-	wmEvent *event = MEM_mallocN(sizeof(wmEvent), "wmEvent");
-
-	*event = *event_to_add;
-
-	update_tablet_data(win, event);
-
+	event->type = type;
 	if (ELEM(event->type, MOUSEMOVE, INBETWEEN_MOUSEMOVE)) {
 		/* We could have a preference to support relative tablet motion (we can't detect that). */
 		event->is_motion_absolute = (
 		        (event->tablet_data != NULL) &&
 		        (event->tablet_data->Active != GHOST_kTabletModeNone));
 	}
+}
+
+wmEvent *wm_event_add_ex(wmWindow *win, const wmEvent *event_to_add, const wmEvent *event_to_add_after)
+{
+	wmEvent *event = MEM_mallocN(sizeof(wmEvent), "wmEvent");
+
+	*event = *event_to_add;
+	update_tablet_data(win, event);
 
 	if (event_to_add_after == NULL) {
 		BLI_addtail(&win->queue, event);
@@ -110,10 +113,11 @@ wmEvent *wm_event_add_ex(wmWindow *win, const wmEvent *event_to_add, const wmEve
 		/* note, strictly speaking this breaks const-correctness, however we're only changing 'next' member */
 		BLI_insertlinkafter(&win->queue, (void *)event_to_add_after, event);
 	}
+
 	return event;
 }
 
-wmEvent *wm_event_add(wmWindow *win, const wmEvent *event_to_add)
+wmEvent *wm_event_add(wmWindow *win, const struct wmEvent *event_to_add)
 {
 	return wm_event_add_ex(win, event_to_add, NULL);
 }
@@ -2601,12 +2605,12 @@ void wm_event_do_handlers(bContext *C)
 
 		/* only add mousemove when queue was read entirely */
 		if (win->addmousemove && win->eventstate) {
-			wmEvent tevent = *(win->eventstate);
-			// printf("adding MOUSEMOVE %d %d\n", tevent.x, tevent.y);
-			tevent.type = MOUSEMOVE;
-			tevent.prevx = tevent.x;
-			tevent.prevy = tevent.y;
-			wm_event_add(win, &tevent);
+			wmEvent *tevent = wm_event_add(win, win->eventstate);
+			// printf("adding MOUSEMOVE %d %d\n", tevent->x, tevent->y);
+			wm_event_set_type(tevent, MOUSEMOVE);
+			tevent->prevx = tevent->x;
+			tevent->prevy = tevent->y;
+			
 			win->addmousemove = 0;
 		}
 
@@ -2627,13 +2631,13 @@ void WM_event_fileselect_event(wmWindowManager *wm, void *ophandle, int eventval
 	wmWindow *win;
 
 	for (win = wm->windows.first; win; win = win->next) {
-		wmEvent event = *win->eventstate;
+		wmEvent *event = wm_event_add(win, win->eventstate);
 
-		event.type = EVT_FILESELECT;
-		event.val = eventval;
-		event.customdata = ophandle;     // only as void pointer type check
+		wm_event_set_type(event, EVT_FILESELECT);
+		event->val = eventval;
+		event->customdata = ophandle;     // only as void pointer type check
 
-		wm_event_add(win, &event);
+		
 	}
 }
 
@@ -3197,6 +3201,7 @@ static wmEvent *wm_event_add_mousemove(wmWindow *win, const wmEvent *event)
 	}
 
 	copy_v2_v2_int(&event_new->prevx, &event_last->x);
+
 	return event_new;
 }
 
@@ -3204,7 +3209,6 @@ static wmEvent *wm_event_add_mousemove(wmWindow *win, const wmEvent *event)
 /* time is in 1000s of seconds, from ghost */
 void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int UNUSED(time), void *customdata)
 {
-	wmWindow *owin;
 
 	/* Having both, event and evt, can be highly confusing to work with, but is necessary for
 	 * our current event system, so let's clear things up a bit:
@@ -3212,72 +3216,61 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 	 * - data added to evt only stays, but is handled with the next event -> execution delay
 	 * - data added to event and evt stays and is handled immediately
 	 */
-	wmEvent event, *evt = win->eventstate;
-
-	/* initialize and copy state (only mouse x y and modifiers) */
-	event = *evt;
+	wmEvent *evt = win->eventstate;
 
 	switch (type) {
 		/* mouse move, also to inactive window (X11 does this) */
 		case GHOST_kEventCursorMove:
 		{
 			GHOST_TEventCursorData *cd = customdata;
+			copy_v2_v2_int(&evt->x, &cd->x);
 
-			copy_v2_v2_int(&event.x, &cd->x);
-
-			event.type = MOUSEMOVE;
-			{
-				wmEvent *event_new = wm_event_add_mousemove(win, &event);
-				copy_v2_v2_int(&evt->x, &event_new->x);
-				evt->is_motion_absolute = event_new->is_motion_absolute;
-			}
+			wmEvent *event = wm_event_add_mousemove(win, evt);
+			wm_event_set_type(event, MOUSEMOVE);
+			evt->is_motion_absolute = event->is_motion_absolute;
 
 			/* also add to other window if event is there, this makes overdraws disappear nicely */
 			/* it remaps mousecoord to other window in event */
-			owin = wm_event_cursor_other_windows(wm, win, &event);
+			wmWindow *owin = wm_event_cursor_other_windows(wm, win, event);
 			if (owin) {
-				wmEvent oevent, *oevt = owin->eventstate;
+				wmEvent *oevt = owin->eventstate;
 
-				oevent = *oevt;
-
-				copy_v2_v2_int(&oevent.x, &event.x);
-				oevent.type = MOUSEMOVE;
-				{
-					wmEvent *event_new = wm_event_add_mousemove(owin, &oevent);
-					copy_v2_v2_int(&oevt->x, &event_new->x);
-					oevt->is_motion_absolute = event_new->is_motion_absolute;
-				}
+				copy_v2_v2_int(&oevt->x, &event->x);
+				wmEvent *oevent = wm_event_add_mousemove(owin, oevt);
+				wm_event_set_type(oevent, MOUSEMOVE);
+				oevt->is_motion_absolute = oevent->is_motion_absolute;
+				
+				copy_v2_v2_int(&event->x, &cd->x);
 			}
 
 			break;
 		}
 		case GHOST_kEventTrackpad:
 		{
+			wmEvent * event = wm_event_add(win, evt);
 			GHOST_TEventTrackpadData *pd = customdata;
 			switch (pd->subtype) {
 				case GHOST_kTrackpadEventMagnify:
-					event.type = MOUSEZOOM;
+					event->type = MOUSEZOOM;
 					pd->deltaX = -pd->deltaX;
 					pd->deltaY = -pd->deltaY;
 					break;
 				case GHOST_kTrackpadEventRotate:
-					event.type = MOUSEROTATE;
+					event->type = MOUSEROTATE;
 					break;
-				case GHOST_kTrackpadEventScroll:
 				default:
-					event.type = MOUSEPAN;
+					event->type = MOUSEPAN;
 					break;
 			}
 
-			event.x = evt->x = pd->x;
-			event.y = evt->y = pd->y;
-			event.val = KM_NOTHING;
+			event->x = evt->x = pd->x;
+			event->y = evt->y = pd->y;
+			event->val = KM_NOTHING;
 
 			/* Use prevx/prevy so we can calculate the delta later */
-			event.prevx = event.x - pd->deltaX;
-			event.prevy = event.y - (-pd->deltaY);
+			event->prevx = event->x - pd->deltaX;
+			event->prevy = event->y - (-pd->deltaY);
 
-			wm_event_add(win, &event);
 			break;
 		}
 		/* mouse button */
@@ -3285,34 +3278,7 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 		case GHOST_kEventButtonUp:
 		{
 			GHOST_TEventButtonData *bd = customdata;
-
-			/* get value and type from ghost */
-			event.val = (type == GHOST_kEventButtonDown) ? KM_PRESS : KM_RELEASE;
-
-			if (bd->button == GHOST_kButtonMaskLeft)
-				event.type = LEFTMOUSE;
-			else if (bd->button == GHOST_kButtonMaskRight)
-				event.type = RIGHTMOUSE;
-			else if (bd->button == GHOST_kButtonMaskButton4)
-				event.type = BUTTON4MOUSE;
-			else if (bd->button == GHOST_kButtonMaskButton5)
-				event.type = BUTTON5MOUSE;
-			else if (bd->button == GHOST_kButtonMaskButton6)
-				event.type = BUTTON6MOUSE;
-			else if (bd->button == GHOST_kButtonMaskButton7)
-				event.type = BUTTON7MOUSE;
-			else
-				event.type = MIDDLEMOUSE;
-
-			wm_eventemulation(&event);
-
-			/* copy previous state to prev event state (two old!) */
-			evt->prevval = evt->val;
-			evt->prevtype = evt->type;
-
-			/* copy to event state */
-			evt->val = event.val;
-			evt->type = event.type;
+			wmEvent *event;
 
 			if (win->active == 0) {
 				int cx, cy;
@@ -3320,35 +3286,56 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 				/* entering window, update mouse pos. (ghost sends win-activate *after* the mouseclick in window!) */
 				wm_get_cursor_position(win, &cx, &cy);
 
-				event.x = evt->x = cx;
-				event.y = evt->y = cy;
-			}
-
-			/* double click test */
-			if (wm_event_is_double_click(&event, evt)) {
-				CLOG_INFO(WM_LOG_HANDLERS, 1, "Send double click");
-				event.val = KM_DBL_CLICK;
-			}
-			if (event.val == KM_PRESS) {
-				evt->prevclicktime = PIL_check_seconds_timer();
-				evt->prevclickx = event.x;
-				evt->prevclicky = event.y;
+				evt->x = cx;
+				evt->y = cy;
 			}
 
 			/* add to other window if event is there (not to both!) */
-			owin = wm_event_cursor_other_windows(wm, win, &event);
+			wmWindow *owin = wm_event_cursor_other_windows(wm, win, evt);
 			if (owin) {
-				wmEvent oevent = *(owin->eventstate);
-
-				oevent.x = event.x;
-				oevent.y = event.y;
-				oevent.type = event.type;
-				oevent.val = event.val;
-
-				wm_event_add(owin, &oevent);
+				event = wm_event_add(owin, owin->eventstate);
 			}
 			else {
-				wm_event_add(win, &event);
+				event = wm_event_add(win, evt);
+			}
+
+			/* get value and type from ghost */
+			event->val = (type == GHOST_kEventButtonDown) ? KM_PRESS : KM_RELEASE;
+
+			if (bd->button == GHOST_kButtonMaskLeft)
+				event->type = LEFTMOUSE;
+			else if (bd->button == GHOST_kButtonMaskRight)
+				event->type = RIGHTMOUSE;
+			else if (bd->button == GHOST_kButtonMaskButton4)
+				event->type = BUTTON4MOUSE;
+			else if (bd->button == GHOST_kButtonMaskButton5)
+				event->type = BUTTON5MOUSE;
+			else if (bd->button == GHOST_kButtonMaskButton6)
+				event->type = BUTTON6MOUSE;
+			else if (bd->button == GHOST_kButtonMaskButton7)
+				event->type = BUTTON7MOUSE;
+			else
+				event->type = MIDDLEMOUSE;
+
+			wm_eventemulation(event);
+
+			/* copy previous state to prev event state (two old!) */
+			evt->prevval = evt->val;
+			evt->prevtype = evt->type;
+
+			/* copy to event state */
+			evt->val = event->val;
+			evt->type = event->type;
+
+			/* double click test */
+			if (wm_event_is_double_click(event, evt)) {
+				CLOG_INFO(WM_LOG_HANDLERS, 1, "Send double click");
+				event->val = KM_DBL_CLICK;
+			}
+			if (event->val == KM_PRESS) {
+				evt->prevclicktime = PIL_check_seconds_timer();
+				evt->prevclickx = event->x;
+				evt->prevclicky = event->y;
 			}
 
 			break;
@@ -3359,126 +3346,126 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 		{
 			GHOST_TEventKeyData *kd = customdata;
 			short keymodifier = KM_NOTHING;
-			event.type = convert_key(kd->key);
-			event.ascii = kd->ascii;
-			memcpy(event.utf8_buf, kd->utf8_buf, sizeof(event.utf8_buf)); /* might be not null terminated*/
-			event.val = (type == GHOST_kEventKeyDown) ? KM_PRESS : KM_RELEASE;
+			wmEvent *event = wm_event_add(win, evt);
 
-			wm_eventemulation(&event);
+			event->type = convert_key(kd->key);
+			event->ascii = kd->ascii;
+			memcpy(event->utf8_buf, kd->utf8_buf, sizeof(event->utf8_buf)); /* might be not null terminated*/
+			event->val = (type == GHOST_kEventKeyDown) ? KM_PRESS : KM_RELEASE;
+
+			wm_eventemulation(event);
 
 			/* copy previous state to prev event state (two old!) */
 			evt->prevval = evt->val;
 			evt->prevtype = evt->type;
 
 			/* copy to event state */
-			evt->val = event.val;
-			evt->type = event.type;
+			evt->val = event->val;
+			evt->type = event->type;
 
 			/* exclude arrow keys, esc, etc from text input */
 			if (type == GHOST_kEventKeyUp) {
-				event.ascii = '\0';
+				event->ascii = '\0';
 
 				/* ghost should do this already for key up */
-				if (event.utf8_buf[0]) {
+				if (event->utf8_buf[0]) {
 					CLOG_ERROR(WM_LOG_EVENTS, "ghost on your platform is misbehaving, utf8 events on key up!");
 				}
-				event.utf8_buf[0] = '\0';
+				event->utf8_buf[0] = '\0';
 			}
 			else {
-				if (event.ascii < 32 && event.ascii > 0)
-					event.ascii = '\0';
-				if (event.utf8_buf[0] < 32 && event.utf8_buf[0] > 0)
-					event.utf8_buf[0] = '\0';
+				if (event->ascii < 32 && event->ascii > 0)
+					event->ascii = '\0';
+				if (event->utf8_buf[0] < 32 && event->utf8_buf[0] > 0)
+					event->utf8_buf[0] = '\0';
 			}
 
-			if (event.utf8_buf[0]) {
-				if (BLI_str_utf8_size(event.utf8_buf) == -1) {
+			if (event->utf8_buf[0]) {
+				if (BLI_str_utf8_size(event->utf8_buf) == -1) {
 					CLOG_ERROR(WM_LOG_EVENTS,
 					           "ghost detected an invalid unicode character '%d'",
-					           (int)(unsigned char)event.utf8_buf[0]);
-					event.utf8_buf[0] = '\0';
+					           (int)(unsigned char)event->utf8_buf[0]);
+					event->utf8_buf[0] = '\0';
 				}
 			}
 
 			/* assigning both first and second is strange - campbell */
-			switch (event.type) {
+			switch (event->type) {
 				case LEFTSHIFTKEY:
 				case RIGHTSHIFTKEY:
-					if (event.val == KM_PRESS) {
+					if (event->val == KM_PRESS) {
 						if (evt->ctrl || evt->alt || evt->oskey) keymodifier = (KM_MOD_FIRST | KM_MOD_SECOND);
 						else keymodifier = KM_MOD_FIRST;
 					}
-					event.shift = evt->shift = keymodifier;
+					event->shift = evt->shift = keymodifier;
 					break;
 				case LEFTCTRLKEY:
 				case RIGHTCTRLKEY:
-					if (event.val == KM_PRESS) {
+					if (event->val == KM_PRESS) {
 						if (evt->shift || evt->alt || evt->oskey) keymodifier = (KM_MOD_FIRST | KM_MOD_SECOND);
 						else keymodifier = KM_MOD_FIRST;
 					}
-					event.ctrl = evt->ctrl = keymodifier;
+					event->ctrl = evt->ctrl = keymodifier;
 					break;
 				case LEFTALTKEY:
 				case RIGHTALTKEY:
-					if (event.val == KM_PRESS) {
+					if (event->val == KM_PRESS) {
 						if (evt->ctrl || evt->shift || evt->oskey) keymodifier = (KM_MOD_FIRST | KM_MOD_SECOND);
 						else keymodifier = KM_MOD_FIRST;
 					}
-					event.alt = evt->alt = keymodifier;
+					event->alt = evt->alt = keymodifier;
 					break;
 				case OSKEY:
-					if (event.val == KM_PRESS) {
+					if (event->val == KM_PRESS) {
 						if (evt->ctrl || evt->alt || evt->shift) keymodifier = (KM_MOD_FIRST | KM_MOD_SECOND);
 						else keymodifier = KM_MOD_FIRST;
 					}
-					event.oskey = evt->oskey = keymodifier;
+					event->oskey = evt->oskey = keymodifier;
 					break;
 				default:
-					if (event.val == KM_PRESS && event.keymodifier == 0)
-						evt->keymodifier = event.type;  /* only set in eventstate, for next event */
-					else if (event.val == KM_RELEASE && event.keymodifier == event.type)
-						event.keymodifier = evt->keymodifier = 0;
+					if (event->val == KM_PRESS && event->keymodifier == 0)
+						evt->keymodifier = event->type;  /* only set in eventstate, for next event */
+					else if (event->val == KM_RELEASE && event->keymodifier == event->type)
+						event->keymodifier = evt->keymodifier = 0;
 					break;
 			}
 
 			/* double click test */
 			/* if previous event was same type, and previous was release, and now it presses... */
-			if (wm_event_is_double_click(&event, evt)) {
+			if (wm_event_is_double_click(event, evt)) {
 				CLOG_INFO(WM_LOG_HANDLERS, 1, "Send double click");
-				event.val = KM_DBL_CLICK;
+				event->val = KM_DBL_CLICK;
 			}
 
 			/* this case happens on holding a key pressed, it should not generate
 			 * press events events with the same key as modifier */
-			if (event.keymodifier == event.type)
-				event.keymodifier = 0;
+			if (event->keymodifier == event->type)
+				event->keymodifier = 0;
 
 			/* this case happens with an external numpad, and also when using 'dead keys' (to compose complex latin
 			 * characters e.g.), it's not really clear why.
 			 * Since it's impossible to map a key modifier to an unknown key, it shouldn't harm to clear it. */
-			if (event.keymodifier == UNKNOWNKEY) {
-				evt->keymodifier = event.keymodifier = 0;
+			if (event->keymodifier == UNKNOWNKEY) {
+				evt->keymodifier = event->keymodifier = 0;
 			}
 
 			/* if test_break set, it catches this. Do not set with modifier presses. XXX Keep global for now? */
-			if ((event.type == ESCKEY && event.val == KM_PRESS) &&
+			if ((event->type == ESCKEY && event->val == KM_PRESS) &&
 			    /* check other modifiers because ms-windows uses these to bring up the task manager */
-			    (event.shift == 0 && event.ctrl == 0 && event.alt == 0))
+			    (event->shift == 0 && event->ctrl == 0 && event->alt == 0))
 			{
 				G.is_break = true;
 			}
 
 			/* double click test - only for press */
-			if (event.val == KM_PRESS) {
+			if (event->val == KM_PRESS) {
 				/* Don't reset timer & location when holding the key generates repeat events. */
-				if ((evt->prevtype != event.type) || (evt->prevval != KM_PRESS)) {
+				if ((evt->prevtype != event->type) || (evt->prevval != KM_PRESS)) {
 					evt->prevclicktime = PIL_check_seconds_timer();
-					evt->prevclickx = event.x;
-					evt->prevclicky = event.y;
+					evt->prevclickx = event->x;
+					evt->prevclicky = event->y;
 				}
 			}
-
-			wm_event_add(win, &event);
 
 			break;
 		}
@@ -3487,24 +3474,24 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 		{
 			GHOST_TEventWheelData *wheelData = customdata;
 
+			wmEvent *event = wm_event_add(win, evt);
 			if (wheelData->z > 0)
-				event.type = WHEELUPMOUSE;
+				event->type = WHEELUPMOUSE;
 			else
-				event.type = WHEELDOWNMOUSE;
+				event->type = WHEELDOWNMOUSE;
 
-			event.val = KM_PRESS;
-			wm_event_add(win, &event);
+			event->val = KM_PRESS;
 
 			break;
 		}
 		case GHOST_kEventTimer:
 		{
-			event.type = TIMER;
-			event.custom = EVT_DATA_TIMER;
-			event.customdata = customdata;
-			event.val = KM_NOTHING;
-			event.keymodifier = 0;
-			wm_event_add(win, &event);
+			wmEvent *event = wm_event_add(win, evt);
+			event->type = TIMER;
+			event->custom = EVT_DATA_TIMER;
+			event->customdata = customdata;
+			event->val = KM_NOTHING;
+			event->keymodifier = 0;
 
 			break;
 		}
@@ -3515,8 +3502,8 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 
 		case GHOST_kEventWindowDeactivate:
 		{
-			event.type = WINDEACTIVATE;
-			wm_event_add(win, &event);
+			wmEvent *event = wm_event_add(win, evt);
+			event->type = WINDEACTIVATE;
 
 			break;
 		}
@@ -3524,28 +3511,28 @@ void wm_event_add_ghostevent(wmWindowManager *wm, wmWindow *win, int type, int U
 #ifdef WITH_INPUT_IME
 		case GHOST_kEventImeCompositionStart:
 		{
-			event.val = KM_PRESS;
+			wmEvent *event = wm_event_add(win, evt);
+			event->val = KM_PRESS;
 			win->ime_data = customdata;
 			win->ime_data->is_ime_composing = true;
-			event.type = WM_IME_COMPOSITE_START;
-			wm_event_add(win, &event);
+			event->type = WM_IME_COMPOSITE_START;
 			break;
 		}
 		case GHOST_kEventImeComposition:
 		{
-			event.val = KM_PRESS;
-			event.type = WM_IME_COMPOSITE_EVENT;
-			wm_event_add(win, &event);
+			wmEvent *event = wm_event_add(win, evt);
+			event->val = KM_PRESS;
+			event->type = WM_IME_COMPOSITE_EVENT;
 			break;
 		}
 		case GHOST_kEventImeCompositionEnd:
 		{
-			event.val = KM_PRESS;
+			wmEvent *event = wm_event_add(win, evt);
+			event->val = KM_PRESS;
 			if (win->ime_data) {
 				win->ime_data->is_ime_composing = false;
 			}
-			event.type = WM_IME_COMPOSITE_END;
-			wm_event_add(win, &event);
+			event->type = WM_IME_COMPOSITE_END;
 			break;
 		}
 #endif /* WITH_INPUT_IME */
