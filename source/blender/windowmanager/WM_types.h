@@ -387,11 +387,6 @@ typedef struct wmEvent {
 	short val;			/* press, release, scrollvalue */
 	int x, y;			/* mouse pointer position, screen coord */
 	int mval[2];		/* region mouse position, name convention pre 2.5 :) */
-	char utf8_buf[6];	/* from, ghost if utf8 is enabled for the platform,
-						 * BLI_str_utf8_size() must _always_ be valid, check
-						 * when assigning s we don't need to check on every access after */
-	char ascii;			/* from ghost, fallback if utf8 isn't set */
-	char pad;
 
 	/* previous state, used for double click and the 'click' */
 	short prevtype;
@@ -400,15 +395,6 @@ typedef struct wmEvent {
 	double prevclicktime;
 	int prevclickx, prevclicky;
 
-	/* modifier states */
-	short shift, ctrl, alt, oskey;	/* oskey is apple or windowskey, value denotes order of pressed */
-	short keymodifier;				/* rawkey modifier */
-
-	/* set in case a KM_PRESS went by unhandled */
-	char check_click;
-	char check_drag;
-	char is_motion_absolute;
-
 	/* keymap item, set by handler (weak?) */
 	const char *keymap_idname;
 
@@ -416,10 +402,23 @@ typedef struct wmEvent {
 	const struct wmTabletData *tablet_data;
 
 	/* custom data */
-	short custom;		/* custom data type, stylus, 6dof, see wm_event_types.h */
-	short customdatafree;
-	int pad2;
 	void *customdata;	/* ascii, unicode, mouse coords, angles, vectors, dragdrop info */
+	short custom;		/* custom data type, stylus, 6dof, see wm_event_types.h */
+
+	/* modifier states */
+	short shift, ctrl, alt, oskey;	/* oskey is apple or windowskey, value denotes order of pressed */
+	short keymodifier;				/* rawkey modifier */
+
+	char utf8_buf[6];	/* from, ghost if utf8 is enabled for the platform,
+						 * BLI_str_utf8_size() must _always_ be valid, check
+						 * when assigning s we don't need to check on every access after */
+	char ascii;			/* from ghost, fallback if utf8 isn't set */
+
+	/* set in case a KM_PRESS went by unhandled */
+	char check_click:1;
+	char check_drag:1;
+	char is_motion_absolute:1;
+	char customdatafree:1;
 
 } wmEvent;
 
