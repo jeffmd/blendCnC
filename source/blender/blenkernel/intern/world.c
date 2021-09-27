@@ -75,19 +75,7 @@ void BKE_world_init(World *wrld)
 	wrld->exp = 0.0f;
 	wrld->exposure = wrld->range = 1.0f;
 
-	wrld->aodist = 10.0f;
-	wrld->aosamp = 5;
-	wrld->aoenergy = 1.0f;
-	wrld->ao_env_energy = 1.0f;
-	wrld->ao_indirect_energy = 1.0f;
-	wrld->ao_indirect_bounces = 1;
-	wrld->aobias = 0.05f;
-	wrld->ao_samp_method = WO_AOSAMP_HAMMERSLEY;
-	wrld->ao_approx_error = 0.25f;
-
 	wrld->preview = NULL;
-	wrld->miststa = 5.0f;
-	wrld->mistdist = 25.0f;
 }
 
 World *BKE_world_add(Main *bmain, const char *name)

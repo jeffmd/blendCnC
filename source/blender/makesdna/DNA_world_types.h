@@ -36,8 +36,7 @@ struct MTex;
 
 /**
  * World defines general modeling data such as a background fill,
- * gravity, color model etc. It mixes game-data, rendering
- * data and modeling data. */
+ * color model etc. It mixes modeling data. */
 typedef struct World {
 	ID id;
 
@@ -57,11 +56,6 @@ typedef struct World {
 	float linfac, logfac;
 
 	/**
-	 * Gravitation constant for the game world
-	 */
-	float gravity; // XXX moved to scene->gamedata in 2.5
-
-	/**
 	 * Radius of the activity bubble, in Manhattan length. Objects
 	 * outside the box are activity-culled. */
 	float activityBoxRadius; // XXX moved to scene->gamedata in 2.5
@@ -77,37 +71,15 @@ typedef struct World {
 	 * bit 5: (gameengine) : enable Bullet DBVT tree for view frustum culling
 	 */
 	short mode;												// partially moved to scene->gamedata in 2.5
-	short occlusionRes;		/* resolution of occlusion Z buffer in pixel */	// XXX moved to scene->gamedata in 2.5
-	short physicsEngine;	/* here it's aligned */					// XXX moved to scene->gamedata in 2.5
-	short ticrate, maxlogicstep, physubstep, maxphystep;	// XXX moved to scene->gamedata in 2.5
-
-	float misi, miststa, mistdist, misthi;
-
-	/* unused now: DOF */
-	short dofsta, dofend, dofmin, dofmax;
-
-	/* ambient occlusion */
-	float aodist, aodistfac, aoenergy, aobias;
-	short aomode, aosamp, aomix, aocolor;
-	float ao_adapt_thresh, ao_adapt_speed_fac;
-	float ao_approx_error, ao_approx_correction;
-	float ao_indirect_energy, ao_env_energy, ao_pad2;
-	short ao_indirect_bounces, ao_pad;
-	short ao_samp_method, ao_gather_method, ao_approx_passes;
 
 	/* assorted settings (in the middle of ambient occlusion settings for padding reasons) */
 	short flag;
-
-	/* ambient occlusion (contd...) */
-	float *aosphere, *aotables;
-
-
+	short pr_texture;
+	int pad;
 	struct MTex *mtex[18];		/* MAX_MTEX */
-	short pr_texture, use_nodes, pad[2];
 
 	/* previews */
 	struct PreviewImage *preview;
-
 	ListBase gpumaterial;		/* runtime */
 } World;
 
@@ -122,37 +94,9 @@ typedef struct World {
 #define WO_ZENUP        (1 << 4)
 
 /* mode */
-#define WO_MIST                (1 << 0)
 #define WO_ACTIVITY_CULLING    (1 << 3)
 #define WO_ENV_LIGHT          (1 << 4)
 #define WO_DBVT_CULLING       (1 << 5)
-#define WO_AMB_OCC            (1 << 6)
-#define WO_INDIRECT_LIGHT     (1 << 7)
-
-/* aomix */
-enum {
-	WO_AOADD    = 0,
-	WO_AOMUL    = 3,
-};
-
-/* ao_samp_method - methods for sampling the AO hemi */
-#define WO_AOSAMP_CONSTANT			0
-#define WO_AOSAMP_HALTON			1
-#define WO_AOSAMP_HAMMERSLEY		2
-
-/* aomode (use distances & random sampling modes) */
-#define WO_AODIST       (1 << 0)
-#define WO_AORNDSMP     (1 << 1)
-#define WO_AOCACHE      (1 << 2)
-
-/* aocolor */
-#define WO_AOPLAIN	0
-#define WO_AOSKYCOL	1
-#define WO_AOSKYTEX	2
-
-/* ao_gather_method */
-#define WO_AOGATHER_RAYTRACE	0
-#define WO_AOGATHER_APPROX		1
 
 /* texco (also in DNA_material_types.h) */
 #define TEXCO_ANGMAP      (1 << 6)

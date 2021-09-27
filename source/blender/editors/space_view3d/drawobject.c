@@ -1613,15 +1613,6 @@ static void drawcamera(Scene *scene, View3D *v3d, RegionView3D *rv3d, Base *base
 				draw_limit_line(cam->clipsta, cam->clipend, dflag, (is_active ? col_hi : col));
 			}
 
-			if (cam->flag & CAM_SHOWMIST) {
-				World *world = scene->world;
-				const unsigned char col[3] = {128, 128, 128}, col_hi[3] = {255, 255, 255};
-
-				if (world) {
-					draw_limit_line(world->miststa, world->miststa + world->mistdist,
-					                dflag, (is_active ? col_hi : col));
-				}
-			}
 			glPopMatrix();
 		}
 	}

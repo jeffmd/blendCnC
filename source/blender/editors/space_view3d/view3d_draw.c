@@ -2235,8 +2235,6 @@ static void gpu_update_lamps_shadows_world(Main *bmain, Scene *scene, View3D *v3
 
 	/* update world values */
 	if (world) {
-		GPU_mist_update_enable(world->mode & WO_MIST);
-		GPU_mist_update_values(world->mistype, world->miststa, world->mistdist, world->misi, &world->horr);
 		GPU_horizon_update_color(&world->horr);
 		GPU_ambient_update_color(&world->ambr);
 		GPU_zenith_update_color(&world->zenr);

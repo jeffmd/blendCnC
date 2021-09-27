@@ -150,95 +150,6 @@ class WORLD_PT_indirect_lighting(WorldButtonsPanel, Panel):
     def draw(self, context):
         layout = self.layout
 
-        light = context.world.light_settings
-
-        layout.active = light.use_indirect_light and light.gather_method == 'APPROXIMATE'
-
-        split = layout.split()
-        split.prop(light, "indirect_factor", text="Factor")
-        split.prop(light, "indirect_bounces", text="Bounces")
-
-        if light.gather_method == 'RAYTRACE':
-            layout.label(text="Only works with Approximate gather method")
-
-
-class WORLD_PT_gather(WorldButtonsPanel, Panel):
-    bl_label = "Gather"
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
-
-    def draw(self, context):
-        layout = self.layout
-
-        light = context.world.light_settings
-
-        layout.active = light.use_ambient_occlusion or light.use_environment_light or light.use_indirect_light
-
-        layout.row().prop(light, "gather_method", expand=True)
-
-        split = layout.split()
-
-        col = split.column()
-        col.label(text="Attenuation:")
-        if light.gather_method == 'RAYTRACE':
-            col.prop(light, "distance")
-        col.prop(light, "use_falloff")
-        sub = col.row()
-        sub.active = light.use_falloff
-        sub.prop(light, "falloff_strength", text="Strength")
-
-        if light.gather_method == 'RAYTRACE':
-            col = split.column()
-
-            col.label(text="Sampling:")
-            col.prop(light, "sample_method", text="")
-
-            sub = col.column()
-            sub.prop(light, "samples")
-
-            if light.sample_method == 'ADAPTIVE_QMC':
-                sub.prop(light, "threshold")
-                sub.prop(light, "adapt_to_speed", slider=True)
-            elif light.sample_method == 'CONSTANT_JITTERED':
-                sub.prop(light, "bias")
-
-        if light.gather_method == 'APPROXIMATE':
-            col = split.column()
-
-            col.label(text="Sampling:")
-            col.prop(light, "passes")
-            col.prop(light, "error_threshold", text="Error")
-            col.prop(light, "use_cache")
-            col.prop(light, "correction")
-
-
-class WORLD_PT_mist(WorldButtonsPanel, Panel):
-    bl_label = "Mist"
-    bl_options = {'DEFAULT_CLOSED'}
-    COMPAT_ENGINES = {'BLENDER_RENDER'}
-
-    def draw_header(self, context):
-        world = context.world
-
-        self.layout.prop(world.mist_settings, "use_mist", text="")
-
-    def draw(self, context):
-        layout = self.layout
-
-        world = context.world
-
-        layout.active = world.mist_settings.use_mist
-
-        split = layout.split()
-
-        col = split.column()
-        col.prop(world.mist_settings, "intensity")
-        col.prop(world.mist_settings, "start")
-
-        col = split.column()
-        col.prop(world.mist_settings, "depth")
-        col.prop(world.mist_settings, "height")
-
-        layout.prop(world.mist_settings, "falloff")
 
 
 class WORLD_PT_custom_props(WorldButtonsPanel, PropertyPanel, Panel):
@@ -251,11 +162,6 @@ classes = (
     WORLD_PT_context_world,
     WORLD_PT_preview,
     WORLD_PT_world,
-    WORLD_PT_ambient_occlusion,
-    WORLD_PT_environment_lighting,
-    WORLD_PT_indirect_lighting,
-    WORLD_PT_gather,
-    WORLD_PT_mist,
     WORLD_PT_custom_props,
 )
 
