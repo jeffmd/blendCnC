@@ -38,9 +38,6 @@
 #include "GHOST_EventWheel.h"
 #include "GHOST_DisplayManagerX11.h"
 #include "GHOST_EventDragnDrop.h"
-#ifdef WITH_INPUT_NDOF
-#  include "GHOST_NDOFManagerUnix.h"
-#endif
 
 #ifdef WITH_XDND
 #  include "GHOST_DropTargetX11.h"
@@ -252,9 +249,6 @@ init()
 	GHOST_TSuccess success = GHOST_System::init();
 
 	if (success) {
-#ifdef WITH_INPUT_NDOF
-		m_ndofManager = new GHOST_NDOFManagerUnix(*this);
-#endif
 		m_displayManager = new GHOST_DisplayManagerX11(this);
 
 		if (m_displayManager) {
@@ -514,7 +508,7 @@ lastEventTime(Time default_time) {
 
 bool
 GHOST_SystemX11::
-processEvents()
+processEvents(void)
 {
 	/* Get all the current events -- translate them into
 	 * ghost events and call base class pushEvent() method. */
@@ -627,11 +621,6 @@ processEvents()
 			anyProcessed = true;
 		}
 
-#ifdef WITH_INPUT_NDOF
-		if (static_cast<GHOST_NDOFManagerUnix *>(m_ndofManager)->processEvents()) {
-			anyProcessed = true;
-		}
-#endif
 
 	}
 

@@ -164,10 +164,6 @@ typedef enum {
 	GHOST_kEventWheel,          /// Mouse wheel event
 	GHOST_kEventTrackpad,       /// Trackpad event
 
-#ifdef WITH_INPUT_NDOF
-	GHOST_kEventNDOFMotion,     /// N degree of freedom device motion event
-	GHOST_kEventNDOFButton,     /// N degree of freedom device button event
-#endif
 
 	GHOST_kEventKeyDown,
 	GHOST_kEventKeyUp,
@@ -472,28 +468,6 @@ typedef enum {
 	GHOST_kFinishing,
 	GHOST_kFinished
 } GHOST_TProgress;
-
-#ifdef WITH_INPUT_NDOF
-typedef struct {
-	/** N-degree of freedom device data v3 [GSoC 2010] */
-	// Each component normally ranges from -1 to +1, but can exceed that.
-	// These use blender standard view coordinates, with positive rotations being CCW about the axis.
-	float tx, ty, tz; // translation
-	float rx, ry, rz; // rotation:
-	// axis = (rx,ry,rz).normalized
-	// amount = (rx,ry,rz).magnitude [in revolutions, 1.0 = 360 deg]
-	float dt; // time since previous NDOF Motion event
-	GHOST_TProgress progress; // Starting, InProgress or Finishing (for modal handlers)
-} GHOST_TEventNDOFMotionData;
-
-typedef enum { GHOST_kPress, GHOST_kRelease } GHOST_TButtonAction;
-// good for mouse or other buttons too, hmmm?
-
-typedef struct {
-	GHOST_TButtonAction action;
-	short button;
-} GHOST_TEventNDOFButtonData;
-#endif // WITH_INPUT_NDOF
 
 typedef struct {
 	/** The key code. */

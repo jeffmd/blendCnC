@@ -1467,7 +1467,7 @@ void wm_window_process_events(const bContext *C)
 
 	BLI_assert(BLI_thread_is_main());
 
-	hasevent = GHOST_ProcessEvents(g_system); /* 0 is no wait */
+	hasevent = GHOST_ProcessEvents(g_system);
 
 	if (hasevent)
 		GHOST_DispatchEvents(g_system);

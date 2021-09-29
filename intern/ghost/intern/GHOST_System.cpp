@@ -34,10 +34,6 @@
 #include "GHOST_TimerManager.h"
 #include "GHOST_WindowManager.h"
 
-#ifdef WITH_INPUT_NDOF
-#  include "GHOST_NDOFManager.h"
-#endif
-
 GHOST_System::GHOST_System()
     : m_nativePixel(false),
       m_windowFocus(true),
@@ -45,9 +41,6 @@ GHOST_System::GHOST_System()
       m_timerManager(NULL),
       m_windowManager(NULL),
       m_eventManager(NULL)
-#ifdef WITH_INPUT_NDOF
-      , m_ndofManager(0)
-#endif
 {
 }
 
@@ -211,13 +204,6 @@ bool GHOST_System::getFullScreen(void)
 
 void GHOST_System::dispatchEvents()
 {
-#ifdef WITH_INPUT_NDOF
-	// NDOF Motion event is sent only once per dispatch, so do it now:
-	if (m_ndofManager) {
-		m_ndofManager->sendMotionEvent();
-	}
-#endif
-
 	if (m_eventManager) {
 		m_eventManager->dispatchEvents();
 	}
@@ -287,13 +273,6 @@ GHOST_TSuccess GHOST_System::getButtonState(GHOST_TButtonMask mask, bool& isDown
 	return success;
 }
 
-#ifdef WITH_INPUT_NDOF
-void GHOST_System::setNDOFDeadZone(float deadzone)
-{
-	this->m_ndofManager->setDeadZone(deadzone);
-}
-#endif
-
 GHOST_TSuccess GHOST_System::init()
 {
 	m_timerManager = new GHOST_TimerManager();
@@ -333,11 +312,6 @@ GHOST_TSuccess GHOST_System::exit()
 
 	delete m_eventManager;
 	m_eventManager = NULL;
-
-#ifdef WITH_INPUT_NDOF
-	delete m_ndofManager;
-	m_ndofManager = NULL;
-#endif
 
 	return GHOST_kSuccess;
 }

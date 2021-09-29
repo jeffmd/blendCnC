@@ -40,9 +40,6 @@ class GHOST_Event;
 class GHOST_TimerManager;
 class GHOST_Window;
 class GHOST_WindowManager;
-#ifdef WITH_INPUT_NDOF
-class GHOST_NDOFManager;
-#endif
 
 /**
  * Implementation of platform independent functionality of the GHOST_ISystem
@@ -239,18 +236,6 @@ public:
 	 */
 	GHOST_TSuccess getButtonState(GHOST_TButtonMask mask, bool& isDown) const;
 
-#ifdef WITH_INPUT_NDOF
-	/***************************************************************************************
-	 * Access to 3D mouse.
-	 ***************************************************************************************/
-
-	/**
-	 * Sets 3D mouse deadzone
-	 * \param deadzone: Deadzone of the 3D mouse (both for rotation and pan) relative to full range
-	 */
-	void setNDOFDeadZone(float deadzone);
-#endif
-
 	/***************************************************************************************
 	 * Other (internal) functionality.
 	 ***************************************************************************************/
@@ -277,13 +262,6 @@ public:
 	 * \return A pointer to our window manager.
 	 */
 	inline GHOST_WindowManager *getWindowManager() const;
-
-#ifdef WITH_INPUT_NDOF
-	/**
-	 * \return A pointer to our n-degree of freedom manager.
-	 */
-	inline GHOST_NDOFManager *getNDOFManager() const;
-#endif
 
 	/**
 	 * Returns the state of all modifier keys.
@@ -359,11 +337,6 @@ protected:
 	/** The event manager. */
 	GHOST_EventManager *m_eventManager;
 
-#ifdef WITH_INPUT_NDOF
-	/** The N-degree of freedom device manager */
-	GHOST_NDOFManager *m_ndofManager;
-#endif
-
 	/** Prints all the events. */
 #ifdef GHOST_DEBUG
 	GHOST_EventPrinter *m_eventPrinter;
@@ -388,12 +361,5 @@ inline GHOST_WindowManager *GHOST_System::getWindowManager() const
 {
 	return m_windowManager;
 }
-
-#ifdef WITH_INPUT_NDOF
-inline GHOST_NDOFManager *GHOST_System::getNDOFManager() const
-{
-	return m_ndofManager;
-}
-#endif
 
 #endif // __GHOST_SYSTEM_H__
