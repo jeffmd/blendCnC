@@ -163,7 +163,7 @@ void wm_event_init_from_window(wmWindow *win, wmEvent *event)
 
 /* ********************* notifiers, listeners *************** */
 
-static bool wm_test_duplicate_notifier(wmWindowManager *wm, unsigned int type, void *reference)
+static bool wm_test_duplicate_notifier(unsigned int type, void *reference, wmWindowManager *wm)
 {
 	wmNotifier *note;
 
@@ -174,26 +174,16 @@ static bool wm_test_duplicate_notifier(wmWindowManager *wm, unsigned int type, v
 	return 0;
 }
 
-/* XXX: in future, which notifiers to send to other windows? */
-void WM_event_add_notifier(const bContext *C, unsigned int type, void *reference)
+wmNotifier * wm_add_notifier(unsigned int type, void *reference, wmWindowManager *wm)
 {
-	ARegion *ar;
-	wmWindowManager *wm = CTX_wm_manager(C);
-	wmNotifier *note;
 
-	if (wm_test_duplicate_notifier(wm, type, reference))
-		return;
+	if (!wm || wm_test_duplicate_notifier(type, reference, wm))
+		return NULL;
 
-	note = MEM_callocN(sizeof(wmNotifier), "notifier");
+	wmNotifier *note = MEM_callocN(sizeof(wmNotifier), "notifier");
 
 	note->wm = wm;
 	BLI_addtail(&note->wm->queue, note);
-
-	note->window = CTX_wm_window(C);
-
-	ar = CTX_wm_region(C);
-	if (ar)
-		note->swinid = ar->swinid;
 
 	note->category = type & NOTE_CATEGORY;
 	note->data = type & NOTE_DATA;
@@ -201,29 +191,33 @@ void WM_event_add_notifier(const bContext *C, unsigned int type, void *reference
 	note->action = type & NOTE_ACTION;
 
 	note->reference = reference;
+
+	return note;
 }
 
 void WM_main_add_notifier(unsigned int type, void *reference)
 {
 	Main *bmain = G_MAIN;
 	wmWindowManager *wm = bmain->wm.first;
-	wmNotifier *note;
+	wm_add_notifier(type, reference, wm);
 
-	if (!wm || wm_test_duplicate_notifier(wm, type, reference))
-		return;
-
-	note = MEM_callocN(sizeof(wmNotifier), "notifier");
-
-	note->wm = wm;
-	BLI_addtail(&note->wm->queue, note);
-
-	note->category = type & NOTE_CATEGORY;
-	note->data = type & NOTE_DATA;
-	note->subtype = type & NOTE_SUBTYPE;
-	note->action = type & NOTE_ACTION;
-
-	note->reference = reference;
 }
+
+/* XXX: in future, which notifiers to send to other windows? */
+void WM_event_add_notifier(const bContext *C, unsigned int type, void *reference)
+{
+	wmWindowManager *wm = CTX_wm_manager(C);
+	wmNotifier *note = wm_add_notifier(type, reference, wm);
+
+	if (note) {
+		note->window = CTX_wm_window(C);
+
+		ARegion *ar = CTX_wm_region(C);
+		if (ar)
+			note->swinid = ar->swinid;
+	}
+}
+
 
 /**
  * Clear notifiers by reference, Used so listeners don't act on freed data.
