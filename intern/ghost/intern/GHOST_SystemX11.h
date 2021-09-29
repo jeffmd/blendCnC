@@ -180,9 +180,7 @@ public:
 	 * \return Indication of the presence of events.
 	 */
 	bool
-	processEvents(
-	    bool waitForEvent
-	    );
+	processEvents();
 
 	GHOST_TSuccess
 	getCursorPosition(

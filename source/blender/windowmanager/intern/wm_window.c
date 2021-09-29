@@ -1270,15 +1270,6 @@ static int ghost_event_proc(GHOST_EventHandle evt, GHOST_TUserDataPtr C_void_ptr
 						WM_event_add_notifier(C, NC_SCREEN | NA_EDITED, NULL);
 						WM_event_add_notifier(C, NC_WINDOW | NA_EDITED, NULL);
 
-#if defined(__APPLE__) || defined(WIN32)
-						/* OSX and Win32 don't return to the mainloop while resize */
-						wm_event_do_notifiers(C);
-						wm_draw_update(C);
-
-						/* Warning! code above nulls 'C->wm.window', causing BGE to quit, see: T45699.
-						 * Further, its easier to match behavior across platforms, so restore the window. */
-						CTX_wm_window_set(C, win);
-#endif
 					}
 				}
 				break;
@@ -1476,7 +1467,7 @@ void wm_window_process_events(const bContext *C)
 
 	BLI_assert(BLI_thread_is_main());
 
-	hasevent = GHOST_ProcessEvents(g_system, 0); /* 0 is no wait */
+	hasevent = GHOST_ProcessEvents(g_system); /* 0 is no wait */
 
 	if (hasevent)
 		GHOST_DispatchEvents(g_system);
@@ -1490,7 +1481,7 @@ void wm_window_process_events(const bContext *C)
 
 void wm_window_process_events_nosleep(void)
 {
-	if (GHOST_ProcessEvents(g_system, 0))
+	if (GHOST_ProcessEvents(g_system))
 		GHOST_DispatchEvents(g_system);
 }
 
@@ -1506,7 +1497,7 @@ void wm_window_testbreak(void)
 	 * if we get called more often.
 	 */
 	if ((curtime - ltime) > 0.05) {
-		int hasevent = GHOST_ProcessEvents(g_system, 0); /* 0 is no wait */
+		int hasevent = GHOST_ProcessEvents(g_system);
 
 		if (hasevent)
 			GHOST_DispatchEvents(g_system);

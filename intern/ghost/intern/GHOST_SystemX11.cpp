@@ -514,30 +514,15 @@ lastEventTime(Time default_time) {
 
 bool
 GHOST_SystemX11::
-processEvents(
-		bool waitForEvent)
+processEvents()
 {
 	/* Get all the current events -- translate them into
 	 * ghost events and call base class pushEvent() method. */
 
 	bool anyProcessed = false;
 
-	do {
+	{
 		GHOST_TimerManager *timerMgr = getTimerManager();
-
-		if (waitForEvent && m_dirty_windows.empty() && !XPending(m_display)) {
-			GHOST_TUns64 next = timerMgr->nextFireTime();
-
-			if (next == GHOST_kFireTimeNever) {
-				SleepTillEvent(m_display, -1);
-			}
-			else {
-				GHOST_TInt64 maxSleep = next - getMilliSeconds();
-
-				if (maxSleep >= 0)
-					SleepTillEvent(m_display, next - getMilliSeconds());
-			}
-		}
 
 		if (timerMgr->fireTimers(getMilliSeconds())) {
 			anyProcessed = true;
@@ -648,7 +633,7 @@ processEvents(
 		}
 #endif
 
-	} while (waitForEvent && !anyProcessed);
+	}
 
 	return anyProcessed;
 }

@@ -250,7 +250,7 @@ extern int GHOST_GetFullScreen(GHOST_SystemHandle systemhandle);
  * wait (block) until the next event before returning.
  * \return Indication of the presence of events.
  */
-extern int GHOST_ProcessEvents(GHOST_SystemHandle systemhandle, int waitForEvent);
+extern int GHOST_ProcessEvents(GHOST_SystemHandle systemhandle);
 
 /**
  * Retrieves events from the queue and send them to the event consumers.

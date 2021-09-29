@@ -213,11 +213,11 @@ int GHOST_GetFullScreen(GHOST_SystemHandle systemhandle)
 
 
 
-int GHOST_ProcessEvents(GHOST_SystemHandle systemhandle, int waitForEvent)
+int GHOST_ProcessEvents(GHOST_SystemHandle systemhandle)
 {
 	GHOST_ISystem *system = (GHOST_ISystem *) systemhandle;
 
-	return (int) system->processEvents(waitForEvent ? true : false);
+	return (int) system->processEvents();
 }
 
 

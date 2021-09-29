@@ -50,26 +50,6 @@ GHOST_EventManager::~GHOST_EventManager()
 	}
 }
 
-
-GHOST_TUns32 GHOST_EventManager::getNumEvents()
-{
-	return (GHOST_TUns32) m_events.size();
-}
-
-
-GHOST_TUns32 GHOST_EventManager::getNumEvents(GHOST_TEventType type)
-{
-	GHOST_TUns32 numEvents = 0;
-	TEventStack::iterator p;
-	for (p = m_events.begin(); p != m_events.end(); ++p) {
-		if ((*p)->getType() == type) {
-			numEvents++;
-		}
-	}
-	return numEvents;
-}
-
-
 GHOST_TSuccess GHOST_EventManager::pushEvent(GHOST_IEvent *event)
 {
 	GHOST_TSuccess success;
@@ -99,9 +79,9 @@ void GHOST_EventManager::dispatchEvent()
 {
 	GHOST_IEvent *event = m_events.back();
 	m_events.pop_back();
-	m_handled_events.push_back(event);
 
 	dispatchEvent(event);
+	delete event;
 }
 
 
@@ -111,7 +91,6 @@ void GHOST_EventManager::dispatchEvents()
 		dispatchEvent();
 	}
 
-	disposeEvents();
 }
 
 
@@ -177,37 +156,8 @@ void GHOST_EventManager::removeWindowEvents(GHOST_IWindow *window)
 	}
 }
 
-void GHOST_EventManager::removeTypeEvents(GHOST_TEventType type, GHOST_IWindow *window)
-{
-	TEventStack::iterator iter;
-	iter = m_events.begin();
-	while (iter != m_events.end()) {
-		GHOST_IEvent *event = *iter;
-		if ((event->getType() == type) && (!window || (event->getWindow() == window))) {
-			GHOST_PRINT("GHOST_EventManager::removeTypeEvents(): removing event\n");
-			/*
-			 * Found an event of this type for the window, remove it.
-			 * The iterator will become invalid.
-			 */
-			delete event;
-			m_events.erase(iter);
-			iter = m_events.begin();
-		}
-		else {
-			++iter;
-		}
-	}
-}
-
-
 void GHOST_EventManager::disposeEvents()
 {
-	while (m_handled_events.empty() == false) {
-		GHOST_ASSERT(m_handled_events[0], "invalid event");
-		delete m_handled_events[0];
-		m_handled_events.pop_front();
-	}
-
 	while (m_events.empty() == false) {
 		GHOST_ASSERT(m_events[0], "invalid event");
 		delete m_events[0];

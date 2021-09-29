@@ -312,7 +312,7 @@ public:
 	 * \param waitForEvent Flag to wait for an event (or return immediately).
 	 * \return Indication of the presence of events.
 	 */
-	virtual bool processEvents(bool waitForEvent) = 0;
+	virtual bool processEvents() = 0;
 
 	/**
 	 * Retrieves events from the queue and send them to the event consumers.
