@@ -44,7 +44,6 @@ void		wm_window_title				(wmWindowManager *wm, wmWindow *win);
 void		wm_window_ghostwindows_ensure(wmWindowManager *wm);
 void		wm_window_ghostwindows_remove_invalid(bContext *C, wmWindowManager *wm);
 void		wm_window_process_events	(const bContext *C);
-void		wm_window_process_events_nosleep(void);
 
 void		wm_window_make_drawable(wmWindowManager *wm, wmWindow *win);
 
