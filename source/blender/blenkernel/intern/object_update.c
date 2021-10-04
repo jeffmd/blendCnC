@@ -89,7 +89,7 @@ void BKE_object_handle_data_update(
 {
 	float ctime = 0.0f;
 
-	/* includes all keys and modifiers */
+	/* includes modifiers */
 	switch (ob->type) {
 		case OB_MESH:
 		{
