@@ -330,6 +330,7 @@ static void rna_BPoint_array_begin(CollectionPropertyIterator *iter, PointerRNA 
 
 static void rna_Curve_update_data_id(Main *UNUSED(bmain), Scene *UNUSED(scene), ID *id)
 {
+	id->recalc |= ID_RECALC;
 	WM_main_add_notifier(NC_GEOM | ND_DATA, id);
 }
 

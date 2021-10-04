@@ -227,7 +227,7 @@ static void recalcData_objects(TransInfo *t)
 				clipMirrorModifier(t, t->obedit);
 				applyProject(t);
 			}
-
+			
 			if (t->state == TRANS_CANCEL) {
 				while (nu) {
 					BKE_nurb_handles_calc(nu); /* Cant do testhandlesNurb here, it messes up the h1 and h2 flags */
@@ -242,6 +242,8 @@ static void recalcData_objects(TransInfo *t)
 					nu = nu->next;
 				}
 			}
+
+			t->obedit->recalc |= OB_RECALC_DATA;
 		}
 		else if (t->obedit->type == OB_MESH) {
 			BMEditMesh *em = BKE_editmesh_from_object(t->obedit);
@@ -261,6 +263,7 @@ static void recalcData_objects(TransInfo *t)
 				projectVertSlideData(t, false);
 			}
 
+			t->obedit->recalc |= OB_RECALC_DATA;
 			EDBM_mesh_normals_update(em);
 			BKE_editmesh_tessface_calc(em);
 		}
@@ -277,7 +280,6 @@ static void recalcData_objects(TransInfo *t)
 
 		for (int i = 0; i < t->total; i++) {
 			TransData *td = t->data + i;
-			Object *ob = td->ob;
 
 			if (td->flag & TD_NOACTION)
 				break;
@@ -285,7 +287,7 @@ static void recalcData_objects(TransInfo *t)
 			if (td->flag & TD_SKIP)
 				continue;
 
-			BKE_object_eval_transform_all(t->scene, ob);
+			td->ob->recalc |= OB_RECALC_OB;
 
 		}
 	}
@@ -295,15 +297,7 @@ static void recalcData_objects(TransInfo *t)
 void recalcData(TransInfo *t)
 {
 	/* if tests must match createTransData for correct updates */
-	if (t->options & CTX_TEXTURE) {
-		recalcData_objects(t);
-	}
-	else if (t->options & CTX_EDGE) {
-		recalcData_objects(t);
-	}
-	else {
-		recalcData_objects(t);
-	}
+	recalcData_objects(t);
 }
 
 void drawLine(TransInfo *t, const float center[3], const float dir[3], char axis, short options)

@@ -37,7 +37,6 @@
 #include "DNA_space_types.h"
 #include "DNA_view3d_types.h"
 #include "DNA_windowmanager_types.h"
-#include "DNA_curve_types.h"
 #include "DNA_world_types.h"
 
 #include "BLI_math.h"
@@ -68,8 +67,6 @@
 #include "BKE_screen.h"
 #include "BKE_unit.h"
 #include "BKE_world.h"
-
-#include "PIL_time.h"
 
 #include "IMB_colormanagement.h"
 #include "IMB_imbuf.h"
@@ -554,44 +551,31 @@ bool BKE_scene_validate_setscene(Main *bmain, Scene *sce)
 	return true;
 }
 
-/* That's like really a bummer, because currently animation data for armatures
- * might want to use pose, and pose might be missing on the object.
- * This happens when changing visible layers, which leads to situations when
- * pose is missing or marked for recalc, animation will change it and then
- * object update will restore the pose.
- *
- * This could be solved by the new dependency graph, but for until then we'll
- * do an extra pass on the objects to ensure it's all fine.
- */
-#define POSE_ANIMATION_WORKAROUND
+static void scene_update_all_bases(Main *bmain, Scene *scene, Scene *scene_parent)
+{
+	Base *base;
 
-/* Used to visualize CPU threads activity during threaded object update,
- * would pollute STDERR with whole bunch of timing information which then
- * could be parsed and nicely visualized.
- */
-/* ALWAYS KEEY DISABLED! */
-#  undef DETAILED_ANALYSIS_OUTPUT
+	for (base = scene->base.first; base; base = base->next) {
+		Object *object = base->object;
 
-typedef struct StatisicsEntry {
-	struct StatisicsEntry *next, *prev;
-	Object *object;
-	double start_time;
-	double duration;
-} StatisicsEntry;
+		BKE_object_handle_update_ex(bmain, scene_parent, object, scene->rigidbody_world, true);
 
-typedef struct ThreadedObjectUpdateState {
-	/* TODO(sergey): We might want this to be per-thread object. */
-	Main *bmain;
-	Scene *scene;
-	Scene *scene_parent;
-	double base_time;
+	}
+}
 
-	int num_threads;
+static void scene_update_tagged_recursive(Main *bmain, Scene *scene, Scene *scene_parent)
+{
+	scene->customdata_mask = scene_parent->customdata_mask;
 
-	/* Execution statistics */
-	bool has_updated_objects;
-	ListBase *statistics;
-} ThreadedObjectUpdateState;
+	/* sets first, we allow per definition current scene to have
+	 * dependencies on sets, but not the other way around. */
+	if (scene->set)
+		scene_update_tagged_recursive(bmain, scene->set, scene_parent);
+
+	/* scene objects */
+	scene_update_all_bases(bmain, scene, scene_parent);
+
+}
 
 static bool check_rendered_viewport_visible(Main *bmain)
 {
@@ -650,15 +634,8 @@ void BKE_scene_update_tagged(Main *bmain, Scene *scene)
 	/* keep this first */
 	BLI_callback_exec(bmain, &scene->id, BLI_CB_EVT_SCENE_UPDATE_PRE);
 
-	/* (re-)build dependency graph if needed */
-	for (sce_iter = scene; sce_iter; sce_iter = sce_iter->set) {
-		/* Uncomment this to check if dependency graph was properly tagged for update. */
-	}
-
 	/* flush editing data if needed */
 	prepare_mesh_for_viewport_render(bmain, scene);
-
-	/* removed calls to quick_cache, see pointcache.c */
 
 	/* clear "LIB_TAG_DOIT" flag from all materials, to prevent infinite recursion problems later
 	 * when trying to find materials with drivers that need evaluating [#32017]
@@ -666,6 +643,7 @@ void BKE_scene_update_tagged(Main *bmain, Scene *scene)
 	BKE_main_id_tag_idcode(bmain, ID_MA, LIB_TAG_DOIT, false);
 	BKE_main_id_tag_idcode(bmain, ID_LA, LIB_TAG_DOIT, false);
 
+	scene_update_tagged_recursive(bmain, scene, scene);
 	/* notify editors and python about recalc */
 	BLI_callback_exec(bmain, &scene->id, BLI_CB_EVT_SCENE_UPDATE_POST);
 

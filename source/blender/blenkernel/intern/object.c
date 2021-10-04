@@ -1677,15 +1677,20 @@ void BKE_object_handle_update_ex(Main *bmain,
                                  RigidBodyWorld *rbw,
                                  const bool do_proxy_update)
 {
+	if (ob->data) {
+		ID *data_id = (ID *)ob->data;
+		if (data_id->recalc & ID_RECALC_ALL) {
+			ob->recalc |= OB_RECALC_DATA;
+			data_id->recalc &= ~ID_RECALC_ALL;
+		}
+	}
+
 	if ((ob->recalc & OB_RECALC_ALL) == 0) {
 		object_handle_update_proxy(bmain, scene, ob, do_proxy_update);
 		return;
 	}
 
-	/* XXX new animsys warning: depsgraph tag OB_RECALC_DATA should not skip drivers,
-	 * which is only in BKE_object_where_is_calc now */
-	/* XXX: should this case be OB_RECALC_OB instead? */
-	if (ob->recalc & OB_RECALC_ALL) {
+	if (ob->recalc & OB_RECALC_OB) {
 		/* Handle proxy copy for target. */
 		if (!BKE_object_eval_proxy_copy(ob)) {
 			BKE_object_where_is_calc_ex(scene, rbw, ob, NULL);
