@@ -137,8 +137,6 @@ class OBJECT_PT_relations(ObjectButtonsPanel, Panel):
 
         col = split.column()
         col.prop(ob, "layers")
-        col.separator()
-        col.prop(ob, "pass_index")
 
         col = split.column()
         col.label(text="Parent:")
