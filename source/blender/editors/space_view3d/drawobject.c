@@ -3291,12 +3291,17 @@ static void draw_mesh_fancy(Scene *scene, ARegion *ar, View3D *v3d, RegionView3D
 
 			GPU_object_material_unbind();
 
+			if ((v3d->flag2 & V3D_RENDER_OVERRIDE) == 0) {
+				if ((dflag & DRAW_CONSTCOLOR) == 0) {
+					glColor3ubv(ob_wire_col);
+				}
+				glLineWidth(1.0f);
+				dm->drawLooseEdges(dm);
+			}
 		}
 	}
 
-	if ((draw_wire != OBDRAW_WIRE_OFF) &&  /* draw extra wire */
-	    /* when overriding with render only, don't bother */
-	    ((v3d->drawtype >= OB_SOLID) == 0))
+	if (draw_wire != OBDRAW_WIRE_OFF) /* draw extra wire */
 	{
 		if ((dflag & DRAW_CONSTCOLOR) == 0) {
 			glColor3ubv(ob_wire_col);
