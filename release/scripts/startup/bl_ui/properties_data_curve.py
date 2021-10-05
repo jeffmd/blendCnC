@@ -136,7 +136,6 @@ class DATA_PT_shape_curve(CurveButtonsPanel, Panel):
 class DATA_PT_curve_texture_space(CurveButtonsPanel, Panel):
     bl_label = "Texture Space"
     bl_options = {'DEFAULT_CLOSED'}
-    COMPAT_ENGINES = {'BLENDER_RENDER', 'BLENDER_GAME'}
 
     def draw(self, context):
         layout = self.layout
@@ -207,30 +206,6 @@ class DATA_PT_geometry_curve(CurveButtonsPanelCurve, Panel):
             sub = row.row()
             sub.active = curve.bevel_object is not None
             sub.prop(curve, "use_fill_caps")
-
-
-class DATA_PT_pathanim(CurveButtonsPanelCurve, Panel):
-    bl_label = "Path Animation"
-
-    def draw_header(self, context):
-        curve = context.curve
-
-        self.layout.prop(curve, "use_path", text="")
-
-    def draw(self, context):
-        layout = self.layout
-
-        curve = context.curve
-
-        layout.active = curve.use_path
-
-        col = layout.column()
-        col.prop(curve, "path_duration", text="Frames")
-        col.prop(curve, "eval_time")
-
-        # these are for paths only
-        row = layout.row()
-        row.prop(curve, "use_path_follow")
 
 
 class DATA_PT_active_spline(CurveButtonsPanelActive, Panel):
@@ -438,7 +413,6 @@ classes = (
     DATA_PT_shape_curve,
     DATA_PT_curve_texture_space,
     DATA_PT_geometry_curve,
-    DATA_PT_pathanim,
     DATA_PT_active_spline,
     DATA_PT_font,
     DATA_PT_paragraph,
