@@ -629,6 +629,7 @@ static void rna_Curve_spline_remove(Curve *cu, ReportList *reports, PointerRNA *
 	BKE_nurb_free(nu);
 	RNA_POINTER_INVALIDATE(nu_ptr);
 
+	cu->id.recalc |= ID_RECALC_DATA;
 	WM_main_add_notifier(NC_GEOM | ND_DATA, NULL);
 }
 
@@ -638,6 +639,7 @@ static void rna_Curve_spline_clear(Curve *cu)
 
 	BKE_nurbList_free(nurbs);
 
+	cu->id.recalc |= ID_RECALC_DATA;
 	WM_main_add_notifier(NC_GEOM | ND_DATA, NULL);
 }
 
@@ -1289,6 +1291,16 @@ static void rna_def_curve(BlenderRNA *brna)
 	RNA_def_struct_ui_text(srna, "Curve", "Curve data-block storing curves, splines and NURBS");
 	RNA_def_struct_ui_icon(srna, ICON_CURVE_DATA);
 	RNA_def_struct_refine_func(srna, "rna_Curve_refine");
+
+	prop = RNA_def_property(srna, "splines", PROP_COLLECTION, PROP_NONE);
+	/* this way we get editmode nurbs too, keyframe in editmode */
+	RNA_def_property_collection_funcs(prop, "rna_Curve_splines_begin", "rna_iterator_listbase_next",
+	                                  "rna_iterator_listbase_end", "rna_iterator_listbase_get",
+	                                  NULL, NULL, NULL, NULL);
+
+	RNA_def_property_struct_type(prop, "Spline");
+	RNA_def_property_ui_text(prop, "Splines", "Collection of splines in this curve data object");
+	rna_def_curve_splines(brna, prop);
 
 	prop = RNA_def_property(srna, "show_handles", PROP_BOOLEAN, PROP_NONE);
 	RNA_def_property_boolean_negative_sdna(prop, NULL, "drawflag", CU_HIDE_HANDLES);

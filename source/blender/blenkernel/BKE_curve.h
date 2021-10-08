@@ -45,7 +45,7 @@ typedef struct CurveCache {
 	struct Path *path;
 } CurveCache;
 
-/* Definitions needed for shape keys */
+/* Definitions needed for nurb keys */
 typedef struct CVKeyIndex {
 	void *orig_cv;
 	int key_index, nu_index, pt_index, vertex_index;
