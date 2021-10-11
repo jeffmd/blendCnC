@@ -282,13 +282,7 @@ void BKE_object_free(Object *ob)
 	BLI_freelistN(&ob->lodlevels);
 
 	/* Free runtime curves data. */
-	if (ob->curve_cache) {
-		BKE_curve_bevelList_free(&ob->curve_cache->bev);
-		if (ob->curve_cache->path)
-			BKE_curve_free_path(ob->curve_cache->path);
-		MEM_freeN(ob->curve_cache);
-		ob->curve_cache = NULL;
-	}
+	BKE_object_free_curve_cache(ob);
 
 	BKE_previewimg_free(&ob->preview);
 }
