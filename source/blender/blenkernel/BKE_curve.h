@@ -128,6 +128,9 @@ void BKE_curve_forward_diff_tangent_bezier(float q0, float q1, float q2, float q
 void BKE_curve_rect_from_textbox(const struct Curve *cu, const struct TextBox *tb, struct rctf *r_rect);
 
 void BKE_curve_correct_bezpart(float v1[2], float v2[2], float v3[2], float v4[2]);
+void BKE_curve_free_path(struct Path *path);
+void BKE_curve_calc_path(struct Object *ob, ListBase *nurbs);
+int BKE_curve_where_on_path(struct Object *ob, float ctime, float vec[4], float dir[3], float quat[4], float *radius, float *weight);
 
 /* ** Nurbs ** */
 
@@ -209,12 +212,7 @@ void BKE_nurb_handles_autocalc(struct Nurb *nu, int flag);
 void BKE_nurb_bezt_handle_test(struct BezTriple *bezt, const bool use_handle);
 void BKE_nurb_handles_test(struct Nurb *nu, const bool use_handles);
 
-/* **** Depsgraph evaluation **** */
-
-struct EvaluationContext;
-
-void BKE_curve_eval_geometry(struct EvaluationContext *eval_ctx,
-                             struct Curve *curve);
+void BKE_curve_eval_geometry(struct Curve *curve);
 
 /* curve_decimate.c */
 unsigned int BKE_curve_decimate_bezt_array(

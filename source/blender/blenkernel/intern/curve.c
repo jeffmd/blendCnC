@@ -4898,10 +4898,7 @@ void BKE_curve_rect_from_textbox(const struct Curve *cu, const struct TextBox *t
 	r_rect->ymin = r_rect->ymax - tb->h;
 }
 
-/* **** Depsgraph evaluation **** */
-
-void BKE_curve_eval_geometry(struct EvaluationContext *UNUSED(eval_ctx),
-                             Curve *curve)
+void BKE_curve_eval_geometry(Curve *curve)
 {
 	if (curve->bb == NULL || (curve->bb->flag & BOUNDBOX_DIRTY)) {
 		BKE_curve_texspace_calc(curve);
@@ -4950,5 +4947,256 @@ void BKE_curve_correct_bezpart(float v1[2], float v2[2], float v3[2], float v4[2
 		v3[0] = (v4[0] - fac * h2[0]);
 		v3[1] = (v4[1] - fac * h2[1]);
 	}
+}
+
+/* free curve path data
+ * NOTE: frees the path itself!
+ * NOTE: this is increasingly inaccurate with non-uniform BevPoint subdivisions [#24633]
+ */
+void BKE_curve_free_path(Path *path)
+{
+	if (path->data) MEM_freeN(path->data);
+	MEM_freeN(path);
+}
+
+/* calculate a curve-deform path for a curve
+ * - only called from displist.c -> do_makeDispListCurveTypes
+ */
+void BKE_curve_calc_path(Object *ob, ListBase *nurbs)
+{
+	BevList *bl;
+	BevPoint *bevp, *bevpn, *bevpfirst, *bevplast;
+	PathPoint *pp;
+	Nurb *nu;
+	Path *path;
+	float *fp, *dist, *maxdist, xyz[3];
+	float fac, d = 0, fac1, fac2;
+	int a, tot, cycl = 0;
+
+	/* in a path vertices are with equal differences: path->len = number of verts */
+	/* NOW WITH BEVELCURVE!!! */
+
+	if (ob == NULL || ob->type != OB_CURVE) {
+		return;
+	}
+
+	if (ob->curve_cache->path) BKE_curve_free_path(ob->curve_cache->path);
+	ob->curve_cache->path = NULL;
+
+	/* weak! can only use first curve */
+	bl = ob->curve_cache->bev.first;
+	if (bl == NULL || !bl->nr) {
+		return;
+	}
+
+	nu = nurbs->first;
+
+	ob->curve_cache->path = path = MEM_callocN(sizeof(Path), "calc_curvepath");
+
+	/* if POLY: last vertice != first vertice */
+	cycl = (bl->poly != -1);
+
+	tot = cycl ? bl->nr : bl->nr - 1;
+
+	path->len = tot + 1;
+	/* exception: vector handle paths and polygon paths should be subdivided at least a factor resolu */
+	if (path->len < nu->resolu * SEGMENTSU(nu)) {
+		path->len = nu->resolu * SEGMENTSU(nu);
+	}
+
+	dist = (float *)MEM_mallocN(sizeof(float) * (tot + 1), "calcpathdist");
+
+	/* all lengths in *dist */
+	bevp = bevpfirst = bl->bevpoints;
+	fp = dist;
+	*fp = 0.0f;
+	for (a = 0; a < tot; a++) {
+		fp++;
+		if (cycl && a == tot - 1)
+			sub_v3_v3v3(xyz, bevpfirst->vec, bevp->vec);
+		else
+			sub_v3_v3v3(xyz, (bevp + 1)->vec, bevp->vec);
+
+		*fp = *(fp - 1) + len_v3(xyz);
+		bevp++;
+	}
+
+	path->totdist = *fp;
+
+	/* the path verts  in path->data */
+	/* now also with TILT value */
+	pp = path->data = (PathPoint *)MEM_callocN(sizeof(PathPoint) * path->len, "pathdata");
+
+	bevp = bevpfirst;
+	bevpn = bevp + 1;
+	bevplast = bevpfirst + (bl->nr - 1);
+	if (UNLIKELY(bevpn > bevplast)) {
+		bevpn = cycl ? bevpfirst : bevplast;
+	}
+	fp = dist + 1;
+	maxdist = dist + tot;
+	fac = 1.0f / ((float)path->len - 1.0f);
+	fac = fac * path->totdist;
+
+	for (a = 0; a < path->len; a++) {
+
+		d = ((float)a) * fac;
+
+		/* we're looking for location (distance) 'd' in the array */
+		if (LIKELY(tot > 0)) {
+			while ((fp < maxdist) && (d >= *fp)) {
+				fp++;
+				if (bevp < bevplast) bevp++;
+				bevpn = bevp + 1;
+				if (UNLIKELY(bevpn > bevplast)) {
+					bevpn = cycl ? bevpfirst : bevplast;
+				}
+			}
+
+			fac1 = (*(fp) - d) / (*(fp) - *(fp - 1));
+			fac2 = 1.0f - fac1;
+		}
+		else {
+			fac1 = 1.0f;
+			fac2 = 0.0f;
+		}
+
+		interp_v3_v3v3(pp->vec, bevp->vec, bevpn->vec, fac2);
+		pp->vec[3] = fac1 * bevp->alfa   + fac2 * bevpn->alfa;
+		pp->radius = fac1 * bevp->radius + fac2 * bevpn->radius;
+		pp->weight = fac1 * bevp->weight + fac2 * bevpn->weight;
+		interp_qt_qtqt(pp->quat, bevp->quat, bevpn->quat, fac2);
+		normalize_qt(pp->quat);
+
+		pp++;
+	}
+
+	MEM_freeN(dist);
+}
+
+static int interval_test(const int min, const int max, int p1, const int cycl)
+{
+	if (cycl) {
+		p1 = mod_i(p1 - min, (max - min + 1)) + min;
+	}
+	else {
+		if      (p1 < min) p1 = min;
+		else if (p1 > max) p1 = max;
+	}
+	return p1;
+}
+
+/* calculate the deformation implied by the curve path at a given parametric position,
+ * and returns whether this operation succeeded.
+ *
+ * note: ctime is normalized range <0-1>
+ *
+ * returns OK: 1/0
+ */
+int BKE_curve_where_on_path(Object *ob, float ctime, float vec[4], float dir[3], float quat[4], float *radius, float *weight)
+{
+	Curve *cu;
+	Nurb *nu;
+	BevList *bl;
+	Path *path;
+	PathPoint *pp, *p0, *p1, *p2, *p3;
+	float fac;
+	float data[4];
+	int cycl = 0, s0, s1, s2, s3;
+	ListBase *nurbs;
+
+	if (ob == NULL || ob->type != OB_CURVE) return 0;
+
+	cu = ob->data;
+	if (ob->curve_cache == NULL || ob->curve_cache->path == NULL || ob->curve_cache->path->data == NULL) {
+		printf("no path!\n");
+		return 0;
+	}
+
+	path = ob->curve_cache->path;
+	pp = path->data;
+
+	/* test for cyclic */
+	bl = ob->curve_cache->bev.first;
+	if (!bl) return 0;
+	if (!bl->nr) return 0;
+	if (bl->poly > -1) cycl = 1;
+
+	/* values below zero for non-cyclic curves give strange results */
+	BLI_assert(cycl || ctime >= 0.0f);
+
+	ctime *= (path->len - 1);
+
+	s1 = (int)floor(ctime);
+	fac = (float)(s1 + 1) - ctime;
+
+	/* path->len is corrected for cyclic */
+	s0 = interval_test(0, path->len - 1 - cycl, s1 - 1, cycl);
+	s1 = interval_test(0, path->len - 1 - cycl, s1, cycl);
+	s2 = interval_test(0, path->len - 1 - cycl, s1 + 1, cycl);
+	s3 = interval_test(0, path->len - 1 - cycl, s1 + 2, cycl);
+
+	p0 = pp + s0;
+	p1 = pp + s1;
+	p2 = pp + s2;
+	p3 = pp + s3;
+
+	/* NOTE: commented out for follow constraint
+	 *
+	 *       If it's ever be uncommented watch out for curve_deform_verts()
+	 *       which used to temporary set CU_FOLLOW flag for the curve and no
+	 *       longer does it (because of threading issues of such a thing.
+	 */
+	//if (cu->flag & CU_FOLLOW) {
+
+	curve_tangent_weights(1.0f - fac, data, KEY_BSPLINE);
+
+	interp_v3_v3v3v3v3(dir, p0->vec, p1->vec, p2->vec, p3->vec, data);
+
+	/* make compatible with vectoquat */
+	negate_v3(dir);
+	//}
+
+	nurbs = BKE_curve_editNurbs_get(cu);
+	if (!nurbs)
+		nurbs = &cu->nurb;
+	nu = nurbs->first;
+
+	/* make sure that first and last frame are included in the vectors here  */
+	int key = KEY_BSPLINE;
+
+	if ((nu->type == CU_POLY) || (nu->type == CU_BEZIER)) key = KEY_LINEAR;
+	else if (s0 == s1 || p2 == p3) key = KEY_CARDINAL;
+
+	curve_position_weights(1.0f - fac, data, key);
+
+	vec[0] = data[0] * p0->vec[0] + data[1] * p1->vec[0] + data[2] * p2->vec[0] + data[3] * p3->vec[0]; /* X */
+	vec[1] = data[0] * p0->vec[1] + data[1] * p1->vec[1] + data[2] * p2->vec[1] + data[3] * p3->vec[1]; /* Y */
+	vec[2] = data[0] * p0->vec[2] + data[1] * p1->vec[2] + data[2] * p2->vec[2] + data[3] * p3->vec[2]; /* Z */
+	vec[3] = data[0] * p0->vec[3] + data[1] * p1->vec[3] + data[2] * p2->vec[3] + data[3] * p3->vec[3]; /* Tilt, should not be needed since we have quat still used */
+
+	if (quat) {
+		float totfac, q1[4], q2[4];
+
+		totfac = data[0] + data[3];
+		if (totfac > FLT_EPSILON) interp_qt_qtqt(q1, p0->quat, p3->quat, data[3] / totfac);
+		else copy_qt_qt(q1, p1->quat);
+
+		totfac = data[1] + data[2];
+		if (totfac > FLT_EPSILON) interp_qt_qtqt(q2, p1->quat, p2->quat, data[2] / totfac);
+		else copy_qt_qt(q2, p3->quat);
+
+		totfac = data[0] + data[1] + data[2] + data[3];
+		if (totfac > FLT_EPSILON) interp_qt_qtqt(quat, q1, q2, (data[1] + data[2]) / totfac);
+		else copy_qt_qt(quat, q2);
+	}
+
+	if (radius)
+		*radius = data[0] * p0->radius + data[1] * p1->radius + data[2] * p2->radius + data[3] * p3->radius;
+
+	if (weight)
+		*weight = data[0] * p0->weight + data[1] * p1->weight + data[2] * p2->weight + data[3] * p3->weight;
+
+	return 1;
 }
 

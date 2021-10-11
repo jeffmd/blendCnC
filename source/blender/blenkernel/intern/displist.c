@@ -1473,6 +1473,10 @@ static void do_makeDispListCurveTypes(Scene *scene, Object *ob, ListBase *dispba
 		 * If the calculation happens for orco, we should never free data which
 		 * was needed before and only not needed for orco calculation.
 		 */
+		if (!for_orco) {
+			if (ob->curve_cache->path) BKE_curve_free_path(ob->curve_cache->path);
+			ob->curve_cache->path = NULL;
+		}
 
 		if (ob->type == OB_FONT) {
 			BKE_vfont_to_curve_nubase(ob, FO_EDIT, &nubase);
@@ -1674,6 +1678,10 @@ static void do_makeDispListCurveTypes(Scene *scene, Object *ob, ListBase *dispba
 		}
 
 		if (!for_orco) {
+			if (cu->flag & CU_PATH) {
+				BKE_curve_calc_path(ob, &nubase);
+			}
+
 			BKE_nurbList_duplicate(&ob->curve_cache->deformed_nurbs, &nubase);
 			curve_calc_modifiers_post(scene, ob, &nubase, dispbase, r_dm_final, for_render, use_render_resolution);
 		}

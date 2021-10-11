@@ -1065,6 +1065,7 @@ makebreak:
 	/* Note: Only OB_CURVE objects could have a path  */
 	if (cu->textoncurve && cu->textoncurve->type == OB_CURVE) {
 		BLI_assert(cu->textoncurve->curve_cache != NULL);
+
 		if (cu->textoncurve->curve_cache->path) {
 			float distfac, imat[4][4], imat3[3][3], cmat[3][3];
 			float minx, maxx, miny, maxy;
@@ -1076,8 +1077,8 @@ makebreak:
 			else {
 				unit_m4(imat);
 			}
-			copy_m3_m4(imat3, imat);
 
+			copy_m3_m4(imat3, imat);
 			copy_m3_m4(cmat, cu->textoncurve->obmat);
 			mul_m3_m3m3(cmat, cmat, imat3);
 			sizefac = normalize_v3(cmat[0]) / cu->fsize;
@@ -1143,6 +1144,8 @@ makebreak:
 
 				/* calc the right loc AND the right rot separately */
 				/* vec, tvec need 4 items */
+				BKE_curve_where_on_path(cu->textoncurve, ctime, vec, tvec, NULL, NULL, NULL);
+				BKE_curve_where_on_path(cu->textoncurve, ctime + dtime, tvec, rotvec, NULL, NULL, NULL);
 
 				mul_v3_fl(vec, sizefac);
 
