@@ -1919,8 +1919,7 @@ float *BKE_curve_make_orco(Scene *scene, Object *ob, int *r_numVerts)
 
 /* ***************** BEVEL ****************** */
 
-void BKE_curve_bevel_make(Scene *scene, Object *ob, ListBase *disp,
-                          const bool for_render, const bool use_render_resolution)
+void BKE_curve_bevel_make(Scene *scene, Object *ob, ListBase *disp)
 {
 	DispList *dl, *dlnew;
 	Curve *bevcu, *cu;
@@ -1943,11 +1942,7 @@ void BKE_curve_bevel_make(Scene *scene, Object *ob, ListBase *disp,
 			facx = cu->bevobj->size[0];
 			facy = cu->bevobj->size[1];
 
-			if (for_render) {
-				BKE_displist_make_curveTypes_forRender(scene, cu->bevobj, &bevdisp, NULL, false, use_render_resolution);
-				dl = bevdisp.first;
-			}
-			else if (cu->bevobj->curve_cache) {
+			if (cu->bevobj->curve_cache) {
 				dl = cu->bevobj->curve_cache->disp.first;
 			}
 			else {
@@ -2832,7 +2827,7 @@ void BKE_curve_bevelList_free(ListBase *bev)
 	BLI_listbase_clear(bev);
 }
 
-void BKE_curve_bevelList_make(Object *ob, ListBase *nurbs, bool for_render)
+void BKE_curve_bevelList_make(Object *ob, ListBase *nurbs)
 {
 	/*
 	 * - convert all curves to polys, with indication of resol and flags for double-vertices
@@ -2899,10 +2894,7 @@ void BKE_curve_bevelList_make(Object *ob, ListBase *nurbs, bool for_render)
 		else {
 			BevPoint *bevp;
 
-			if (for_render && cu->resolu_ren != 0)
-				resolu = cu->resolu_ren;
-			else
-				resolu = nu->resolu;
+			resolu = nu->resolu;
 
 			segcount = SEGMENTSU(nu);
 

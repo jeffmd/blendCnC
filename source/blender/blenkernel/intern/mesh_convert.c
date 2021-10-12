@@ -780,7 +780,6 @@ Mesh *BKE_mesh_new_from_object(
 	Mesh *tmpmesh;
 	Curve *tmpcu = NULL, *copycu;
 	int i;
-	const bool render = (settings == eModifierMode_Render);
 	const bool cage = !apply_modifiers;
 	bool do_mat_id_data_us = true;
 
@@ -833,7 +832,7 @@ Mesh *BKE_mesh_new_from_object(
 			copycu->editnurb = tmpcu->editnurb;
 
 			/* get updated display list, and convert to a mesh */
-			BKE_displist_make_curveTypes_forRender(sce, tmpobj, &dispbase, &derivedFinal, false, render);
+			BKE_displist_make_curveTypes_forRender(sce, tmpobj, &dispbase, &derivedFinal, false);
 
 			copycu->editfont = NULL;
 			copycu->editnurb = NULL;
@@ -887,10 +886,7 @@ Mesh *BKE_mesh_new_from_object(
 					mask |= CD_MASK_ORCO;
 
 				/* Write the display mesh into the dummy mesh */
-				if (render)
-					dm = mesh_create_derived_render(sce, ob, mask);
-				else
-					dm = mesh_create_derived_view(sce, ob, mask);
+				dm = mesh_create_derived_view(sce, ob, mask);
 
 				tmpmesh = BKE_mesh_add(bmain, ((ID *)ob->data)->name + 2);
 				DM_to_mesh(dm, tmpmesh, ob, mask, true);

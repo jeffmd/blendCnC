@@ -118,9 +118,8 @@ float *BKE_curve_make_orco(struct Scene *scene, struct Object *ob, int *r_numVer
 float *BKE_curve_surf_make_orco(struct Object *ob);
 
 void BKE_curve_bevelList_free(struct ListBase *bev);
-void BKE_curve_bevelList_make(struct Object *ob, struct ListBase *nurbs, bool for_render);
-void BKE_curve_bevel_make(struct Scene *scene, struct Object *ob,  struct ListBase *disp,
-                          const bool for_render, const bool use_render_resolution);
+void BKE_curve_bevelList_make(struct Object *ob, struct ListBase *nurbs);
+void BKE_curve_bevel_make(struct Scene *scene, struct Object *ob,  struct ListBase *disp);
 
 void BKE_curve_forward_diff_bezier(float q0, float q1, float q2, float q3, float *p, int it, int stride);
 void BKE_curve_forward_diff_tangent_bezier(float q0, float q1, float q2, float q3, float *p, int it, int stride);
