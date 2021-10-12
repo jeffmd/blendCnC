@@ -78,11 +78,9 @@ void BKE_displist_count(struct ListBase *lb, int *totvert, int *totface, int *to
 void BKE_displist_free(struct ListBase *lb);
 bool BKE_displist_has_faces(struct ListBase *lb);
 
-void BKE_displist_make_surf(struct Scene *scene, struct Object *ob, struct ListBase *dispbase, struct DerivedMesh **r_dm_final,
-                            const bool for_orco);
-void BKE_displist_make_curveTypes(struct Scene *scene, struct Object *ob, const bool for_orco);
-void BKE_displist_make_curveTypes_forRender(struct Scene *scene, struct Object *ob, struct ListBase *dispbase, struct DerivedMesh **r_dm_final,
-                                            const bool for_orco);
+void BKE_displist_make_surf(struct Scene *scene, struct Object *ob, struct ListBase *dispbase, struct DerivedMesh **r_dm_final);
+void BKE_displist_make_curveTypes(struct Scene *scene, struct Object *ob);
+void BKE_displist_make_curveTypes_forRender(struct Scene *scene, struct Object *ob, struct ListBase *dispbase, struct DerivedMesh **r_dm_final);
 void BKE_displist_make_curveTypes_forOrco(struct Scene *scene, struct Object *ob, struct ListBase *dispbase);
 
 bool BKE_displist_surfindex_get(DispList *dl, int a, int *b, int *p1, int *p2, int *p3, int *p4);

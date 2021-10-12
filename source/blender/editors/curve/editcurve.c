@@ -5546,7 +5546,7 @@ static int match_texture_space_exec(bContext *C, wmOperator *UNUSED(op))
 	int a;
 
 	if (object->curve_cache == NULL) {
-		BKE_displist_make_curveTypes(scene, object, false);
+		BKE_displist_make_curveTypes(scene, object);
 	}
 
 	INIT_MINMAX(min, max);

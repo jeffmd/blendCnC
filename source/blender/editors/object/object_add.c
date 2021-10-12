@@ -944,7 +944,7 @@ static void convert_ensure_curve_cache(Main *bmain, Scene *scene, Object *ob)
 		 * redo we might end up with an object which isn't evaluated yet.
 		 */
 		if (ELEM(ob->type, OB_SURF, OB_CURVE, OB_FONT)) {
-			BKE_displist_make_curveTypes(scene, ob, false);
+			BKE_displist_make_curveTypes(scene, ob);
 		}
 	}
 }

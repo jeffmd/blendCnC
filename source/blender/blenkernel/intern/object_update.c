@@ -106,7 +106,7 @@ void BKE_object_handle_data_update(
 		case OB_CURVE:
 		case OB_SURF:
 		case OB_FONT:
-			BKE_displist_make_curveTypes(scene, ob, 0);
+			BKE_displist_make_curveTypes(scene, ob);
 			break;
 
 	}

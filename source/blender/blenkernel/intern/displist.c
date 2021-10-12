@@ -671,7 +671,7 @@ static float displist_calc_taper(Scene *scene, Object *taperobj, float fac)
 
 	dl = taperobj->curve_cache ? taperobj->curve_cache->disp.first : NULL;
 	if (dl == NULL) {
-		BKE_displist_make_curveTypes(scene, taperobj, 0);
+		BKE_displist_make_curveTypes(scene, taperobj);
 		dl = taperobj->curve_cache->disp.first;
 	}
 	if (dl) {
@@ -1113,7 +1113,7 @@ static void curve_calc_orcodm(Scene *scene, Object *ob, DerivedMesh *dm_final)
 }
 
 void BKE_displist_make_surf(Scene *scene, Object *ob, ListBase *dispbase,
-                            DerivedMesh **r_dm_final, const bool for_orco)
+                            DerivedMesh **r_dm_final)
 {
 	ListBase nubase = {NULL, NULL};
 	Nurb *nu;
@@ -1129,8 +1129,7 @@ void BKE_displist_make_surf(Scene *scene, Object *ob, ListBase *dispbase,
 		BKE_nurbList_duplicate(&nubase, &cu->nurb);
 	}
 
-	if (!for_orco)
-		curve_calc_modifiers_pre(scene, ob, &nubase);
+	curve_calc_modifiers_pre(scene, ob, &nubase);
 
 	for (nu = nubase.first; nu; nu = nu->next) {
 		if ((nu->hide == 0) && BKE_nurb_check_valid_uv(nu)) {
@@ -1188,10 +1187,8 @@ void BKE_displist_make_surf(Scene *scene, Object *ob, ListBase *dispbase,
 		}
 	}
 
-	if (!for_orco) {
-		BKE_nurbList_duplicate(&ob->curve_cache->deformed_nurbs, &nubase);
-		curve_calc_modifiers_post(scene, ob, &nubase, dispbase, r_dm_final);
-	}
+	BKE_nurbList_duplicate(&ob->curve_cache->deformed_nurbs, &nubase);
+	curve_calc_modifiers_post(scene, ob, &nubase, dispbase, r_dm_final);
 
 	BKE_nurbList_free(&nubase);
 }
@@ -1416,7 +1413,7 @@ static void calc_bevfac_mapping(Curve *cu, BevList *bl, Nurb *nu,
 }
 
 static void do_makeDispListCurveTypes(Scene *scene, Object *ob, ListBase *dispbase,
-                                      DerivedMesh **r_dm_final, const bool for_orco)
+                                      DerivedMesh **r_dm_final)
 {
 	Curve *cu = ob->data;
 
@@ -1424,7 +1421,7 @@ static void do_makeDispListCurveTypes(Scene *scene, Object *ob, ListBase *dispba
 	if (!ELEM(ob->type, OB_SURF, OB_CURVE, OB_FONT)) return;
 
 	if (ob->type == OB_SURF) {
-		BKE_displist_make_surf(scene, ob, dispbase, r_dm_final, for_orco);
+		BKE_displist_make_surf(scene, ob, dispbase, r_dm_final);
 	}
 	else if (ELEM(ob->type, OB_CURVE, OB_FONT)) {
 		ListBase dlbev;
@@ -1432,14 +1429,8 @@ static void do_makeDispListCurveTypes(Scene *scene, Object *ob, ListBase *dispba
 
 		BKE_curve_bevelList_free(&ob->curve_cache->bev);
 
-		/* We only re-evaluate path if evaluation is not happening for orco.
-		 * If the calculation happens for orco, we should never free data which
-		 * was needed before and only not needed for orco calculation.
-		 */
-		if (!for_orco) {
-			if (ob->curve_cache->path) BKE_curve_free_path(ob->curve_cache->path);
-			ob->curve_cache->path = NULL;
-		}
+		if (ob->curve_cache->path) BKE_curve_free_path(ob->curve_cache->path);
+		ob->curve_cache->path = NULL;
 
 		if (ob->type == OB_FONT) {
 			BKE_vfont_to_curve_nubase(ob, FO_EDIT, &nubase);
@@ -1448,8 +1439,7 @@ static void do_makeDispListCurveTypes(Scene *scene, Object *ob, ListBase *dispba
 			BKE_nurbList_duplicate(&nubase, BKE_curve_nurbs_get(cu));
 		}
 
-		if (!for_orco)
-			curve_calc_modifiers_pre(scene, ob, &nubase);
+		curve_calc_modifiers_pre(scene, ob, &nubase);
 
 		BKE_curve_bevelList_make(ob, &nubase);
 
@@ -1640,14 +1630,12 @@ static void do_makeDispListCurveTypes(Scene *scene, Object *ob, ListBase *dispba
 			curve_to_filledpoly(cu, &nubase, dispbase);
 		}
 
-		if (!for_orco) {
-			if (cu->flag & CU_PATH) {
-				BKE_curve_calc_path(ob, &nubase);
-			}
-
-			BKE_nurbList_duplicate(&ob->curve_cache->deformed_nurbs, &nubase);
-			curve_calc_modifiers_post(scene, ob, &nubase, dispbase, r_dm_final);
+		if (cu->flag & CU_PATH) {
+			BKE_curve_calc_path(ob, &nubase);
 		}
+
+		BKE_nurbList_duplicate(&ob->curve_cache->deformed_nurbs, &nubase);
+		curve_calc_modifiers_post(scene, ob, &nubase, dispbase, r_dm_final);
 
 		if (cu->flag & CU_DEFORM_FILL && !ob->derivedFinal) {
 			curve_to_filledpoly(cu, &nubase, dispbase);
@@ -1657,7 +1645,7 @@ static void do_makeDispListCurveTypes(Scene *scene, Object *ob, ListBase *dispba
 	}
 }
 
-void BKE_displist_make_curveTypes(Scene *scene, Object *ob, const bool for_orco)
+void BKE_displist_make_curveTypes(Scene *scene, Object *ob)
 {
 	ListBase *dispbase;
 
@@ -1675,19 +1663,19 @@ void BKE_displist_make_curveTypes(Scene *scene, Object *ob, const bool for_orco)
 
 	dispbase = &(ob->curve_cache->disp);
 
-	do_makeDispListCurveTypes(scene, ob, dispbase, &ob->derivedFinal, for_orco);
+	do_makeDispListCurveTypes(scene, ob, dispbase, &ob->derivedFinal);
 
 	boundbox_displist_object(ob);
 }
 
 void BKE_displist_make_curveTypes_forRender(Scene *scene, Object *ob, ListBase *dispbase,
-                                            DerivedMesh **r_dm_final, const bool for_orco)
+                                            DerivedMesh **r_dm_final)
 {
 	if (ob->curve_cache == NULL) {
 		ob->curve_cache = MEM_callocN(sizeof(CurveCache), "CurveCache for Curve");
 	}
 
-	do_makeDispListCurveTypes(scene, ob, dispbase, r_dm_final, for_orco);
+	do_makeDispListCurveTypes(scene, ob, dispbase, r_dm_final);
 }
 
 void BKE_displist_make_curveTypes_forOrco(struct Scene *scene, struct Object *ob, struct ListBase *dispbase)
@@ -1696,7 +1684,7 @@ void BKE_displist_make_curveTypes_forOrco(struct Scene *scene, struct Object *ob
 		ob->curve_cache = MEM_callocN(sizeof(CurveCache), "CurveCache for Curve");
 	}
 
-	do_makeDispListCurveTypes(scene, ob, dispbase, NULL, 1);
+	do_makeDispListCurveTypes(scene, ob, dispbase, NULL);
 }
 
 /* add Orco layer to the displist object which has got derived mesh and return orco */

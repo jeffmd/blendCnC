@@ -433,7 +433,7 @@ static DerivedMesh *arrayModifier_doArray(
 		if (cu) {
 #ifdef CYCLIC_DEPENDENCY_WORKAROUND
 			if (amd->curve_ob->curve_cache == NULL) {
-				BKE_displist_make_curveTypes(scene, amd->curve_ob, false);
+				BKE_displist_make_curveTypes(scene, amd->curve_ob);
 			}
 #endif
 

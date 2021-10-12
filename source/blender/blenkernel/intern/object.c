@@ -950,7 +950,7 @@ static bool ob_parcurve(Scene *scene, Object *ob, Object *par, float mat[4][4])
 		if (scene == NULL) {
 			return false;
 		}
-		BKE_displist_make_curveTypes(scene, par, 0);
+		BKE_displist_make_curveTypes(scene, par);
 	}
 
 	if (par->curve_cache->path == NULL) {

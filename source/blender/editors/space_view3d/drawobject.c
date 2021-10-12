@@ -1689,7 +1689,7 @@ static void ensure_curve_cache(Main *bmain, Scene *scene, Object *object)
 			case OB_CURVE:
 			case OB_SURF:
 			case OB_FONT:
-				BKE_displist_make_curveTypes(scene, object, false);
+				BKE_displist_make_curveTypes(scene, object);
 				break;
 		}
 	}
