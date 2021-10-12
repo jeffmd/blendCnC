@@ -1007,111 +1007,6 @@ static void displist_surf_indices(DispList *dl)
 	}
 }
 
-static DerivedMesh *create_orco_dm(Scene *scene, Object *ob)
-{
-	DerivedMesh *dm;
-	ListBase disp = {NULL, NULL};
-
-	/* OrcoDM should be created from underformed disp lists */
-	BKE_displist_make_curveTypes_forOrco(scene, ob, &disp);
-	dm = CDDM_from_curve_displist(ob, &disp);
-
-	BKE_displist_free(&disp);
-
-	return dm;
-}
-
-static void add_orco_dm(Object *ob, DerivedMesh *dm, DerivedMesh *orcodm)
-{
-	float (*orco)[3], (*layerorco)[3];
-	int totvert, a;
-	Curve *cu = ob->data;
-
-	totvert = dm->getNumVerts(dm);
-
-	orco = MEM_callocN(sizeof(float) * 3 * totvert, "dm orco");
-
-	if (orcodm->getNumVerts(orcodm) == totvert)
-		orcodm->getVertCos(orcodm, orco);
-	else
-		dm->getVertCos(dm, orco);
-
-	for (a = 0; a < totvert; a++) {
-		float *co = orco[a];
-		co[0] = (co[0] - cu->loc[0]) / cu->size[0];
-		co[1] = (co[1] - cu->loc[1]) / cu->size[1];
-		co[2] = (co[2] - cu->loc[2]) / cu->size[2];
-	}
-
-	if ((layerorco = DM_get_vert_data_layer(dm, CD_ORCO))) {
-		memcpy(layerorco, orco, sizeof(float) * totvert);
-		MEM_freeN(orco);
-	}
-	else
-		DM_add_vert_layer(dm, CD_ORCO, CD_ASSIGN, orco);
-}
-
-static void curve_calc_orcodm(Scene *scene, Object *ob, DerivedMesh *dm_final)
-{
-	/* this function represents logic of mesh's orcodm calculation
-	 * for displist-based objects
-	 */
-	VirtualModifierData virtualModifierData;
-	ModifierData *md = modifiers_getVirtualModifierList(ob, &virtualModifierData);
-	ModifierData *pretessellatePoint;
-	Curve *cu = ob->data;
-	int required_mode;
-	const bool editmode = (cu->editnurb || cu->editfont);
-	DerivedMesh *ndm, *orcodm = NULL;
-	ModifierApplyFlag app_flag = MOD_APPLY_ORCO;
-
-	required_mode = eModifierMode_Realtime;
-
-	pretessellatePoint = curve_get_tessellate_point(scene, ob, editmode);
-
-	if (editmode)
-		required_mode |= eModifierMode_Editmode;
-
-	if (pretessellatePoint) {
-		md = pretessellatePoint->next;
-	}
-
-	/* If modifiers are disabled, we wouldn't be here because
-	 * this function is only called if there're enabled constructive
-	 * modifiers applied on the curve.
-	 *
-	 * This means we can create ORCO DM in advance and assume it's
-	 * never NULL.
-	 */
-	orcodm = create_orco_dm(scene, ob);
-
-	for (; md; md = md->next) {
-		const ModifierTypeInfo *mti = modifierType_getInfo(md->type);
-
-		md->scene = scene;
-
-		if (!modifier_isEnabled(scene, md, required_mode))
-			continue;
-		if (mti->type != eModifierTypeType_Constructive)
-			continue;
-
-		ndm = modwrap_applyModifier(md, ob, orcodm, app_flag);
-
-		if (ndm) {
-			/* if the modifier returned a new dm, release the old one */
-			if (orcodm && orcodm != ndm) {
-				orcodm->release(orcodm);
-			}
-			orcodm = ndm;
-		}
-	}
-
-	/* add an orco layer if needed */
-	add_orco_dm(ob, dm_final, orcodm);
-
-	orcodm->release(orcodm);
-}
-
 void BKE_displist_make_surf(Scene *scene, Object *ob, ListBase *dispbase,
                             DerivedMesh **r_dm_final)
 {
@@ -1650,8 +1545,7 @@ void BKE_displist_make_curveTypes(Scene *scene, Object *ob)
 	ListBase *dispbase;
 
 	/* The same check for duplis as in do_makeDispListCurveTypes.
-	 * Happens when curve used for constraint/bevel was converted to mesh.
-	 * check there is still needed for render displist and orco displists. */
+	 * Happens when curve used for constraint/bevel was converted to mesh. */
 	if (!ELEM(ob->type, OB_SURF, OB_CURVE, OB_FONT))
 		return;
 
@@ -1676,36 +1570,6 @@ void BKE_displist_make_curveTypes_forRender(Scene *scene, Object *ob, ListBase *
 	}
 
 	do_makeDispListCurveTypes(scene, ob, dispbase, r_dm_final);
-}
-
-void BKE_displist_make_curveTypes_forOrco(struct Scene *scene, struct Object *ob, struct ListBase *dispbase)
-{
-	if (ob->curve_cache == NULL) {
-		ob->curve_cache = MEM_callocN(sizeof(CurveCache), "CurveCache for Curve");
-	}
-
-	do_makeDispListCurveTypes(scene, ob, dispbase, NULL);
-}
-
-/* add Orco layer to the displist object which has got derived mesh and return orco */
-float *BKE_displist_make_orco(Scene *scene, Object *ob, DerivedMesh *dm_final)
-{
-	float *orco;
-
-	if (dm_final == NULL)
-		dm_final = ob->derivedFinal;
-
-	if (!dm_final->getVertDataArray(dm_final, CD_ORCO)) {
-		curve_calc_orcodm(scene, ob, dm_final);
-	}
-
-	orco = dm_final->getVertDataArray(dm_final, CD_ORCO);
-
-	if (orco) {
-		orco = MEM_dupallocN(orco);
-	}
-
-	return orco;
 }
 
 void BKE_displist_minmax(ListBase *dispbase, float min[3], float max[3])
