@@ -629,8 +629,6 @@ static void prepare_mesh_for_viewport_render(Main *bmain, Scene *scene)
 
 void BKE_scene_update_tagged(Main *bmain, Scene *scene)
 {
-	Scene *sce_iter;
-
 	/* keep this first */
 	BLI_callback_exec(bmain, &scene->id, BLI_CB_EVT_SCENE_UPDATE_PRE);
 
