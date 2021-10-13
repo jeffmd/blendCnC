@@ -38,47 +38,6 @@ struct Material;
 struct Object;
 struct VFont;
 
-/* These two Lines with # tell makesdna this struct can be excluded. */
-#
-#
-typedef struct PathPoint {
-	float vec[4]; /* grr, cant get rid of tilt yet */
-	float quat[4];
-	float radius, weight;
-} PathPoint;
-
-/* These two Lines with # tell makesdna this struct can be excluded. */
-#
-#
-typedef struct Path {
-	struct PathPoint *data;
-	int len;
-	float totdist;
-} Path;
-
-/* These two Lines with # tell makesdna this struct can be excluded. */
-#
-#
-typedef struct BevPoint {
-	float vec[3], alfa, radius, weight, offset;
-	float sina, cosa;				/* 2D Only */
-	float dir[3], tan[3], quat[4];	/* 3D Only */
-	short split_tag, dupe_tag;
-} BevPoint;
-
-/* These two Lines with # tell makesdna this struct can be excluded. */
-#
-#
-typedef struct BevList {
-	struct BevList *next, *prev;
-	int nr, dupe_nr;
-	int poly, hole;
-	int charidx;
-	int *segbevcount;
-	float *seglen;
-	BevPoint *bevpoints;
-} BevList;
-
 /**
  * Points on Bezier Curves/Paths are generally BezTriples
  *

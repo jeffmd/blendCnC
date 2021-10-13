@@ -1324,8 +1324,7 @@ static void do_makeDispListCurveTypes(Scene *scene, Object *ob, ListBase *dispba
 
 		BKE_curve_bevelList_free(&ob->curve_cache->bev);
 
-		if (ob->curve_cache->path) BKE_curve_free_path(ob->curve_cache->path);
-		ob->curve_cache->path = NULL;
+		BKE_object_free_path(ob);
 
 		if (ob->type == OB_FONT) {
 			BKE_vfont_to_curve_nubase(ob, FO_EDIT, &nubase);
@@ -1542,8 +1541,6 @@ static void do_makeDispListCurveTypes(Scene *scene, Object *ob, ListBase *dispba
 
 void BKE_displist_make_curveTypes(Scene *scene, Object *ob)
 {
-	ListBase *dispbase;
-
 	/* The same check for duplis as in do_makeDispListCurveTypes.
 	 * Happens when curve used for constraint/bevel was converted to mesh. */
 	if (!ELEM(ob->type, OB_SURF, OB_CURVE, OB_FONT))
@@ -1551,13 +1548,7 @@ void BKE_displist_make_curveTypes(Scene *scene, Object *ob)
 
 	BKE_object_free_derived_caches(ob);
 
-	if (!ob->curve_cache) {
-		ob->curve_cache = MEM_callocN(sizeof(CurveCache), "CurveCache for curve types");
-	}
-
-	dispbase = &(ob->curve_cache->disp);
-
-	do_makeDispListCurveTypes(scene, ob, dispbase, &ob->derivedFinal);
+	do_makeDispListCurveTypes(scene, ob, BKE_object_curve_cache_disp(ob), &ob->derivedFinal);
 
 	boundbox_displist_object(ob);
 }
@@ -1565,10 +1556,6 @@ void BKE_displist_make_curveTypes(Scene *scene, Object *ob)
 void BKE_displist_make_curveTypes_forRender(Scene *scene, Object *ob, ListBase *dispbase,
                                             DerivedMesh **r_dm_final)
 {
-	if (ob->curve_cache == NULL) {
-		ob->curve_cache = MEM_callocN(sizeof(CurveCache), "CurveCache for Curve");
-	}
-
 	do_makeDispListCurveTypes(scene, ob, dispbase, r_dm_final);
 }
 
@@ -1614,7 +1601,7 @@ static void boundbox_displist_object(Object *ob)
 			float min[3], max[3];
 
 			INIT_MINMAX(min, max);
-			BKE_displist_minmax(&ob->curve_cache->disp, min, max);
+			BKE_displist_minmax(BKE_object_curve_cache_disp(ob), min, max);
 			BKE_boundbox_init_from_minmax(ob->bb, min, max);
 
 			ob->bb->flag &= ~BOUNDBOX_DIRTY;

@@ -807,10 +807,7 @@ Mesh *BKE_mesh_new_from_object(
 			 * TODO(sergey): Look into more proper solution.
 			 */
 			if (ob->curve_cache != NULL) {
-				if (tmpobj->curve_cache == NULL) {
-					tmpobj->curve_cache = MEM_callocN(sizeof(CurveCache), "CurveCache for curve types");
-				}
-				BKE_displist_copy(&tmpobj->curve_cache->disp, &ob->curve_cache->disp);
+				BKE_displist_copy(BKE_object_curve_cache_disp(tmpobj), &ob->curve_cache->disp);
 			}
 
 			/* if getting the original caged mesh, delete object modifiers */

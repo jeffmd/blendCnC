@@ -4732,15 +4732,6 @@ void BKE_curve_correct_bezpart(float v1[2], float v2[2], float v3[2], float v4[2
 	}
 }
 
-/* free curve path data
- * NOTE: frees the path itself!
- * NOTE: this is increasingly inaccurate with non-uniform BevPoint subdivisions [#24633]
- */
-void BKE_curve_free_path(Path *path)
-{
-	if (path->data) MEM_freeN(path->data);
-	MEM_freeN(path);
-}
 
 /* calculate a curve-deform path for a curve
  * - only called from displist.c -> do_makeDispListCurveTypes
@@ -4763,8 +4754,7 @@ void BKE_curve_calc_path(Object *ob, ListBase *nurbs)
 		return;
 	}
 
-	if (ob->curve_cache->path) BKE_curve_free_path(ob->curve_cache->path);
-	ob->curve_cache->path = NULL;
+	BKE_object_free_path(ob);
 
 	/* weak! can only use first curve */
 	bl = ob->curve_cache->bev.first;

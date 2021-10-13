@@ -36,18 +36,19 @@ struct Object;
 struct RigidBodyWorld;
 struct Scene;
 struct View3D;
+struct ListBase;
 
 void BKE_object_workob_clear(struct Object *workob);
 void BKE_object_workob_calc_parent(struct Scene *scene, struct Object *ob, struct Object *workob);
 
 void BKE_object_transform_copy(struct Object *ob_tar, const struct Object *ob_src);
 struct BulletSoftBody *copy_bulletsoftbody(const struct BulletSoftBody *sb, const int flag);
-void BKE_object_free_curve_cache(struct Object *ob);
 void BKE_object_update_base_layer(struct Scene *scene, struct Object *ob);
 
 void BKE_object_free(struct Object *ob);
 void BKE_object_free_derived_caches(struct Object *ob);
 void BKE_object_free_caches(struct Object *object);
+void BKE_object_free_curve_cache(struct Object *ob);
 
 void BKE_object_modifier_hook_reset(struct Object *ob, struct HookModifierData *hmd);
 
@@ -68,10 +69,12 @@ struct Object *BKE_object_add_only_object(
         struct Main *bmain,
         int type, const char *name)
         ATTR_NONNULL(1) ATTR_RETURNS_NONNULL;
+
 struct Object *BKE_object_add(
         struct Main *bmain, struct Scene *scene,
         int type, const char *name)
         ATTR_NONNULL(1, 2) ATTR_RETURNS_NONNULL;
+
 void *BKE_object_obdata_add_from_type(
         struct Main *bmain,
         int type, const char *name)
@@ -154,57 +157,26 @@ typedef struct ObjectTfmProtectedChannels {
 	float rotAngle,   drotAngle;
 } ObjectTfmProtectedChannels;
 
-void BKE_object_tfm_protected_backup(
-        const struct Object *ob,
-        ObjectTfmProtectedChannels *obtfm);
-
-void BKE_object_tfm_protected_restore(
-        struct Object *ob,
-        const ObjectTfmProtectedChannels *obtfm,
-        const short protectflag);
+void BKE_object_tfm_protected_backup(const struct Object *ob, ObjectTfmProtectedChannels *obtfm);
+void BKE_object_tfm_protected_restore(struct Object *ob, const ObjectTfmProtectedChannels *obtfm, const short protectflag);
 
 /* Dependency graph evaluation callbacks. */
-void BKE_object_eval_local_transform(
-        struct Object *ob);
-void BKE_object_eval_parent(
-        struct Scene *scene,
-        struct Object *ob);
-void BKE_object_eval_constraints(
-        struct Scene *scene,
-        struct Object *ob);
+void BKE_object_eval_local_transform(struct Object *ob);
+void BKE_object_eval_parent(struct Scene *scene, struct Object *ob);
+void BKE_object_eval_constraints(struct Scene *scene, struct Object *ob);
 void BKE_object_eval_done(struct Object *ob);
-
-bool BKE_object_eval_proxy_copy(
-        struct Object *object);
-void BKE_object_eval_uber_transform(
-        struct Object *ob);
-void BKE_object_eval_uber_data(
-        struct Main *bmain,
-        struct Scene *scene,
-        struct Object *ob);
-
-void BKE_object_eval_transform_all(
-        struct Scene *scene,
-        struct Object *object);
-
-void BKE_object_handle_data_update(
-        struct Main *bmain,
-        struct Scene *scene,
-        struct Object *ob);
-void BKE_object_handle_update(
-        struct Main *bmain,
-        struct Scene *scene,
-        struct Object *ob);
-void BKE_object_handle_update_ex(
-        struct Main *bmain,
-        struct Scene *scene, struct Object *ob,
+bool BKE_object_eval_proxy_copy(struct Object *object);
+void BKE_object_eval_uber_transform(struct Object *ob);
+void BKE_object_eval_uber_data(struct Main *bmain, struct Scene *scene, struct Object *ob);
+void BKE_object_eval_transform_all(struct Scene *scene, struct Object *object);
+void BKE_object_handle_data_update(struct Main *bmain, struct Scene *scene, struct Object *ob);
+void BKE_object_handle_update(struct Main *bmain, struct Scene *scene, struct Object *ob);
+void BKE_object_handle_update_ex(struct Main *bmain, struct Scene *scene, struct Object *ob,
         struct RigidBodyWorld *rbw,
         const bool do_proxy_update);
 
 int BKE_object_obdata_texspace_get(struct Object *ob, short **r_texflag, float **r_loc, float **r_size, float **r_rot);
-
 bool BKE_object_flag_test_recursive(const struct Object *ob, short flag);
-
 bool BKE_object_is_child_recursive(const struct Object *ob_parent, const struct Object *ob_child);
 
 /* return ModifierMode flag */
@@ -246,6 +218,10 @@ bool BKE_object_modifier_update_subframe(
 
 /* Rotation Mode Conversions - Objects... */
 void BKE_object_rotMode_change_values(float quat[4], float eul[3], float axis[3], float *angle, short oldMode, short newMode);
+
+/* curve cache */
+ListBase *BKE_object_curve_cache_disp(struct Object *ob);
+void BKE_object_free_path(struct Object *ob);
 
 #ifdef __cplusplus
 }

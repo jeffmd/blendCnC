@@ -124,9 +124,7 @@ void BKE_object_free_curve_cache(Object *ob)
 	if (ob->curve_cache) {
 		BKE_displist_free(&ob->curve_cache->disp);
 		BKE_curve_bevelList_free(&ob->curve_cache->bev);
-		if (ob->curve_cache->path) {
-			BKE_curve_free_path(ob->curve_cache->path);
-		}
+		BKE_object_free_path(ob);
 		BKE_nurbList_free(&ob->curve_cache->deformed_nurbs);
 		MEM_freeN(ob->curve_cache);
 		ob->curve_cache = NULL;
@@ -2090,7 +2088,7 @@ bool BKE_object_modifier_update_subframe(
 }
 
 /* **************** Rotation Mode Conversions ****************************** */
-/* Used for Objects and Pose Channels, since both can have multiple rotation representations */
+/* Used for Objects, since both can have multiple rotation representations */
 
 /* Called from RNA when rotation mode changes
  * - the result should be that the rotations given in the provided pointers have had conversions
@@ -2140,3 +2138,26 @@ void BKE_object_rotMode_change_values(float quat[4], float eul[3], float axis[3]
 	}
 }
 
+/******************* Curve Cache ******************/
+static CurveCache *object_curve_cache(struct Object *ob)
+{
+	if (!ob->curve_cache) {
+		ob->curve_cache = MEM_callocN(sizeof(CurveCache), "CurveCache for curve types");
+	}
+	
+	return ob->curve_cache;
+}
+
+ListBase *BKE_object_curve_cache_disp(struct Object *ob)
+{
+	return &(object_curve_cache(ob)->disp);
+}
+
+void BKE_object_free_path(struct Object *ob)
+{
+	if (ob->curve_cache && ob->curve_cache->path) {
+		if (ob->curve_cache->path->data) MEM_freeN(ob->curve_cache->path->data);
+		MEM_freeN(ob->curve_cache->path);
+		ob->curve_cache->path = NULL;
+	}
+}
