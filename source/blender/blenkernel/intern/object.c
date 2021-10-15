@@ -88,6 +88,13 @@
 
 #include "GPU_material.h"
 
+typedef struct CurveCache {
+	ListBase disp;
+	ListBase bev;
+	ListBase deformed_nurbs;
+	struct Path *path;
+} CurveCache;
+
 /* Vertex parent modifies original BMesh which is not safe for threading.
  * Ideally such a modification should be handled as a separate DAG update
  * callback for mesh datablock, but for until it is actually supported use
@@ -119,13 +126,20 @@ void BKE_object_update_base_layer(struct Scene *scene, Object *ob)
 	}
 }
 
-void BKE_object_free_curve_cache(Object *ob)
+void BKE_object_clear_curve_cache(struct Object *ob)
 {
 	if (ob->curve_cache) {
 		BKE_displist_free(&ob->curve_cache->disp);
 		BKE_curve_bevelList_free(&ob->curve_cache->bev);
 		BKE_object_free_path(ob);
 		BKE_nurbList_free(&ob->curve_cache->deformed_nurbs);
+	}
+}
+
+void BKE_object_free_curve_cache(Object *ob)
+{
+	if (ob->curve_cache) {
+		BKE_object_clear_curve_cache(ob);
 		MEM_freeN(ob->curve_cache);
 		ob->curve_cache = NULL;
 	}
@@ -248,7 +262,7 @@ void BKE_object_free_derived_caches(Object *ob)
 		ob->derivedDeform = NULL;
 	}
 
-	BKE_object_free_curve_cache(ob);
+	BKE_object_clear_curve_cache(ob);
 }
 
 void BKE_object_free_caches(Object *object)
@@ -2148,9 +2162,24 @@ static CurveCache *object_curve_cache(struct Object *ob)
 	return ob->curve_cache;
 }
 
-ListBase *BKE_object_curve_cache_disp(struct Object *ob)
+ListBase *BKE_object_curve_displist(struct Object *ob)
 {
 	return &(object_curve_cache(ob)->disp);
+}
+
+ListBase *BKE_object_curve_bevlist(struct Object *ob)
+{
+	return &(object_curve_cache(ob)->bev);
+}
+
+ListBase *BKE_object_curve_deformed_nurbs(struct Object *ob)
+{
+	return &(object_curve_cache(ob)->deformed_nurbs);
+}
+
+int BKE_object_has_path(struct Object *ob)
+{
+	return (ob->curve_cache && ob->curve_cache->path && ob->curve_cache->path->data);
 }
 
 void BKE_object_free_path(struct Object *ob)
@@ -2160,4 +2189,36 @@ void BKE_object_free_path(struct Object *ob)
 		MEM_freeN(ob->curve_cache->path);
 		ob->curve_cache->path = NULL;
 	}
+}
+
+static Path *object_create_path(struct Object *ob)
+{
+	object_curve_cache(ob)->path = MEM_callocN(sizeof(Path), "calc_curvepath");
+
+	return ob->curve_cache->path;
+}
+
+Path *BKE_object_new_path(struct Object *ob)
+{
+	BKE_object_free_path(ob);
+
+	return object_create_path(ob);
+}
+
+Path *BKE_object_path(struct Object *ob)
+{
+	if (!object_curve_cache(ob)->path) {
+		object_create_path(ob);
+	}
+
+	return ob->curve_cache->path;
+}
+
+float BKE_object_path_totdist(struct Object *ob)
+{
+	if (ob->curve_cache && ob->curve_cache->path) {
+		return ob->curve_cache->path->totdist;
+	}
+
+	return 0.0f;
 }

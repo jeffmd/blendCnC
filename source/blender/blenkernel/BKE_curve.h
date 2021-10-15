@@ -66,14 +66,6 @@ typedef struct BevList {
 	BevPoint *bevpoints;
 } BevList;
 
-
-typedef struct CurveCache {
-	ListBase disp;
-	ListBase bev;
-	ListBase deformed_nurbs;
-	struct Path *path;
-} CurveCache;
-
 /* Definitions needed for nurb keys */
 typedef struct CVKeyIndex {
 	void *orig_cv;

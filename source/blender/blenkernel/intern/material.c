@@ -58,6 +58,7 @@
 #include "BKE_curve.h"
 #include "BKE_editmesh.h"
 #include "BKE_font.h"
+#include "BKE_object.h"
 
 #include "GPU_material.h"
 
@@ -1107,9 +1108,7 @@ bool BKE_object_material_slot_remove(Main *bmain, Object *ob)
 	/* check indices from mesh */
 	if (ELEM(ob->type, OB_MESH, OB_CURVE, OB_SURF, OB_FONT)) {
 		material_data_index_remove_id((ID *)ob->data, actcol - 1);
-		if (ob->curve_cache) {
-			BKE_displist_free(&ob->curve_cache->disp);
-		}
+		BKE_displist_free(BKE_object_curve_displist(ob));
 	}
 
 	return true;

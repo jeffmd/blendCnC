@@ -33,11 +33,12 @@
 
 #include "BKE_pbvh.h"
 #include "BKE_cdderivedmesh.h"
+#include "BKE_curve.h"
+#include "BKE_editmesh.h"
 #include "BKE_global.h"
 #include "BKE_mesh.h"
 #include "BKE_mesh_mapping.h"
-#include "BKE_editmesh.h"
-#include "BKE_curve.h"
+#include "BKE_object.h"
 
 #include "DNA_mesh_types.h"
 #include "DNA_meshdata_types.h"
@@ -1988,13 +1989,7 @@ DerivedMesh *CDDM_from_mesh(Mesh *mesh)
 
 DerivedMesh *CDDM_from_curve(Object *ob)
 {
-	ListBase disp = {NULL, NULL};
-
-	if (ob->curve_cache) {
-		disp = ob->curve_cache->disp;
-	}
-
-	return CDDM_from_curve_displist(ob, &disp);
+	return CDDM_from_curve_displist(ob, BKE_object_curve_displist(ob));
 }
 
 DerivedMesh *CDDM_from_curve_displist(Object *ob, ListBase *dispbase)

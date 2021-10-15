@@ -40,6 +40,7 @@
 #include "BKE_displist.h"
 #include "BKE_DerivedMesh.h"
 #include "BKE_editmesh.h"
+#include "BKE_object.h"
 
 #include "ED_info.h"
 
@@ -108,8 +109,7 @@ static void stats_object(Object *ob, int sel, int totob, SceneStats *stats)
 		{
 			int totv = 0, totf = 0, tottri = 0;
 
-			if (ob->curve_cache && ob->curve_cache->disp.first)
-				BKE_displist_count(&ob->curve_cache->disp, &totv, &totf, &tottri);
+			BKE_displist_count(BKE_object_curve_displist(ob), &totv, &totf, &tottri);
 
 			totv   *= totob;
 			totf   *= totob;

@@ -195,14 +195,8 @@ int BKE_mesh_nurbs_to_mdata(
         MEdge **r_alledge, int *r_totedge, MLoop **r_allloop, MPoly **r_allpoly,
         int *r_totloop, int *r_totpoly)
 {
-	ListBase disp = {NULL, NULL};
-
-	if (ob->curve_cache) {
-		disp = ob->curve_cache->disp;
-	}
-
 	return BKE_mesh_nurbs_displist_to_mdata(
-	        ob, &disp,
+	        ob, BKE_object_curve_displist(ob),
 	        r_allvert, r_totvert,
 	        r_alledge, r_totedge,
 	        r_allloop, r_allpoly, NULL,
@@ -568,13 +562,8 @@ void BKE_mesh_from_nurbs(Main *bmain, Object *ob)
 {
 	Curve *cu = (Curve *) ob->data;
 	bool use_orco_uv = (cu->flag & CU_UV_ORCO) != 0;
-	ListBase disp = {NULL, NULL};
 
-	if (ob->curve_cache) {
-		disp = ob->curve_cache->disp;
-	}
-
-	BKE_mesh_from_nurbs_displist(bmain, ob, &disp, use_orco_uv, cu->id.name);
+	BKE_mesh_from_nurbs_displist(bmain, ob, BKE_object_curve_displist(ob), use_orco_uv, cu->id.name);
 }
 
 typedef struct EdgeLink {
@@ -806,9 +795,7 @@ Mesh *BKE_mesh_new_from_object(
 			 *
 			 * TODO(sergey): Look into more proper solution.
 			 */
-			if (ob->curve_cache != NULL) {
-				BKE_displist_copy(BKE_object_curve_cache_disp(tmpobj), &ob->curve_cache->disp);
-			}
+			BKE_displist_copy(BKE_object_curve_displist(tmpobj), BKE_object_curve_displist(ob));
 
 			/* if getting the original caged mesh, delete object modifiers */
 			if (cage)

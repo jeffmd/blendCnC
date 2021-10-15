@@ -40,6 +40,7 @@
 #include "BKE_modifier.h"
 #include "BKE_mesh.h"
 #include "BKE_object_deform.h"
+#include "BKE_object.h"
 
 #include "MOD_util.h"
 
@@ -432,14 +433,14 @@ static DerivedMesh *arrayModifier_doArray(
 		Curve *cu = amd->curve_ob->data;
 		if (cu) {
 #ifdef CYCLIC_DEPENDENCY_WORKAROUND
-			if (amd->curve_ob->curve_cache == NULL) {
+			if (!BKE_object_has_path(amd->curve_ob)) {
 				BKE_displist_make_curveTypes(scene, amd->curve_ob);
 			}
 #endif
 
-			if (amd->curve_ob->curve_cache && amd->curve_ob->curve_cache->path) {
+			if (BKE_object_has_path(amd->curve_ob)) {
 				float scale_fac = mat4_to_scale(amd->curve_ob->obmat);
-				length = scale_fac * amd->curve_ob->curve_cache->path->totdist;
+				length = scale_fac * BKE_object_path_totdist(amd->curve_ob);
 			}
 		}
 	}

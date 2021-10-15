@@ -1660,30 +1660,11 @@ static void drawspeaker(Scene *UNUSED(scene), View3D *UNUSED(v3d), RegionView3D 
 }
 
 /* ***************** ******************** */
-static void ensure_curve_cache(Main *bmain, Scene *scene, Object *object)
+static void ensure_curve_cache(Scene *scene, Object *object)
 {
-	bool need_recalc = object->curve_cache == NULL;
-	/* Render thread might have freed the curve cache if the
-	 * object is not visible. If the object is also used for
-	 * particles duplication, then render thread might have
-	 * also created curve_cache with only bevel and path
-	 * filled in.
-	 *
-	 * So check for curve_cache != NULL is not fully correct
-	 * here, we also need to check whether display list is
-	 * empty or not.
-	 *
-	 * The trick below tries to optimize calls to displist
-	 * creation for cases curve is empty. Meaning, if the curve
-	 * is empty (without splines) bevel list would also be empty.
-	 * And the thing is, render thread always leaves bevel list
-	 * in a proper state. So if bevel list is here and display
-	 * list is not we need to make display list.
-	 */
-	if (need_recalc == false) {
-		need_recalc = object->curve_cache->disp.first == NULL &&
-		              object->curve_cache->bev.first != NULL;
-	}
+	const int need_recalc = BKE_object_curve_displist(object)->first == NULL; /* &&
+		BKE_object_curve_bevlist(object)->first != NULL;*/
+
 	if (need_recalc) {
 		switch (object->type) {
 			case OB_CURVE:
@@ -3096,14 +3077,12 @@ static void draw_em_fancy(Scene *scene, ARegion *ar, View3D *v3d,
 			if ((me->drawflag & (ME_DRAWEXTRA_EDGELEN |
 			                     ME_DRAWEXTRA_FACEAREA |
 			                     ME_DRAWEXTRA_FACEANG |
-			                     ME_DRAWEXTRA_EDGEANG)) &&
-			    !(v3d->flag2 & V3D_RENDER_OVERRIDE))
+			                     ME_DRAWEXTRA_EDGEANG)))
 			{
 				draw_em_measure_stats(ar, v3d, ob, em, &scene->unit);
 			}
 
-			if ((G.debug & G_DEBUG) && (me->drawflag & ME_DRAWEXTRA_INDICES) &&
-			    !(v3d->flag2 & V3D_RENDER_OVERRIDE))
+			if ((G.debug & G_DEBUG) && (me->drawflag & ME_DRAWEXTRA_INDICES))
 			{
 				draw_em_indices(em);
 			}
@@ -3191,7 +3170,7 @@ static void draw_mesh_fancy(Scene *scene, ARegion *ar, View3D *v3d, RegionView3D
 	glFrontFace((ob->transflag & OB_NEG_SCALE) ? GL_CW : GL_CCW);
 
 	if (dt == OB_BOUNDBOX) {
-		if (((v3d->flag2 & V3D_RENDER_OVERRIDE) && v3d->drawtype >= OB_WIRE) == 0)
+		if ((v3d->drawtype >= OB_WIRE) == 0)
 			draw_bounding_volume(ob, ob->boundtype);
 	}
 	else if ((no_faces && no_edges) ||
@@ -3208,9 +3187,8 @@ static void draw_mesh_fancy(Scene *scene, ARegion *ar, View3D *v3d, RegionView3D
 		bool draw_loose = true;
 
 		if ((v3d->flag & V3D_SELECT_OUTLINE) &&
-		    ((v3d->flag2 & V3D_RENDER_OVERRIDE) == 0) &&
-		    (base->flag & SELECT) &&
-		    !(G.f & G_PICKSEL || (draw_flags & DRAW_FACE_SELECT)) &&
+		    ((base->flag & SELECT) &&
+		    !(G.f & G_PICKSEL || (draw_flags & DRAW_FACE_SELECT))) &&
 		    (draw_wire == OBDRAW_WIRE_OFF))
 		{
 			draw_mesh_object_outline(v3d, ob, dm);
@@ -3234,7 +3212,7 @@ static void draw_mesh_fancy(Scene *scene, ARegion *ar, View3D *v3d, RegionView3D
 		}
 
 		if (draw_loose && !(draw_flags & DRAW_FACE_SELECT)) {
-			if ((v3d->flag2 & V3D_RENDER_OVERRIDE) == 0) {
+			{
 				if ((dflag & DRAW_CONSTCOLOR) == 0) {
 					glColor3ubv(ob_wire_col);
 				}
@@ -3255,7 +3233,6 @@ static void draw_mesh_fancy(Scene *scene, ARegion *ar, View3D *v3d, RegionView3D
 
 				/* draw outline */
 				if ((v3d->flag & V3D_SELECT_OUTLINE) &&
-				    ((v3d->flag2 & V3D_RENDER_OVERRIDE) == 0) &&
 				    (base->flag & SELECT) &&
 				    (draw_wire == OBDRAW_WIRE_OFF) )
 				{
@@ -3276,7 +3253,6 @@ static void draw_mesh_fancy(Scene *scene, ARegion *ar, View3D *v3d, RegionView3D
 		}
 		else {
 			if ((v3d->flag & V3D_SELECT_OUTLINE) &&
-			    ((v3d->flag2 & V3D_RENDER_OVERRIDE) == 0) &&
 			    (base->flag & SELECT) &&
 			    (draw_wire == OBDRAW_WIRE_OFF) )
 			{
@@ -3291,7 +3267,7 @@ static void draw_mesh_fancy(Scene *scene, ARegion *ar, View3D *v3d, RegionView3D
 
 			GPU_object_material_unbind();
 
-			if ((v3d->flag2 & V3D_RENDER_OVERRIDE) == 0) {
+			{
 				if ((dflag & DRAW_CONSTCOLOR) == 0) {
 					glColor3ubv(ob_wire_col);
 				}
@@ -3703,7 +3679,7 @@ static bool drawCurveDerivedMesh(Scene *scene, View3D *v3d, RegionView3D *rv3d, 
 		GPU_end_object_materials();
 	}
 	else {
-		if (((v3d->flag2 & V3D_RENDER_OVERRIDE) && v3d->drawtype >= OB_SOLID) == 0)
+		if ((v3d->drawtype >= OB_SOLID) == 0)
 			drawCurveDMWired(ob);
 	}
 
@@ -3721,7 +3697,6 @@ static bool drawDispList_nobackface(Scene *scene, View3D *v3d, RegionView3D *rv3
 	ListBase *lb = NULL;
 	DispList *dl;
 	Curve *cu;
-	const bool render_only = (v3d->flag2 & V3D_RENDER_OVERRIDE) != 0;
 	const bool solid = (dt > OB_WIRE);
 
 	switch (ob->type) {
@@ -3729,7 +3704,7 @@ static bool drawDispList_nobackface(Scene *scene, View3D *v3d, RegionView3D *rv3
 		case OB_CURVE:
 			cu = ob->data;
 
-			lb = &ob->curve_cache->disp;
+			lb = BKE_object_curve_displist(ob);
 
 			if (solid) {
 				const bool has_faces = BKE_displist_has_faces(lb);
@@ -3741,7 +3716,7 @@ static bool drawDispList_nobackface(Scene *scene, View3D *v3d, RegionView3D *rv3
 				if (dl->nors == NULL) BKE_displist_normals_add(lb);
 				index3_nors_incr = false;
 
-				if (!render_only) {
+				{
 					/* when we have faces, only draw loose-wire */
 					if (has_faces) {
 						drawDispListwire_ex(lb, (1 << DL_SEGM));
@@ -3773,14 +3748,14 @@ static bool drawDispList_nobackface(Scene *scene, View3D *v3d, RegionView3D *rv3
 				index3_nors_incr = true;
 			}
 			else {
-				if (!render_only || BKE_displist_has_faces(lb)) {
+				if (BKE_displist_has_faces(lb)) {
 					return drawDispListwire(lb, ob->type);
 				}
 			}
 			break;
 		case OB_SURF:
 
-			lb = &ob->curve_cache->disp;
+			lb = BKE_object_curve_displist(ob);
 
 			if (solid) {
 				dl = lb->first;
@@ -3821,7 +3796,7 @@ static bool drawDispList(Main *bmain, Scene *scene, View3D *v3d, RegionView3D *r
 		glCullFace(GL_BACK);
 	}
 
-	ensure_curve_cache(bmain, scene, base->object);
+	ensure_curve_cache(scene, base->object);
 
 	if (drawCurveDerivedMesh(scene, v3d, rv3d, base, dt) == false) {
 		retval = false;
@@ -4229,7 +4204,7 @@ static void draw_editnurb(
 	if ((cu->flag & CU_3D) && (ts->normalsize > 0.0015f) && (cu->drawflag & CU_HIDE_NORMALS) == 0) {
 		BevList *bl;
 		glLineWidth(1.0f);
-		for (bl = ob->curve_cache->bev.first, nu = nurb; nu && bl; bl = bl->next, nu = nu->next) {
+		for (bl = BKE_object_curve_bevlist(ob)->first, nu = nurb; nu && bl; bl = bl->next, nu = nu->next) {
 			BevPoint *bevp = bl->bevpoints;
 			int nr = bl->nr;
 			int skip = nu->resolu / 16;
@@ -4732,7 +4707,7 @@ static void draw_object_selected_outline(
 	if (ELEM(ob->type, OB_FONT, OB_CURVE, OB_SURF)) {
 		bool has_faces = false;
 
-		ensure_curve_cache(bmain, scene, ob);
+		ensure_curve_cache(scene, ob);
 
 		DerivedMesh *dm = ob->derivedFinal;
 		if (dm) {
@@ -4743,7 +4718,7 @@ static void draw_object_selected_outline(
 			has_faces = (dm->getNumPolys(dm) != 0);
 		}
 		else {
-			has_faces = BKE_displist_has_faces(&ob->curve_cache->disp);
+			has_faces = BKE_displist_has_faces(BKE_object_curve_displist(ob));
 		}
 
 		if (has_faces && ED_view3d_boundbox_clip(rv3d, ob->bb)) {
@@ -4753,7 +4728,7 @@ static void draw_object_selected_outline(
 			}
 			else {
 				/* only draw 'solid' parts of the display list as wire. */
-				drawDispListwire_ex(&ob->curve_cache->disp, (DL_INDEX3 | DL_INDEX4 | DL_SURF));
+				drawDispListwire_ex(BKE_object_curve_displist(ob), (DL_INDEX3 | DL_INDEX4 | DL_SURF));
 			}
 		}
 	}
@@ -4783,7 +4758,7 @@ static void draw_wire_extra(Scene *scene, RegionView3D *rv3d, Object *ob, const 
 					drawCurveDMWired(ob);
 				}
 				else {
-					drawDispListwire(&ob->curve_cache->disp, ob->type);
+					drawDispListwire(BKE_object_curve_displist(ob), ob->type);
 				}
 			}
 		}
@@ -4966,18 +4941,12 @@ void draw_object(Main *bmain, Scene *scene, ARegion *ar, View3D *v3d, Base *base
 	const unsigned char *ob_wire_col = NULL;  /* dont initialize this, use NULL crashes as a way to find invalid use */
 	bool zbufoff = false, is_paint = false, empty_object = false;
 	const bool is_obact = (ob == OBACT);
-	const bool render_override = (v3d->flag2 & V3D_RENDER_OVERRIDE) != 0;
 	const bool is_picking = (G.f & G_PICKSEL) != 0;
 	bool skip_object = false;
 
 	if (ob != scene->obedit) {
 		if (ob->restrictflag & OB_RESTRICT_VIEW)
 			return;
-
-		if (render_override) {
-			if (ob->restrictflag & OB_RESTRICT_RENDER)
-				return;
-		}
 	}
 
 	/* xray delay? */
@@ -5053,7 +5022,7 @@ void draw_object(Main *bmain, Scene *scene, ARegion *ar, View3D *v3d, Base *base
 
 	if (!skip_object) {
 		/* draw outline for selected objects, mesh does itself */
-		if ((v3d->flag & V3D_SELECT_OUTLINE) && !render_override && ob->type != OB_MESH) {
+		if ((v3d->flag & V3D_SELECT_OUTLINE) && ob->type != OB_MESH) {
 			if (dt > OB_WIRE && (ob->mode & OB_MODE_EDIT) == 0 && (dflag & DRAW_SCENESET) == 0) {
 				if (!(ob->dtx & OB_DRAWWIRE) && (ob->flag & SELECT) && !(dflag & (DRAW_PICKING | DRAW_CONSTCOLOR))) {
 					draw_object_selected_outline(bmain, scene, v3d, ar, base, ob_wire_col);
@@ -5076,8 +5045,8 @@ void draw_object(Main *bmain, Scene *scene, ARegion *ar, View3D *v3d, Base *base
 					draw_editfont(bmain, scene, v3d, rv3d, base, dt, dflag, ob_wire_col);
 				}
 				else if (dt == OB_BOUNDBOX) {
-					if ((render_override && v3d->drawtype >= OB_WIRE) == 0) {
-						ensure_curve_cache(bmain, scene, base->object);
+					if ((v3d->drawtype >= OB_WIRE) == 0) {
+						ensure_curve_cache(scene, base->object);
 						draw_bounding_volume(ob, ob->boundtype);
 					}
 				}
@@ -5095,8 +5064,8 @@ void draw_object(Main *bmain, Scene *scene, ARegion *ar, View3D *v3d, Base *base
 					draw_editnurb(bmain, scene, v3d, rv3d, base, nurbs->first, dt, dflag, ob_wire_col);
 				}
 				else if (dt == OB_BOUNDBOX) {
-					if ((render_override && (v3d->drawtype >= OB_WIRE)) == 0) {
-						ensure_curve_cache(bmain, scene, base->object);
+					if ((v3d->drawtype >= OB_WIRE) == 0) {
+						ensure_curve_cache(scene, base->object);
 						draw_bounding_volume(ob, ob->boundtype);
 					}
 				}
@@ -5105,7 +5074,7 @@ void draw_object(Main *bmain, Scene *scene, ARegion *ar, View3D *v3d, Base *base
 				}
 				break;
 			case OB_EMPTY:
-				if (!render_override) {
+				{
 					if (ob->empty_drawtype == OB_EMPTY_IMAGE) {
 						draw_empty_image(ob, dflag, ob_wire_col);
 					}
@@ -5115,19 +5084,17 @@ void draw_object(Main *bmain, Scene *scene, ARegion *ar, View3D *v3d, Base *base
 				}
 				break;
 			case OB_LAMP:
-				if (!render_override) {
+				{
 					drawlamp(v3d, rv3d, base, dt, dflag, ob_wire_col, is_obact);
 				}
 				break;
 			case OB_CAMERA:
-				if (!render_override ||
-				    (rv3d->persp == RV3D_CAMOB && v3d->camera == ob)) /* special exception for active camera */
 				{
 					drawcamera(scene, v3d, rv3d, base, dflag, ob_wire_col);
 				}
 				break;
 			default:
-				if (!render_override) {
+				{
 					drawaxes(rv3d->viewmatob, 1.0, OB_ARROWS);
 				}
 				break;
@@ -5135,7 +5102,7 @@ void draw_object(Main *bmain, Scene *scene, ARegion *ar, View3D *v3d, Base *base
 
 	}
 
-	if (!render_override) {
+	{
 		if (ob->rigidbody_object) {
 			draw_rigidbody_shape(ob);
 		}
@@ -5184,19 +5151,11 @@ void draw_object(Main *bmain, Scene *scene, ARegion *ar, View3D *v3d, Base *base
 		glDisable(GL_DEPTH_TEST);
 	}
 
-	if (render_override) {
-		ED_view3d_clear_mats_rv3d(rv3d);
-		return;
-	}
-
 	/* object centers, need to be drawn in viewmat space for speed, but OK for picking select */
 	{
 		int do_draw_center = -1; /* defines below are zero or positive... */
 
-		if (render_override) {
-			/* don't draw */
-		}
-		else if (is_obact)
+		if (is_obact)
 			do_draw_center = ACTIVE;
 		else if (base->flag & SELECT)
 			do_draw_center = SELECT;
@@ -5229,7 +5188,7 @@ void draw_object(Main *bmain, Scene *scene, ARegion *ar, View3D *v3d, Base *base
 	}
 
 	/* not for sets, duplicators or picking */
-	if (dflag == 0 && (v3d->flag & V3D_HIDE_HELPLINES) == 0 && !render_override) {
+	if (dflag == 0 && (v3d->flag & V3D_HIDE_HELPLINES) == 0 ) {
 		RigidBodyCon *rbc = ob->rigidbody_constraint;
 
 		/* draw hook center and offset line */

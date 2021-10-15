@@ -40,6 +40,7 @@
 #include "BKE_global.h"
 #include "BKE_library.h"
 #include "BKE_main.h"
+#include "BKE_object.h"
 #include "BKE_report.h"
 #include "BKE_modifier.h"
 
@@ -5539,18 +5540,13 @@ static bool match_texture_space_poll(bContext *C)
 
 static int match_texture_space_exec(bContext *C, wmOperator *UNUSED(op))
 {
-	Scene *scene = CTX_data_scene(C);
 	Object *object = CTX_data_active_object(C);
 	Curve *curve = (Curve *) object->data;
 	float min[3], max[3], size[3], loc[3];
 	int a;
 
-	if (object->curve_cache == NULL) {
-		BKE_displist_make_curveTypes(scene, object);
-	}
-
 	INIT_MINMAX(min, max);
-	BKE_displist_minmax(&object->curve_cache->disp, min, max);
+	BKE_displist_minmax(BKE_object_curve_displist(object), min, max);
 
 	mid_v3_v3v3(loc, min, max);
 

@@ -37,6 +37,7 @@ struct RigidBodyWorld;
 struct Scene;
 struct View3D;
 struct ListBase;
+struct Path;
 
 void BKE_object_workob_clear(struct Object *workob);
 void BKE_object_workob_calc_parent(struct Scene *scene, struct Object *ob, struct Object *workob);
@@ -220,7 +221,14 @@ bool BKE_object_modifier_update_subframe(
 void BKE_object_rotMode_change_values(float quat[4], float eul[3], float axis[3], float *angle, short oldMode, short newMode);
 
 /* curve cache */
-ListBase *BKE_object_curve_cache_disp(struct Object *ob);
+void BKE_object_clear_curve_cache(struct Object *ob);
+ListBase *BKE_object_curve_displist(struct Object *ob);
+ListBase *BKE_object_curve_bevlist(struct Object *ob);
+ListBase *BKE_object_curve_deformed_nurbs(struct Object *ob);
+int BKE_object_has_path(struct Object *ob);
+struct Path *BKE_object_new_path(struct Object *ob);
+struct Path *BKE_object_path(struct Object *ob);
+float BKE_object_path_totdist(struct Object *ob);
 void BKE_object_free_path(struct Object *ob);
 
 #ifdef __cplusplus

@@ -669,11 +669,13 @@ static float displist_calc_taper(Scene *scene, Object *taperobj, float fac)
 	if (taperobj == NULL || taperobj->type != OB_CURVE)
 		return 1.0;
 
-	dl = taperobj->curve_cache ? taperobj->curve_cache->disp.first : NULL;
+	dl = BKE_object_curve_displist(taperobj)->first;
+
 	if (dl == NULL) {
 		BKE_displist_make_curveTypes(scene, taperobj);
-		dl = taperobj->curve_cache->disp.first;
+		dl = BKE_object_curve_displist(taperobj)->first;
 	}
+
 	if (dl) {
 		float minx, dx, *fp;
 		int a;
@@ -1082,7 +1084,7 @@ void BKE_displist_make_surf(Scene *scene, Object *ob, ListBase *dispbase,
 		}
 	}
 
-	BKE_nurbList_duplicate(&ob->curve_cache->deformed_nurbs, &nubase);
+	BKE_nurbList_duplicate(BKE_object_curve_deformed_nurbs(ob), &nubase);
 	curve_calc_modifiers_post(scene, ob, &nubase, dispbase, r_dm_final);
 
 	BKE_nurbList_free(&nubase);
@@ -1322,7 +1324,7 @@ static void do_makeDispListCurveTypes(Scene *scene, Object *ob, ListBase *dispba
 		ListBase dlbev;
 		ListBase nubase = {NULL, NULL};
 
-		BKE_curve_bevelList_free(&ob->curve_cache->bev);
+		BKE_curve_bevelList_free(BKE_object_curve_bevlist(ob));
 
 		BKE_object_free_path(ob);
 
@@ -1346,7 +1348,7 @@ static void do_makeDispListCurveTypes(Scene *scene, Object *ob, ListBase *dispba
 		}
 		else {
 			float widfac = cu->width - 1.0f;
-			BevList *bl = ob->curve_cache->bev.first;
+			BevList *bl = BKE_object_curve_bevlist(ob)->first;
 			Nurb *nu = nubase.first;
 
 			for (; bl && nu; bl = bl->next, nu = nu->next) {
@@ -1528,7 +1530,7 @@ static void do_makeDispListCurveTypes(Scene *scene, Object *ob, ListBase *dispba
 			BKE_curve_calc_path(ob, &nubase);
 		}
 
-		BKE_nurbList_duplicate(&ob->curve_cache->deformed_nurbs, &nubase);
+		BKE_nurbList_duplicate(BKE_object_curve_deformed_nurbs(ob), &nubase);
 		curve_calc_modifiers_post(scene, ob, &nubase, dispbase, r_dm_final);
 
 		if (cu->flag & CU_DEFORM_FILL && !ob->derivedFinal) {
@@ -1548,7 +1550,7 @@ void BKE_displist_make_curveTypes(Scene *scene, Object *ob)
 
 	BKE_object_free_derived_caches(ob);
 
-	do_makeDispListCurveTypes(scene, ob, BKE_object_curve_cache_disp(ob), &ob->derivedFinal);
+	do_makeDispListCurveTypes(scene, ob, BKE_object_curve_displist(ob), &ob->derivedFinal);
 
 	boundbox_displist_object(ob);
 }
@@ -1601,7 +1603,7 @@ static void boundbox_displist_object(Object *ob)
 			float min[3], max[3];
 
 			INIT_MINMAX(min, max);
-			BKE_displist_minmax(BKE_object_curve_cache_disp(ob), min, max);
+			BKE_displist_minmax(BKE_object_curve_displist(ob), min, max);
 			BKE_boundbox_init_from_minmax(ob->bb, min, max);
 
 			ob->bb->flag &= ~BOUNDBOX_DIRTY;

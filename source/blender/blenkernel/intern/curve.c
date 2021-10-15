@@ -1733,13 +1733,7 @@ void BKE_curve_bevel_make(Scene *scene, Object *ob, ListBase *disp)
 			facx = cu->bevobj->size[0];
 			facy = cu->bevobj->size[1];
 
-			if (cu->bevobj->curve_cache) {
-				dl = cu->bevobj->curve_cache->disp.first;
-			}
-			else {
-				BLI_assert(cu->bevobj->curve_cache != NULL);
-				dl = NULL;
-			}
+			dl = BKE_object_curve_displist(cu->bevobj)->first;
 
 			while (dl) {
 				if (ELEM(dl->type, DL_POLY, DL_SEGM)) {
@@ -2650,14 +2644,14 @@ void BKE_curve_bevelList_make(Object *ob, ListBase *nurbs)
 		ELEM(cu->bevfac2_mapping, CU_BEVFAC_MAP_SEGMENT, CU_BEVFAC_MAP_SPLINE);
 
 
-	bev = &ob->curve_cache->bev;
+	bev = BKE_object_curve_bevlist(ob);
 
 	/* do we need to calculate the radius for each point? */
 	/* do_radius = (cu->bevobj || cu->taperobj || (cu->flag & CU_FRONT) || (cu->flag & CU_BACK)) ? 0 : 1; */
 
 	/* STEP 1: MAKE POLYS  */
 
-	BKE_curve_bevelList_free(&ob->curve_cache->bev);
+	BKE_curve_bevelList_free(bev);
 	nu = nurbs->first;
 	if (cu->editnurb && ob->type != OB_FONT) {
 		is_editmode = 1;
@@ -4754,17 +4748,15 @@ void BKE_curve_calc_path(Object *ob, ListBase *nurbs)
 		return;
 	}
 
-	BKE_object_free_path(ob);
-
 	/* weak! can only use first curve */
-	bl = ob->curve_cache->bev.first;
+	bl = BKE_object_curve_bevlist(ob)->first;
 	if (bl == NULL || !bl->nr) {
 		return;
 	}
 
 	nu = nurbs->first;
 
-	ob->curve_cache->path = path = MEM_callocN(sizeof(Path), "calc_curvepath");
+	path = BKE_object_new_path(ob);
 
 	/* if POLY: last vertice != first vertice */
 	cycl = (bl->poly != -1);
@@ -4881,16 +4873,16 @@ int BKE_curve_where_on_path(Object *ob, float ctime, float vec[4], float dir[3],
 	if (ob == NULL || ob->type != OB_CURVE) return 0;
 
 	cu = ob->data;
-	if (ob->curve_cache == NULL || ob->curve_cache->path == NULL || ob->curve_cache->path->data == NULL) {
+	if (!BKE_object_has_path(ob)) {
 		printf("no path!\n");
 		return 0;
 	}
 
-	path = ob->curve_cache->path;
+	path = BKE_object_path(ob);
 	pp = path->data;
 
 	/* test for cyclic */
-	bl = ob->curve_cache->bev.first;
+	bl = BKE_object_curve_bevlist(ob)->first;
 	if (!bl) return 0;
 	if (!bl->nr) return 0;
 	if (bl->poly > -1) cycl = 1;

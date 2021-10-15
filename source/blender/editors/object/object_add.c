@@ -937,21 +937,10 @@ static const EnumPropertyItem convert_target_items[] = {
 	{0, NULL, 0, NULL, NULL}
 };
 
-static void convert_ensure_curve_cache(Main *bmain, Scene *scene, Object *ob)
-{
-	if (ob->curve_cache == NULL) {
-		/* Force creation. This is normally not needed but on operator
-		 * redo we might end up with an object which isn't evaluated yet.
-		 */
-		if (ELEM(ob->type, OB_SURF, OB_CURVE, OB_FONT)) {
-			BKE_displist_make_curveTypes(scene, ob);
-		}
-	}
-}
 
 static void curvetomesh(Main *bmain, Scene *scene, Object *ob)
 {
-	convert_ensure_curve_cache(bmain, scene, ob);
+	BKE_displist_make_curveTypes(scene, ob);
 	BKE_mesh_from_nurbs(bmain, ob); /* also does users */
 
 	if (ob->type == OB_MESH) {
