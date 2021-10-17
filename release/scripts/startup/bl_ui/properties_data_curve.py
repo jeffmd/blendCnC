@@ -99,7 +99,6 @@ class DATA_PT_shape_curve(CurveButtonsPanel, Panel):
         col.label(text="Resolution:")
         sub = col.column(align=True)
         sub.prop(curve, "resolution_u", text="Preview U")
-        sub.prop(curve, "render_resolution_u", text="Render U")
         if is_curve:
             col.label(text="Twisting:")
             col.prop(curve, "twist_mode", text="")
@@ -123,14 +122,6 @@ class DATA_PT_shape_curve(CurveButtonsPanel, Panel):
             sub.active = (curve.dimensions == '2D' or (curve.bevel_object is None and curve.dimensions == '3D'))
             sub.prop(curve, "fill_mode", text="")
             col.prop(curve, "use_fill_deform")
-
-        if is_curve:
-            col.label(text="Path/Curve-Deform:")
-            sub = col.column()
-            subsub = sub.row()
-            subsub.prop(curve, "use_radius")
-            subsub.prop(curve, "use_stretch")
-            sub.prop(curve, "use_deform_bounds")
 
 
 class DATA_PT_curve_texture_space(CurveButtonsPanel, Panel):
