@@ -146,7 +146,7 @@ void BKE_curve_rect_from_textbox(const struct Curve *cu, const struct TextBox *t
 
 void BKE_curve_correct_bezpart(float v1[2], float v2[2], float v3[2], float v4[2]);
 void BKE_curve_calc_path(struct Object *ob, ListBase *nurbs);
-int BKE_curve_where_on_path(struct Object *ob, float ctime, float vec[4], float dir[3], float quat[4], float *radius, float *weight);
+int BKE_curve_where_on_path(struct Object *ob, float ctime, float vec[4], float dir[3]);
 
 /* ** Nurbs ** */
 

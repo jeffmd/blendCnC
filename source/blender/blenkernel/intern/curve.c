@@ -4858,7 +4858,7 @@ static int interval_test(const int min, const int max, int p1, const int cycl)
  *
  * returns OK: 1/0
  */
-int BKE_curve_where_on_path(Object *ob, float ctime, float vec[4], float dir[3], float quat[4], float *radius, float *weight)
+int BKE_curve_where_on_path(Object *ob, float ctime, float vec[4], float dir[3])
 {
 	Curve *cu;
 	Nurb *nu;
@@ -4906,25 +4906,18 @@ int BKE_curve_where_on_path(Object *ob, float ctime, float vec[4], float dir[3],
 	p2 = pp + s2;
 	p3 = pp + s3;
 
-	/* NOTE: commented out for follow constraint
-	 *
-	 *       If it's ever be uncommented watch out for curve_deform_verts()
-	 *       which used to temporary set CU_FOLLOW flag for the curve and no
-	 *       longer does it (because of threading issues of such a thing.
-	 */
-	//if (cu->flag & CU_FOLLOW) {
-
 	curve_tangent_weights(1.0f - fac, data, KEY_BSPLINE);
 
 	interp_v3_v3v3v3v3(dir, p0->vec, p1->vec, p2->vec, p3->vec, data);
 
 	/* make compatible with vectoquat */
 	negate_v3(dir);
-	//}
 
 	nurbs = BKE_curve_editNurbs_get(cu);
+
 	if (!nurbs)
 		nurbs = &cu->nurb;
+
 	nu = nurbs->first;
 
 	/* make sure that first and last frame are included in the vectors here  */
@@ -4939,28 +4932,6 @@ int BKE_curve_where_on_path(Object *ob, float ctime, float vec[4], float dir[3],
 	vec[1] = data[0] * p0->vec[1] + data[1] * p1->vec[1] + data[2] * p2->vec[1] + data[3] * p3->vec[1]; /* Y */
 	vec[2] = data[0] * p0->vec[2] + data[1] * p1->vec[2] + data[2] * p2->vec[2] + data[3] * p3->vec[2]; /* Z */
 	vec[3] = data[0] * p0->vec[3] + data[1] * p1->vec[3] + data[2] * p2->vec[3] + data[3] * p3->vec[3]; /* Tilt, should not be needed since we have quat still used */
-
-	if (quat) {
-		float totfac, q1[4], q2[4];
-
-		totfac = data[0] + data[3];
-		if (totfac > FLT_EPSILON) interp_qt_qtqt(q1, p0->quat, p3->quat, data[3] / totfac);
-		else copy_qt_qt(q1, p1->quat);
-
-		totfac = data[1] + data[2];
-		if (totfac > FLT_EPSILON) interp_qt_qtqt(q2, p1->quat, p2->quat, data[2] / totfac);
-		else copy_qt_qt(q2, p3->quat);
-
-		totfac = data[0] + data[1] + data[2] + data[3];
-		if (totfac > FLT_EPSILON) interp_qt_qtqt(quat, q1, q2, (data[1] + data[2]) / totfac);
-		else copy_qt_qt(quat, q2);
-	}
-
-	if (radius)
-		*radius = data[0] * p0->radius + data[1] * p1->radius + data[2] * p2->radius + data[3] * p3->radius;
-
-	if (weight)
-		*weight = data[0] * p0->weight + data[1] * p1->weight + data[2] * p2->weight + data[3] * p3->weight;
 
 	return 1;
 }

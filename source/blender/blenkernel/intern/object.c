@@ -107,6 +107,77 @@ typedef struct CurveCache {
 static ThreadMutex vparent_lock = BLI_MUTEX_INITIALIZER;
 #endif
 
+/******************* Curve Cache ******************/
+static CurveCache *object_curve_cache(struct Object *ob)
+{
+	if (!ob->curve_cache) {
+		ob->curve_cache = MEM_callocN(sizeof(CurveCache), "CurveCache for curve types");
+	}
+	
+	return ob->curve_cache;
+}
+
+ListBase *BKE_object_curve_displist(struct Object *ob)
+{
+	return &(object_curve_cache(ob)->disp);
+}
+
+ListBase *BKE_object_curve_bevlist(struct Object *ob)
+{
+	return &(object_curve_cache(ob)->bev);
+}
+
+ListBase *BKE_object_curve_deformed_nurbs(struct Object *ob)
+{
+	return &(object_curve_cache(ob)->deformed_nurbs);
+}
+
+int BKE_object_has_path(struct Object *ob)
+{
+	return (ob->curve_cache && ob->curve_cache->path && ob->curve_cache->path->data);
+}
+
+void BKE_object_free_path(struct Object *ob)
+{
+	if (ob->curve_cache && ob->curve_cache->path) {
+		if (ob->curve_cache->path->data) MEM_freeN(ob->curve_cache->path->data);
+		MEM_freeN(ob->curve_cache->path);
+		ob->curve_cache->path = NULL;
+	}
+}
+
+static Path *object_create_path(struct Object *ob)
+{
+	object_curve_cache(ob)->path = MEM_callocN(sizeof(Path), "calc_curvepath");
+
+	return ob->curve_cache->path;
+}
+
+Path *BKE_object_new_path(struct Object *ob)
+{
+	BKE_object_free_path(ob);
+
+	return object_create_path(ob);
+}
+
+Path *BKE_object_path(struct Object *ob)
+{
+	if (!object_curve_cache(ob)->path) {
+		object_create_path(ob);
+	}
+
+	return ob->curve_cache->path;
+}
+
+float BKE_object_path_totdist(struct Object *ob)
+{
+	if (ob->curve_cache && ob->curve_cache->path) {
+		return ob->curve_cache->path->totdist;
+	}
+
+	return 0.0f;
+}
+
 void BKE_object_workob_clear(Object *workob)
 {
 	memset(workob, 0, sizeof(Object));
@@ -2152,73 +2223,3 @@ void BKE_object_rotMode_change_values(float quat[4], float eul[3], float axis[3]
 	}
 }
 
-/******************* Curve Cache ******************/
-static CurveCache *object_curve_cache(struct Object *ob)
-{
-	if (!ob->curve_cache) {
-		ob->curve_cache = MEM_callocN(sizeof(CurveCache), "CurveCache for curve types");
-	}
-	
-	return ob->curve_cache;
-}
-
-ListBase *BKE_object_curve_displist(struct Object *ob)
-{
-	return &(object_curve_cache(ob)->disp);
-}
-
-ListBase *BKE_object_curve_bevlist(struct Object *ob)
-{
-	return &(object_curve_cache(ob)->bev);
-}
-
-ListBase *BKE_object_curve_deformed_nurbs(struct Object *ob)
-{
-	return &(object_curve_cache(ob)->deformed_nurbs);
-}
-
-int BKE_object_has_path(struct Object *ob)
-{
-	return (ob->curve_cache && ob->curve_cache->path && ob->curve_cache->path->data);
-}
-
-void BKE_object_free_path(struct Object *ob)
-{
-	if (ob->curve_cache && ob->curve_cache->path) {
-		if (ob->curve_cache->path->data) MEM_freeN(ob->curve_cache->path->data);
-		MEM_freeN(ob->curve_cache->path);
-		ob->curve_cache->path = NULL;
-	}
-}
-
-static Path *object_create_path(struct Object *ob)
-{
-	object_curve_cache(ob)->path = MEM_callocN(sizeof(Path), "calc_curvepath");
-
-	return ob->curve_cache->path;
-}
-
-Path *BKE_object_new_path(struct Object *ob)
-{
-	BKE_object_free_path(ob);
-
-	return object_create_path(ob);
-}
-
-Path *BKE_object_path(struct Object *ob)
-{
-	if (!object_curve_cache(ob)->path) {
-		object_create_path(ob);
-	}
-
-	return ob->curve_cache->path;
-}
-
-float BKE_object_path_totdist(struct Object *ob)
-{
-	if (ob->curve_cache && ob->curve_cache->path) {
-		return ob->curve_cache->path->totdist;
-	}
-
-	return 0.0f;
-}

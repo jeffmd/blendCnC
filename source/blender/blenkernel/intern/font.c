@@ -52,6 +52,8 @@
 #include "BKE_global.h"
 #include "BKE_main.h"
 #include "BKE_curve.h"
+#include "BKE_object.h"
+
 
 static ThreadRWMutex vfont_rwlock = BLI_RWLOCK_INITIALIZER;
 
@@ -1011,7 +1013,7 @@ makebreak:
 			/* top and top-baseline are the same when text-boxes are used */
 			if (cu->align_y != CU_ALIGN_Y_TOP && i_textbox < slen) {
 				/* all previous textboxes are 'full', only align the last used text-box */
-				float yoff;
+				float yoff = 0.0f;
 				int lines;
 				struct CharTrans *ct_last, *ct_textbox;
 
@@ -1040,12 +1042,10 @@ makebreak:
 		else {
 			/* non text-box case handled separately */
 			ct = chartransdata;
-			float yoff;
+			// assume (cu->align_y == CU_ALIGN_Y_TOP) 
+			float yoff = -linedist;
 
-			if (cu->align_y == CU_ALIGN_Y_TOP) {
-				yoff = -linedist;
-			}
-			else if (cu->align_y == CU_ALIGN_Y_BOTTOM) {
+			if (cu->align_y == CU_ALIGN_Y_BOTTOM) {
 				yoff = (lnr - 1.0f) * linedist;
 			}
 			else if (cu->align_y == CU_ALIGN_Y_CENTER) {
@@ -1142,8 +1142,8 @@ makebreak:
 
 				/* calc the right loc AND the right rot separately */
 				/* vec, tvec need 4 items */
-				BKE_curve_where_on_path(cu->textoncurve, ctime, vec, tvec, NULL, NULL, NULL);
-				BKE_curve_where_on_path(cu->textoncurve, ctime + dtime, tvec, rotvec, NULL, NULL, NULL);
+				BKE_curve_where_on_path(cu->textoncurve, ctime, vec, tvec);
+				BKE_curve_where_on_path(cu->textoncurve, ctime + dtime, tvec, rotvec);
 
 				mul_v3_fl(vec, sizefac);
 
