@@ -1519,7 +1519,7 @@ static void set_trans_object_base_flags(TransInfo *t)
 
 	/* handle pending update events, otherwise they got copied below */
 	for (base = scene->base.first; base; base = base->next) {
-		if (base->object->recalc & OB_RECALC_ALL) {
+		if (base->object->id.recalc & OB_RECALC_ALL) {
 			/* TODO(sergey): Ideally, it's not needed. */
 			BKE_object_handle_update(bmain, t->scene, base->object);
 		}
@@ -1562,12 +1562,12 @@ static void set_trans_object_base_flags(TransInfo *t)
 
 
 	/* and we store them temporal in base (only used for transform code) */
-	/* this because after doing updates, the object->recalc is cleared */
-	for (base = scene->base.first; base; base = base->next) {
-		if (base->object->recalc & (OB_RECALC_OB | OB_RECALC_DATA)) {
-			base->flag |= BA_SNAP_FIX_DEPS_FIASCO;
-		}
-	}
+	/* this because after doing updates, the object->id.recalc is cleared */
+//	for (base = scene->base.first; base; base = base->next) {
+//		if (base->object->id.recalc & (OB_RECALC_OB | OB_RECALC_DATA)) {
+//			base->flag |= BA_SNAP_FIX_DEPS_FIASCO;
+//		}
+//	}
 }
 
 static bool mark_children(Object *ob)
@@ -1621,12 +1621,12 @@ static int count_proportional_objects(TransInfo *t)
 	}
 
 	/* and we store them temporal in base (only used for transform code) */
-	/* this because after doing updates, the object->recalc is cleared */
-	for (base = scene->base.first; base; base = base->next) {
-		if (base->object->recalc & (OB_RECALC_OB | OB_RECALC_DATA)) {
-			base->flag |= BA_SNAP_FIX_DEPS_FIASCO;
-		}
-	}
+	/* this because after doing updates, the object->id.recalc is cleared */
+//	for (base = scene->base.first; base; base = base->next) {
+//		if (base->object->id.recalc & (OB_RECALC_OB | OB_RECALC_DATA)) {
+//			base->flag |= BA_SNAP_FIX_DEPS_FIASCO;
+//		}
+//	}
 
 	return total;
 }
@@ -1946,7 +1946,7 @@ void createTransData(bContext *C, TransInfo *t)
 			RegionView3D *rv3d = t->ar->regiondata;
 			if ((rv3d->persp == RV3D_CAMOB) && v3d->camera) {
 				/* we could have a flag to easily check an object is being transformed */
-				if (v3d->camera->recalc) {
+				if (v3d->camera->id.recalc) {
 					t->flag |= T_CAMERA;
 				}
 			}

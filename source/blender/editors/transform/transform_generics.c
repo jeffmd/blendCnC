@@ -243,7 +243,7 @@ static void recalcData_objects(TransInfo *t)
 				}
 			}
 
-			t->obedit->recalc |= OB_RECALC_DATA;
+			t->obedit->id.recalc |= OB_RECALC_DATA;
 		}
 		else if (t->obedit->type == OB_MESH) {
 			BMEditMesh *em = BKE_editmesh_from_object(t->obedit);
@@ -263,7 +263,7 @@ static void recalcData_objects(TransInfo *t)
 				projectVertSlideData(t, false);
 			}
 
-			t->obedit->recalc |= OB_RECALC_DATA;
+			t->obedit->id.recalc |= OB_RECALC_DATA;
 			EDBM_mesh_normals_update(em);
 			BKE_editmesh_tessface_calc(em);
 		}
@@ -287,7 +287,7 @@ static void recalcData_objects(TransInfo *t)
 			if (td->flag & TD_SKIP)
 				continue;
 
-			td->ob->recalc |= OB_RECALC_OB;
+			td->ob->id.recalc |= OB_RECALC_OB;
 
 		}
 	}

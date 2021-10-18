@@ -2947,7 +2947,7 @@ static void direct_link_object(FileData *fd, Object *ob)
 	/* This is a transient flag; clear in order to avoid unneeded object update pending from
 	 * time when file was saved.
 	 */
-	ob->recalc = 0;
+	ob->id.recalc = 0;
 
 	/* XXX This should not be needed - but seems like it can happen in some cases, so for now play safe... */
 	ob->proxy_from = NULL;

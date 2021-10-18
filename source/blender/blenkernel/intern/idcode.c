@@ -85,6 +85,7 @@ static IDType *idtype_from_name(const char *str)
 
 	return NULL;
 }
+
 static IDType *idtype_from_code(short idcode)
 {
 	int i = ARRAY_SIZE(idtypes);

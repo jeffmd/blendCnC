@@ -132,7 +132,7 @@ const EnumPropertyItem rna_enum_object_axis_items[] = {
 
 static void rna_Object_internal_update(Main *UNUSED(bmain), Scene *UNUSED(scene), PointerRNA *ptr)
 {
-	((Object *)ptr->id.data)->recalc |= OB_RECALC_OB;
+	((Object *)ptr->id.data)->id.recalc |= OB_RECALC_OB;
 }
 
 static void rna_Object_matrix_world_update(Main *bmain, Scene *scene, PointerRNA *ptr)

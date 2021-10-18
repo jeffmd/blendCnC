@@ -3679,7 +3679,6 @@ static bool drawCurveDerivedMesh(Scene *scene, View3D *v3d, RegionView3D *rv3d, 
 		GPU_end_object_materials();
 	}
 	else {
-		if ((v3d->drawtype >= OB_SOLID) == 0)
 			drawCurveDMWired(ob);
 	}
 
@@ -3748,9 +3747,7 @@ static bool drawDispList_nobackface(Scene *scene, View3D *v3d, RegionView3D *rv3
 				index3_nors_incr = true;
 			}
 			else {
-				if (BKE_displist_has_faces(lb)) {
-					return drawDispListwire(lb, ob->type);
-				}
+				return drawDispListwire(lb, ob->type);
 			}
 			break;
 		case OB_SURF:
@@ -5064,10 +5061,8 @@ void draw_object(Main *bmain, Scene *scene, ARegion *ar, View3D *v3d, Base *base
 					draw_editnurb(bmain, scene, v3d, rv3d, base, nurbs->first, dt, dflag, ob_wire_col);
 				}
 				else if (dt == OB_BOUNDBOX) {
-					if ((v3d->drawtype >= OB_WIRE) == 0) {
-						ensure_curve_cache(scene, base->object);
-						draw_bounding_volume(ob, ob->boundtype);
-					}
+					ensure_curve_cache(scene, base->object);
+					draw_bounding_volume(ob, ob->boundtype);
 				}
 				else if (ED_view3d_boundbox_clip(rv3d, ob->bb)) {
 					empty_object = drawDispList(bmain, scene, v3d, rv3d, base, dt, dflag, ob_wire_col);

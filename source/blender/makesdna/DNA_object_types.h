@@ -38,8 +38,6 @@ extern "C" {
 struct BoundBox;
 struct DerivedMesh;
 struct Material;
-struct Object;
-struct Path;
 struct RigidBodyOb;
 
 
@@ -97,7 +95,7 @@ typedef struct LodLevel {
 
 typedef struct Object {
 	ID id;
-	void *pad01;
+	void *pad;
 
 	short type, partype;
 	int par1, par2, par3;	/* can be vertexnrs */
@@ -109,7 +107,8 @@ typedef struct Object {
 	struct BoundBox *bb;  /* axis aligned boundbox (in localspace) */
 	void *data;  /* pointer to objects data - an 'ID' or NULL */
 
-	void *pad1;
+	int data_mod_id;
+	int pad1;
 
 	ListBase defbase;   /* list of bDeformGroup (vertex groups) names and flag only */
 	ListBase modifiers; /* list of ModifierData structures */
@@ -161,23 +160,20 @@ typedef struct Object {
 	short index;			/* custom index, for renderpasses */
 	unsigned short actdef;	/* current deformation group, note: index starts at 1 */
 	float col[4];			/* object color */
-
-	char restrictflag;		/* for restricting view, select, render etc. accessible in outliner */
-	char recalc;			/* dependency flag */
-	short pad20[3];
 	
 	struct Group *dup_group;	/* object duplicator for group */
 
+	char restrictflag;		/* for restricting view, select, render etc. accessible in outliner */
 	char  body_type;			/* for now used to temporarily holds the type of collision object */
 	char  shapeflag;			/* flag for pinning */
-	short pad21;
+	char pad21;
 	float smoothresh;			/* smoothresh is phong interpolation ray_shadow correction in render */
 
 	/* Runtime valuated curve-specific data, not stored in the file */
 	struct CurveCache *curve_cache;
 
 	struct DerivedMesh *derivedDeform, *derivedFinal;
-	void *pad22[2];
+	void *pad22;
 	uint64_t lastDataMask;   /* the custom data layer mask that was last used to calculate derivedDeform and derivedFinal */
 	uint64_t customdata_mask; /* (extra) custom data layer mask to use for creating derivedmesh, set by depsgraph */
 

@@ -33,8 +33,6 @@ extern "C" {
 
 struct FileData;
 struct GPUTexture;
-struct ID;
-struct Library;
 struct PackedFile;
 
 typedef struct IDPropertyData {
@@ -121,7 +119,7 @@ typedef struct ID {
 	int us;
 	int icon_id;
 	int recalc;
-	int pad;
+	int mod_id;
 	IDProperty *properties;
 
 	void *py_instance;

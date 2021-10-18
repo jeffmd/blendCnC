@@ -246,7 +246,7 @@ static void text_update_edited(bContext *C, Object *obedit, int mode)
 	/* run update first since it can move the cursor */
 	if (mode == FO_EDIT) {
 		/* re-tesselllate */
-		obedit->recalc |= OB_RECALC_DATA;
+		obedit->id.recalc |= OB_RECALC_DATA;
 	}
 	else {
 		/* depsgraph runs above, but since we're not tagging for update, call direct */
@@ -574,7 +574,7 @@ static int set_style(bContext *C, const int style, const bool clear)
 			ef->textbufinfo[i].flag |= style;
 	}
 	
-	obedit->recalc |= OB_RECALC_DATA;
+	obedit->id.recalc |= OB_RECALC_DATA;
 	WM_event_add_notifier(C, NC_GEOM | ND_DATA, obedit->data);
 
 	return OPERATOR_FINISHED;

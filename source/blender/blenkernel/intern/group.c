@@ -339,15 +339,15 @@ void BKE_group_handle_recalc_and_update(
 
 		/* we need a DAG per group... */
 		for (go = group->gobject.first; go; go = go->next) {
-			if (go->ob && go->recalc) {
-				go->ob->recalc = go->recalc;
+			if (go->ob && go->id.recalc) {
+				go->ob->id.recalc = go->id.recalc;
 
 				group_replaces_nla(parent, go->ob, 's');
 				BKE_object_handle_update(scene, go->ob);
 				group_replaces_nla(parent, go->ob, 'e');
 
 				/* leave recalc tags in case group members are in normal scene */
-				go->ob->recalc = go->recalc;
+				go->ob->id.recalc = go->id.recalc;
 			}
 		}
 
@@ -360,7 +360,7 @@ void BKE_group_handle_recalc_and_update(
 		/* only do existing tags, as set by regular depsgraph */
 		for (go = group->gobject.first; go; go = go->next) {
 			if (go->ob) {
-				if (go->ob->recalc) {
+				if (go->ob->id.recalc) {
 					BKE_object_handle_update(bmain, scene, go->ob);
 				}
 			}

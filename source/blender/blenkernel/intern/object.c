@@ -1762,28 +1762,28 @@ void BKE_object_handle_update_ex(Main *bmain,
 	if (ob->data) {
 		ID *data_id = (ID *)ob->data;
 		if (data_id->recalc & ID_RECALC_ALL) {
-			ob->recalc |= OB_RECALC_DATA;
+			ob->id.recalc |= OB_RECALC_DATA;
 			data_id->recalc &= ~ID_RECALC_ALL;
 		}
 	}
 
-	if ((ob->recalc & OB_RECALC_ALL) == 0) {
+	if ((ob->id.recalc & OB_RECALC_ALL) == 0) {
 		object_handle_update_proxy(bmain, scene, ob, do_proxy_update);
 		return;
 	}
 
-	if (ob->recalc & OB_RECALC_OB) {
+	if (ob->id.recalc & OB_RECALC_OB) {
 		/* Handle proxy copy for target. */
 		if (!BKE_object_eval_proxy_copy(ob)) {
 			BKE_object_where_is_calc_ex(scene, rbw, ob, NULL);
 		}
 	}
 
-	if (ob->recalc & OB_RECALC_DATA) {
+	if (ob->id.recalc & OB_RECALC_DATA) {
 		BKE_object_handle_data_update(bmain, scene, ob);
 	}
 
-	ob->recalc &= ~OB_RECALC_ALL;
+	ob->id.recalc &= ~OB_RECALC_ALL;
 
 	object_handle_update_proxy(bmain, scene, ob, do_proxy_update);
 }
@@ -2160,7 +2160,7 @@ bool BKE_object_modifier_update_subframe(
 
 	}
 
-	ob->recalc |= OB_RECALC_ALL;
+	ob->id.recalc |= OB_RECALC_ALL;
 	if (update_mesh) {
 		/* ignore cache clear during subframe updates
 		 *  to not mess up cache validity */
