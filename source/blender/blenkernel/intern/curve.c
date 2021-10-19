@@ -4837,6 +4837,8 @@ void BKE_curve_calc_path(Object *ob, ListBase *nurbs)
 	}
 
 	MEM_freeN(dist);
+
+	ob->id.mod_id++;
 }
 
 static int interval_test(const int min, const int max, int p1, const int cycl)
@@ -4934,5 +4936,16 @@ int BKE_curve_where_on_path(Object *ob, float ctime, float vec[4], float dir[3])
 	vec[3] = data[0] * p0->vec[3] + data[1] * p1->vec[3] + data[2] * p2->vec[3] + data[3] * p3->vec[3]; /* Tilt, should not be needed since we have quat still used */
 
 	return 1;
+}
+
+void BKE_curve_check_update(struct Curve *cu)
+{
+	if (!cu) return;
+
+	if (cu->textoncurve && (cu->textoncurve->data_mod_id != cu->textoncurve_mod_id)) {
+		cu->id.mod_id++;
+		cu->textoncurve_mod_id = cu->textoncurve->data_mod_id;
+	}
+
 }
 

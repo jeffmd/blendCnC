@@ -112,6 +112,7 @@ static CurveCache *object_curve_cache(struct Object *ob)
 {
 	if (!ob->curve_cache) {
 		ob->curve_cache = MEM_callocN(sizeof(CurveCache), "CurveCache for curve types");
+		ob->id.mod_id++;
 	}
 	
 	return ob->curve_cache;
@@ -143,12 +144,14 @@ void BKE_object_free_path(struct Object *ob)
 		if (ob->curve_cache->path->data) MEM_freeN(ob->curve_cache->path->data);
 		MEM_freeN(ob->curve_cache->path);
 		ob->curve_cache->path = NULL;
+		ob->id.mod_id++;
 	}
 }
 
 static Path *object_create_path(struct Object *ob)
 {
 	object_curve_cache(ob)->path = MEM_callocN(sizeof(Path), "calc_curvepath");
+	ob->id.mod_id++;
 
 	return ob->curve_cache->path;
 }
@@ -204,6 +207,7 @@ void BKE_object_clear_curve_cache(struct Object *ob)
 		BKE_curve_bevelList_free(&ob->curve_cache->bev);
 		BKE_object_free_path(ob);
 		BKE_nurbList_free(&ob->curve_cache->deformed_nurbs);
+		ob->id.mod_id++;
 	}
 }
 
@@ -1266,16 +1270,13 @@ void BKE_object_get_parent_matrix(Scene *scene, Object *ob, Object *par, float p
 /**
  * \param r_originmat: Optional matrix that stores the space the object is in (without its own matrix applied)
  */
-static void solve_parenting(Scene *scene, Object *ob, Object *par, float obmat[4][4], float slowmat[4][4],
-                            float r_originmat[3][3], const bool set_origin)
+static void solve_parenting(Scene *scene, Object *ob, Object *par, float obmat[4][4], float r_originmat[3][3], const bool set_origin)
 {
 	float totmat[4][4];
 	float tmat[4][4];
 	float locmat[4][4];
 
 	BKE_object_to_mat4(ob, locmat);
-
-	if (ob->partype & PARSLOW) copy_m4_m4(slowmat, obmat);
 
 	BKE_object_get_parent_matrix(scene, ob, par, totmat);
 
@@ -1294,11 +1295,6 @@ static void solve_parenting(Scene *scene, Object *ob, Object *par, float obmat[4
 	}
 }
 
-static bool where_is_object_parslow(Object *ob, float obmat[4][4], float slowmat[4][4])
-{
-	return false;
-}
-
 /* note, scene is the active scene while actual_scene is the scene the object resides in */
 void BKE_object_where_is_calc_time_ex(Scene *scene, Object *ob, float ctime,
                                       RigidBodyWorld *rbw, float r_originmat[3][3])
@@ -1309,18 +1305,10 @@ void BKE_object_where_is_calc_time_ex(Scene *scene, Object *ob, float ctime,
 
 	if (ob->parent) {
 		Object *par = ob->parent;
-		float slowmat[4][4];
 
 		/* calculate parent matrix */
-		solve_parenting(scene, ob, par, ob->obmat, slowmat, r_originmat, true);
+		solve_parenting(scene, ob, par, ob->obmat, r_originmat, true);
 
-		/* "slow parent" is definitely not threadsafe, and may also give bad results jumping around
-		 * An old-fashioned hack which probably doesn't really cut it anymore
-		 */
-		if (ob->partype & PARSLOW) {
-			if (!where_is_object_parslow(ob, ob->obmat, slowmat))
-				return;
-		}
 	}
 	else {
 		BKE_object_to_mat4(ob, ob->obmat);
@@ -1334,6 +1322,8 @@ void BKE_object_where_is_calc_time_ex(Scene *scene, Object *ob, float ctime,
 	/* set negative scale flag in object */
 	if (is_negative_m4(ob->obmat)) ob->transflag |= OB_NEG_SCALE;
 	else ob->transflag &= ~OB_NEG_SCALE;
+
+	ob->id.mod_id++;
 }
 
 void BKE_object_where_is_calc_time(Scene *scene, Object *ob, float ctime)
@@ -1349,14 +1339,10 @@ void BKE_object_where_is_calc_mat4(Scene *scene, Object *ob, float obmat[4][4])
 {
 
 	if (ob->parent) {
-		float slowmat[4][4];
-
 		Object *par = ob->parent;
 
-		solve_parenting(scene, ob, par, obmat, slowmat, NULL, false);
+		solve_parenting(scene, ob, par, obmat, NULL, false);
 
-		if (ob->partype & PARSLOW)
-			where_is_object_parslow(ob, obmat, slowmat);
 	}
 	else {
 		BKE_object_to_mat4(ob, obmat);
@@ -1759,28 +1745,40 @@ void BKE_object_handle_update_ex(Main *bmain,
                                  RigidBodyWorld *rbw,
                                  const bool do_proxy_update)
 {
-	if (ob->data) {
-		ID *data_id = (ID *)ob->data;
-		if (data_id->recalc & ID_RECALC_ALL) {
-			ob->id.recalc |= OB_RECALC_DATA;
-			data_id->recalc &= ~ID_RECALC_ALL;
-		}
+	if (ob->parent && (ob->parent->id.mod_id != ob->parent_mod_id)) {
+		ob->id.recalc |= OB_RECALC_OB;
 	}
 
-	if ((ob->id.recalc & OB_RECALC_ALL) == 0) {
-		object_handle_update_proxy(bmain, scene, ob, do_proxy_update);
-		return;
-	}
 
 	if (ob->id.recalc & OB_RECALC_OB) {
 		/* Handle proxy copy for target. */
 		if (!BKE_object_eval_proxy_copy(ob)) {
 			BKE_object_where_is_calc_ex(scene, rbw, ob, NULL);
+			if (ob->parent) {
+				ob->parent_mod_id = ob->parent->id.mod_id;
+			}
 		}
 	}
 
-	if (ob->id.recalc & OB_RECALC_DATA) {
-		BKE_object_handle_data_update(bmain, scene, ob);
+	else {
+		object_handle_update_proxy(bmain, scene, ob, do_proxy_update);
+	}
+
+	if (ob->data) {
+		switch (ob->type) {
+			case OB_CURVE:
+			case OB_SURF:
+			case OB_FONT:
+				BKE_curve_check_update(ob->data);
+				break;
+
+		}
+
+		ID *data_id = (ID *)ob->data;
+		if (data_id->mod_id != ob->data_mod_id) {
+			BKE_object_handle_data_update(bmain, scene, ob);
+			ob->data_mod_id = data_id->mod_id;
+		}
 	}
 
 	ob->id.recalc &= ~OB_RECALC_ALL;

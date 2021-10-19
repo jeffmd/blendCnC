@@ -169,7 +169,9 @@ typedef struct Curve {
 	/* edit, index in active nurb (BPoint or BezTriple) */
 	int actvert;
 
-	char pad[4];
+	int bevobj_mod_id;
+	int taperobj_mod_id;
+	int textoncurve_mod_id;
 
 	/* font part */
 	short lines;

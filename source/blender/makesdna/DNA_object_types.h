@@ -108,7 +108,7 @@ typedef struct Object {
 	void *data;  /* pointer to objects data - an 'ID' or NULL */
 
 	int data_mod_id;
-	int pad1;
+	int parent_mod_id;
 
 	ListBase defbase;   /* list of bDeformGroup (vertex groups) names and flag only */
 	ListBase modifiers; /* list of ModifierData structures */

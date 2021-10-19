@@ -330,7 +330,7 @@ static void rna_BPoint_array_begin(CollectionPropertyIterator *iter, PointerRNA 
 
 static void rna_Curve_update_data_id(Main *UNUSED(bmain), Scene *UNUSED(scene), ID *id)
 {
-	id->recalc |= ID_RECALC;
+	id->mod_id++;
 	WM_main_add_notifier(NC_GEOM | ND_DATA, id);
 }
 
@@ -629,7 +629,7 @@ static void rna_Curve_spline_remove(Curve *cu, ReportList *reports, PointerRNA *
 	BKE_nurb_free(nu);
 	RNA_POINTER_INVALIDATE(nu_ptr);
 
-	cu->id.recalc |= ID_RECALC_DATA;
+	cu->id.mod_id++;
 	WM_main_add_notifier(NC_GEOM | ND_DATA, NULL);
 }
 
@@ -639,7 +639,7 @@ static void rna_Curve_spline_clear(Curve *cu)
 
 	BKE_nurbList_free(nurbs);
 
-	cu->id.recalc |= ID_RECALC_DATA;
+	cu->id.mod_id++;
 	WM_main_add_notifier(NC_GEOM | ND_DATA, NULL);
 }
 

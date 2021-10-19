@@ -40,7 +40,7 @@ static void rna_Curve_transform(Curve *cu, float *mat, bool shape_keys)
 {
 	BKE_curve_transform(cu, (float (*)[4])mat, shape_keys, true);
 
-	cu->id.recalc |= ID_RECALC;
+	cu->id.mod_id++;
 }
 static float rna_Nurb_calc_length(Nurb *nu, int resolution_u)
 {

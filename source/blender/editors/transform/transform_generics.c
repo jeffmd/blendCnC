@@ -243,7 +243,7 @@ static void recalcData_objects(TransInfo *t)
 				}
 			}
 
-			t->obedit->id.recalc |= OB_RECALC_DATA;
+			cu->id.mod_id++;
 		}
 		else if (t->obedit->type == OB_MESH) {
 			BMEditMesh *em = BKE_editmesh_from_object(t->obedit);
@@ -263,7 +263,7 @@ static void recalcData_objects(TransInfo *t)
 				projectVertSlideData(t, false);
 			}
 
-			t->obedit->id.recalc |= OB_RECALC_DATA;
+			((ID *)t->obedit->data)->mod_id++;
 			EDBM_mesh_normals_update(em);
 			BKE_editmesh_tessface_calc(em);
 		}

@@ -168,7 +168,6 @@ void BKE_object_eval_constraints(struct Scene *scene, struct Object *ob);
 void BKE_object_eval_done(struct Object *ob);
 bool BKE_object_eval_proxy_copy(struct Object *object);
 void BKE_object_eval_uber_transform(struct Object *ob);
-void BKE_object_eval_uber_data(struct Main *bmain, struct Scene *scene, struct Object *ob);
 void BKE_object_eval_transform_all(struct Scene *scene, struct Object *object);
 void BKE_object_handle_data_update(struct Main *bmain, struct Scene *scene, struct Object *ob);
 void BKE_object_handle_update(struct Main *bmain, struct Scene *scene, struct Object *ob);

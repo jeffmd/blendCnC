@@ -52,8 +52,7 @@ void BKE_object_eval_local_transform(Object *ob)
 
 /* Evaluate parent */
 /* NOTE: based on solve_parenting(), but with the cruft stripped out */
-void BKE_object_eval_parent(Scene *scene,
-                            Object *ob)
+void BKE_object_eval_parent(Scene *scene, Object *ob)
 {
 	Object *par = ob->parent;
 
@@ -82,10 +81,7 @@ void BKE_object_eval_done(Object *ob)
 	else ob->transflag &= ~OB_NEG_SCALE;
 }
 
-void BKE_object_handle_data_update(
-        Main *bmain,
-        Scene *scene,
-        Object *ob)
+void BKE_object_handle_data_update(Main *bmain, Scene *scene, Object *ob)
 {
 	float ctime = 0.0f;
 
@@ -163,23 +159,9 @@ bool BKE_object_eval_proxy_copy(Object *object)
 void BKE_object_eval_uber_transform(Object *object)
 {
 	BKE_object_eval_proxy_copy(object);
-	object->id.recalc &= ~(OB_RECALC_OB);
-	if (object->data == NULL) {
-		object->id.recalc &= ~OB_RECALC_DATA;
-	}
 }
 
-void BKE_object_eval_uber_data(Main *bmain, 
-                               Scene *scene,
-                               Object *ob)
-{
-	BKE_object_handle_data_update(bmain, scene, ob);
-
-	ob->id.recalc &= ~(OB_RECALC_DATA);
-}
-
-void BKE_object_eval_transform_all(Scene *scene,
-                                   Object *object)
+void BKE_object_eval_transform_all(Scene *scene, Object *object)
 {
 	/* This mimics full transform update chain from new depsgraph. */
 	BKE_object_eval_local_transform(object);
