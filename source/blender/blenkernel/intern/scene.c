@@ -556,10 +556,7 @@ static void scene_update_all_bases(Main *bmain, Scene *scene, Scene *scene_paren
 	Base *base;
 
 	for (base = scene->base.first; base; base = base->next) {
-		Object *object = base->object;
-
-		BKE_object_handle_update_ex(bmain, scene_parent, object, scene->rigidbody_world, true);
-
+		BKE_object_handle_update_ex(bmain, scene_parent, base->object, scene->rigidbody_world, true);
 	}
 }
 
@@ -597,54 +594,14 @@ static bool check_rendered_viewport_visible(Main *bmain)
 	return false;
 }
 
-static void prepare_mesh_for_viewport_render(Main *bmain, Scene *scene)
-{
-	/* This is needed to prepare mesh to be used by the render
-	 * engine from the viewport rendering. We do loading here
-	 * so all the objects which shares the same mesh datablock
-	 * are nicely tagged for update and updated.
-	 *
-	 * This makes it so viewport render engine doesn't need to
-	 * call loading of the edit data for the mesh objects.
-	 */
-
-	Object *obedit = scene->obedit;
-	if (obedit) {
-		Mesh *mesh = obedit->data;
-		if ((obedit->type == OB_MESH) &&
-		    ((obedit->id.recalc & ID_RECALC_ALL) ||
-		     (mesh->id.recalc & ID_RECALC_ALL)))
-		{
-			if (check_rendered_viewport_visible(bmain)) {
-				BMesh *bm = mesh->edit_btmesh->bm;
-				BM_mesh_bm_to_me(
-				        bmain, bm, mesh,
-				        (&(struct BMeshToMeshParams){
-				            .calc_object_remap = true,
-				        }));
-			}
-		}
-	}
-}
-
 void BKE_scene_update_tagged(Main *bmain, Scene *scene)
 {
 	/* keep this first */
 	BLI_callback_exec(bmain, &scene->id, BLI_CB_EVT_SCENE_UPDATE_PRE);
 
-	/* flush editing data if needed */
-	prepare_mesh_for_viewport_render(bmain, scene);
-
-	/* clear "LIB_TAG_DOIT" flag from all materials, to prevent infinite recursion problems later
-	 * when trying to find materials with drivers that need evaluating [#32017]
-	 */
-	BKE_main_id_tag_idcode(bmain, ID_MA, LIB_TAG_DOIT, false);
-	BKE_main_id_tag_idcode(bmain, ID_LA, LIB_TAG_DOIT, false);
-
 	scene_update_tagged_recursive(bmain, scene, scene);
 	/* notify editors and python about recalc */
 	BLI_callback_exec(bmain, &scene->id, BLI_CB_EVT_SCENE_UPDATE_POST);
-
 }
 
 /* helper function for the SETLOOPER macro */
