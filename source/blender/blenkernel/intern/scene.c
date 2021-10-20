@@ -556,7 +556,7 @@ static void scene_update_all_bases(Main *bmain, Scene *scene, Scene *scene_paren
 	Base *base;
 
 	for (base = scene->base.first; base; base = base->next) {
-		BKE_object_handle_update_ex(bmain, scene_parent, base->object, scene->rigidbody_world, true);
+		BKE_object_handle_update_ex(bmain, scene_parent, base->object, true);
 	}
 }
 

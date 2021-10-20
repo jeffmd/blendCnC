@@ -670,7 +670,6 @@ static void mesh_undosys_step_decode(struct bContext *C, UndoStep *us_p, int UNU
 	BMEditMesh *em = me->edit_btmesh;
 	undomesh_to_editmesh(&us->data, em, obedit->data);
 	mesh_undosys_step_decode_restore_ids(us);
-	//**** updat object transform (&obedit->id, OB_RECALC_DATA);
 	WM_event_add_notifier(C, NC_GEOM | ND_DATA, NULL);
 }
 

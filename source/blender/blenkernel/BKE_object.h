@@ -33,7 +33,6 @@ struct HookModifierData;
 struct Main;
 struct ModifierData;
 struct Object;
-struct RigidBodyWorld;
 struct Scene;
 struct View3D;
 struct ListBase;
@@ -108,12 +107,6 @@ void BKE_object_matrix_local_get(struct Object *ob, float mat[4][4]);
 
 void BKE_object_get_parent_matrix(struct Scene *scene, struct Object *ob, struct Object *par, float parentmat[4][4]);
 void BKE_object_where_is_calc(struct Scene *scene, struct Object *ob);
-void BKE_object_where_is_calc_ex(
-        struct Scene *scene, struct RigidBodyWorld *rbw, struct Object *ob, float r_originmat[3][3]);
-void BKE_object_where_is_calc_time(struct Scene *scene, struct Object *ob, float ctime);
-void BKE_object_where_is_calc_time_ex(
-        struct Scene *scene, struct Object *ob, float ctime,
-        struct RigidBodyWorld *rbw, float r_originmat[3][3]);
 void BKE_object_where_is_calc_mat4(struct Scene *scene, struct Object *ob, float obmat[4][4]);
 
 /* possibly belong in own moduke? */
@@ -172,8 +165,9 @@ void BKE_object_eval_transform_all(struct Scene *scene, struct Object *object);
 void BKE_object_handle_data_update(struct Main *bmain, struct Scene *scene, struct Object *ob);
 void BKE_object_handle_update(struct Main *bmain, struct Scene *scene, struct Object *ob);
 void BKE_object_handle_update_ex(struct Main *bmain, struct Scene *scene, struct Object *ob,
-        struct RigidBodyWorld *rbw,
         const bool do_proxy_update);
+int BKE_object_has_update(struct Object *ob);
+void BKE_object_set_update(struct Object *ob);
 
 int BKE_object_obdata_texspace_get(struct Object *ob, short **r_texflag, float **r_loc, float **r_size, float **r_rot);
 bool BKE_object_flag_test_recursive(const struct Object *ob, short flag);
@@ -209,12 +203,6 @@ void             BKE_object_groups_clear(
 struct KDTree *BKE_object_as_kdtree(struct Object *ob, int *r_tot);
 
 bool BKE_object_modifier_use_time(struct Object *ob, struct ModifierData *md);
-
-bool BKE_object_modifier_update_subframe(
-        struct Main *bmain, 
-        struct Scene *scene, struct Object *ob, bool update_mesh,
-        int parent_recursion, float frame,
-        int type);
 
 /* Rotation Mode Conversions - Objects... */
 void BKE_object_rotMode_change_values(float quat[4], float eul[3], float axis[3], float *angle, short oldMode, short newMode);

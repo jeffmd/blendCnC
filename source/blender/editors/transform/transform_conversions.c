@@ -1519,7 +1519,7 @@ static void set_trans_object_base_flags(TransInfo *t)
 
 	/* handle pending update events, otherwise they got copied below */
 	for (base = scene->base.first; base; base = base->next) {
-		if (base->object->id.recalc & OB_RECALC_ALL) {
+		if (BKE_object_has_update(base->object)) {
 			/* TODO(sergey): Ideally, it's not needed. */
 			BKE_object_handle_update(bmain, t->scene, base->object);
 		}

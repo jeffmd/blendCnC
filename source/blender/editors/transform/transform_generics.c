@@ -287,7 +287,7 @@ static void recalcData_objects(TransInfo *t)
 			if (td->flag & TD_SKIP)
 				continue;
 
-			td->ob->id.recalc |= OB_RECALC_OB;
+			td->ob->id.mod_id++;
 
 		}
 	}

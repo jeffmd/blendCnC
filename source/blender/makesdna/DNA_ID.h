@@ -327,15 +327,6 @@ enum {
 	LIB_TAG_NOT_ALLOCATED     = 1 << 14,
 };
 
-enum {
-	/* RESET_AFTER_USE, used by update code (depsgraph). */
-	ID_RECALC_NONE  = 0,
-	ID_RECALC       = 1 << 0,
-	ID_RECALC_DATA  = 1 << 1,
-	ID_RECALC_SKIP_ANIM_TAG  = 1 << 2,
-	ID_RECALC_ALL   = (ID_RECALC | ID_RECALC_DATA),
-};
-
 /* To filter ID types (filter_id) */
 /* XXX We cannot put all needed IDs inside an enum...
  *     We'll have to see whether we can fit all needed ones inside 32 values,

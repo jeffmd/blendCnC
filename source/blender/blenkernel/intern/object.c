@@ -220,6 +220,17 @@ void BKE_object_free_curve_cache(Object *ob)
 	}
 }
 
+int BKE_object_has_update(struct Object *ob)
+{
+	return ob->id.mod_id != ob->mod_id;
+}
+
+void BKE_object_set_update(struct Object *ob)
+{
+	ob->id.mod_id++;
+}
+
+
 void BKE_object_free_modifiers(Object *ob, const int flag)
 {
 	ModifierData *md;
@@ -1270,7 +1281,7 @@ void BKE_object_get_parent_matrix(Scene *scene, Object *ob, Object *par, float p
 /**
  * \param r_originmat: Optional matrix that stores the space the object is in (without its own matrix applied)
  */
-static void solve_parenting(Scene *scene, Object *ob, Object *par, float obmat[4][4], float r_originmat[3][3], const bool set_origin)
+static void solve_parenting(Scene *scene, Object *ob, Object *par, float obmat[4][4], const bool set_origin)
 {
 	float totmat[4][4];
 	float tmat[4][4];
@@ -1284,11 +1295,6 @@ static void solve_parenting(Scene *scene, Object *ob, Object *par, float obmat[4
 	mul_m4_m4m4(tmat, totmat, ob->parentinv);
 	mul_m4_m4m4(obmat, tmat, locmat);
 
-	if (r_originmat) {
-		/* usable originmat */
-		copy_m3_m4(r_originmat, tmat);
-	}
-
 	/* origin, for help line */
 	if (set_origin) {
 		copy_v3_v3(ob->orig, totmat[3]);
@@ -1296,8 +1302,7 @@ static void solve_parenting(Scene *scene, Object *ob, Object *par, float obmat[4
 }
 
 /* note, scene is the active scene while actual_scene is the scene the object resides in */
-void BKE_object_where_is_calc_time_ex(Scene *scene, Object *ob, float ctime,
-                                      RigidBodyWorld *rbw, float r_originmat[3][3])
+void BKE_object_where_is_calc(Scene *scene, Object *ob)
 {
 	if (ob == NULL) return;
 
@@ -1307,28 +1312,18 @@ void BKE_object_where_is_calc_time_ex(Scene *scene, Object *ob, float ctime,
 		Object *par = ob->parent;
 
 		/* calculate parent matrix */
-		solve_parenting(scene, ob, par, ob->obmat, r_originmat, true);
+		solve_parenting(scene, ob, par, ob->obmat, true);
 
 	}
 	else {
 		BKE_object_to_mat4(ob, ob->obmat);
 	}
 
-	/* try to fall back to the scene rigid body world if none given */
-	rbw = rbw ? rbw : scene->rigidbody_world;
-	/* read values pushed into RBO from sim/cache... */
-	BKE_rigidbody_sync_transforms(rbw, ob, ctime);
-
 	/* set negative scale flag in object */
 	if (is_negative_m4(ob->obmat)) ob->transflag |= OB_NEG_SCALE;
 	else ob->transflag &= ~OB_NEG_SCALE;
 
 	ob->id.mod_id++;
-}
-
-void BKE_object_where_is_calc_time(Scene *scene, Object *ob, float ctime)
-{
-	BKE_object_where_is_calc_time_ex(scene, ob, ctime, NULL, NULL);
 }
 
 /* get object transformation matrix without recalculating dependencies and
@@ -1341,21 +1336,12 @@ void BKE_object_where_is_calc_mat4(Scene *scene, Object *ob, float obmat[4][4])
 	if (ob->parent) {
 		Object *par = ob->parent;
 
-		solve_parenting(scene, ob, par, obmat, NULL, false);
+		solve_parenting(scene, ob, par, obmat, false);
 
 	}
 	else {
 		BKE_object_to_mat4(ob, obmat);
 	}
-}
-
-void BKE_object_where_is_calc_ex(Scene *scene, RigidBodyWorld *rbw, Object *ob, float r_originmat[3][3])
-{
-	BKE_object_where_is_calc_time_ex(scene, ob, 0, rbw, r_originmat);
-}
-void BKE_object_where_is_calc(Scene *scene, Object *ob)
-{
-	BKE_object_where_is_calc_time_ex(scene, ob, 0, NULL, NULL);
 }
 
 /* for calculation of the inverse parent transform, only used for editor */
@@ -1710,10 +1696,7 @@ bool BKE_object_parent_loop_check(const Object *par, const Object *ob)
 	return BKE_object_parent_loop_check(par->parent, ob);
 }
 
-static void object_handle_update_proxy(Main *bmain,
-                                       Scene *scene,
-                                       Object *object,
-                                       const bool do_proxy_update)
+static void object_handle_update_proxy(Main *bmain, Scene *scene, Object *object, const bool do_proxy_update)
 {
 	/* The case when this is a group proxy, object_update is called in group.c */
 	if (object->proxy == NULL) {
@@ -1740,28 +1723,20 @@ static void object_handle_update_proxy(Main *bmain,
 /* the main object update call, for object matrix, constraints, keys and displist (modifiers) */
 /* requires flags to be set! */
 /* Ideally we shouldn't have to pass the rigid body world, but need bigger restructuring to avoid id */
-void BKE_object_handle_update_ex(Main *bmain,
-                                 Scene *scene, Object *ob,
-                                 RigidBodyWorld *rbw,
-                                 const bool do_proxy_update)
+void BKE_object_handle_update_ex(Main *bmain, Scene *scene, Object *ob, const bool do_proxy_update)
 {
-	if (ob->parent && (ob->parent->id.mod_id != ob->parent_mod_id)) {
-		ob->id.recalc |= OB_RECALC_OB;
-	}
-
-
-	if (ob->id.recalc & OB_RECALC_OB) {
+	if ((ob->id.mod_id != ob->mod_id) ||
+		(ob->parent && (ob->parent->id.mod_id != ob->parent_mod_id)))
+	{
 		/* Handle proxy copy for target. */
 		if (!BKE_object_eval_proxy_copy(ob)) {
-			BKE_object_where_is_calc_ex(scene, rbw, ob, NULL);
+			BKE_object_where_is_calc(scene, ob);
 			if (ob->parent) {
 				ob->parent_mod_id = ob->parent->id.mod_id;
 			}
 		}
-	}
 
-	else {
-		object_handle_update_proxy(bmain, scene, ob, do_proxy_update);
+		ob->mod_id = ob->id.mod_id;
 	}
 
 	if (ob->data) {
@@ -1781,8 +1756,6 @@ void BKE_object_handle_update_ex(Main *bmain,
 		}
 	}
 
-	ob->id.recalc &= ~OB_RECALC_ALL;
-
 	object_handle_update_proxy(bmain, scene, ob, do_proxy_update);
 }
 
@@ -1793,7 +1766,7 @@ void BKE_object_handle_update_ex(Main *bmain,
  */
 void BKE_object_handle_update(Main *bmain, Scene *scene, Object *ob)
 {
-	BKE_object_handle_update_ex(bmain, scene, ob, NULL, true);
+	BKE_object_handle_update_ex(bmain, scene, ob, true);
 }
 
 int BKE_object_obdata_texspace_get(Object *ob, short **r_texflag, float **r_loc, float **r_size, float **r_rot)
@@ -2134,40 +2107,6 @@ KDTree *BKE_object_as_kdtree(Object *ob, int *r_tot)
 
 	*r_tot = tot;
 	return tree;
-}
-
-/* Note: this function should eventually be replaced by depsgraph functionality.
- * Avoid calling this in new code unless there is a very good reason for it!
- */
-bool BKE_object_modifier_update_subframe(
-        Main *bmain, 
-        Scene *scene, Object *ob, bool update_mesh,
-        int parent_recursion, float frame,
-        int type)
-{
-	/* if object has parents, update them too */
-	if (parent_recursion) {
-		int recursion = parent_recursion - 1;
-		bool no_update = false;
-		if (ob->parent) no_update |= BKE_object_modifier_update_subframe(bmain, scene, ob->parent, 0, recursion, frame, type);
-
-		/* skip subframe if object is parented
-		 * to vertex of a dynamic paint canvas */
-		if (no_update && (ob->partype == PARVERT1 || ob->partype == PARVERT3))
-			return false;
-
-	}
-
-	ob->id.recalc |= OB_RECALC_ALL;
-	if (update_mesh) {
-		/* ignore cache clear during subframe updates
-		 *  to not mess up cache validity */
-		BKE_object_handle_update(bmain, scene, ob);
-	}
-	else
-		BKE_object_where_is_calc_time(scene, ob, frame);
-
-	return false;
 }
 
 /* **************** Rotation Mode Conversions ****************************** */

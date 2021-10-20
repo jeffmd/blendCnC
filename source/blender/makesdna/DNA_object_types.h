@@ -106,9 +106,11 @@ typedef struct Object {
 	struct Object *proxy, *proxy_group, *proxy_from;
 	struct BoundBox *bb;  /* axis aligned boundbox (in localspace) */
 	void *data;  /* pointer to objects data - an 'ID' or NULL */
-
-	int data_mod_id;
-	int parent_mod_id;
+	
+	int mod_id;        /* modification id for object */
+	int data_mod_id;   /* modification id for data */
+	int parent_mod_id; /* modification id for parent object */
+	int pad1;
 
 	ListBase defbase;   /* list of bDeformGroup (vertex groups) names and flag only */
 	ListBase modifiers; /* list of ModifierData structures */
@@ -349,14 +351,6 @@ enum {
 #define OB_DONE             (1 << 10)  /* unknown state, clear before use */
 #define OB_FROMGROUP        (1 << 12)
 
-/* ob->recalc (flag bits!) */
-enum {
-	OB_RECALC_OB        = 1 << 0,
-	OB_RECALC_DATA      = 1 << 1,
-/* only use for matching any flag, NOT as an argument since more flags may be added. */
-	OB_RECALC_ALL       = OB_RECALC_OB | OB_RECALC_DATA,
-};
-
 
 /* ob->gameflag2 */
 enum {
@@ -379,12 +373,6 @@ enum {
 	OB_BODY_TYPE_RIGID          = 3,
 	OB_BODY_TYPE_NAVMESH        = 7,
 	OB_BODY_TYPE_CHARACTER      = 8,
-};
-
-/* ob->depsflag */
-enum {
-	OB_DEPS_EXTRA_OB_RECALC     = 1 << 0,
-	OB_DEPS_EXTRA_DATA_RECALC   = 1 << 1,
 };
 
 /* ob->restrictflag */

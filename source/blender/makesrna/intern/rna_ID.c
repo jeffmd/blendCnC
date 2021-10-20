@@ -248,39 +248,6 @@ static ID *rna_ID_copy(ID *id, Main *bmain)
 	return NULL;
 }
 
-static void rna_ID_update_tag(ID *id, ReportList *reports, int flag)
-{
-	/* XXX, new function for this! */
-#if 0
-	if (ob->type == OB_FONT) {
-		Curve *cu = ob->data;
-		freedisplist(&cu->disp);
-		BKE_vfont_to_curve(bmain, sce, ob, FO_EDIT, NULL);
-	}
-#endif
-
-	if (flag == 0) {
-		/* pass */
-	}
-	else {
-		/* ensure flag us correct for the type */
-		switch (GS(id->name)) {
-			case ID_OB:
-				if (flag & ~(OB_RECALC_ALL)) {
-					BKE_report(reports, RPT_ERROR, "'Refresh' incompatible with Object ID type");
-					return;
-				}
-				break;
-				/* Could add particle updates later */
-
-			default:
-				BKE_report(reports, RPT_ERROR, "This ID type is not compatible with any 'refresh' options");
-				return;
-		}
-	}
-
-}
-
 static void rna_ID_user_clear(ID *id)
 {
 	id_fake_user_clear(id);
@@ -899,12 +866,6 @@ static void rna_def_ID(BlenderRNA *brna)
 	FunctionRNA *func;
 	PropertyRNA *prop, *parm;
 
-	static const EnumPropertyItem update_flag_items[] = {
-		{OB_RECALC_OB, "OBJECT", 0, "Object", ""},
-		{OB_RECALC_DATA, "DATA", 0, "Data", ""},
-		{0, NULL, 0, NULL, NULL}
-	};
-
 	srna = RNA_def_struct(brna, "ID", NULL);
 	RNA_def_struct_ui_text(srna, "ID",
 	                       "Base type for data-blocks, defining a unique name, linking from other libraries "
@@ -937,16 +898,6 @@ static void rna_def_ID(BlenderRNA *brna)
 	RNA_def_property_ui_text(prop, "Tag",
 	                         "Tools can use this to tag data for their own purposes "
 	                         "(initial state is undefined)");
-
-	prop = RNA_def_property(srna, "is_updated", PROP_BOOLEAN, PROP_NONE);
-	RNA_def_property_boolean_sdna(prop, NULL, "recalc", ID_RECALC);
-	RNA_def_property_clear_flag(prop, PROP_EDITABLE);
-	RNA_def_property_ui_text(prop, "Is Updated", "Data-block is tagged for recalculation");
-
-	prop = RNA_def_property(srna, "is_updated_data", PROP_BOOLEAN, PROP_NONE);
-	RNA_def_property_boolean_sdna(prop, NULL, "recalc", ID_RECALC_DATA);
-	RNA_def_property_clear_flag(prop, PROP_EDITABLE);
-	RNA_def_property_ui_text(prop, "Is Updated Data", "Data-block data is tagged for recalculation");
 
 	prop = RNA_def_property(srna, "is_library_indirect", PROP_BOOLEAN, PROP_NONE);
 	RNA_def_property_boolean_sdna(prop, NULL, "tag", LIB_TAG_INDIRECT);
@@ -997,13 +948,6 @@ static void rna_def_ID(BlenderRNA *brna)
 	parm = RNA_def_int(func, "count", 0, 0, INT_MAX,
 	                   "", "Number of usages/references of given id by current data-block", 0, INT_MAX);
 	RNA_def_function_return(func, parm);
-
-	func = RNA_def_function(srna, "update_tag", "rna_ID_update_tag");
-	RNA_def_function_flag(func, FUNC_USE_REPORTS);
-	RNA_def_function_ui_description(func,
-	                                "Tag the ID to update its display data, "
-	                                "e.g. when calling :class:`bpy.types.Scene.update`");
-	RNA_def_enum_flag(func, "refresh", update_flag_items, 0, "", "Type of updates to perform");
 
 #ifdef WITH_PYTHON
 	RNA_def_struct_register_funcs(srna, NULL, NULL, "rna_ID_instance");
